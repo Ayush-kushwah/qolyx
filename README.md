@@ -316,7 +316,7 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for full guidelines.
 
 <br/>
 
-Built by [**Ayush Kushwah**](https://github.com/Ayush-kushwah) &nbsp;·&nbsp; [LinkedIn](https://linkedin.com/in/ayush-kushwah)
+Built by [**Ayush Kushwah**](https://github.com/Ayush-kushwah) &nbsp;·&nbsp; [LinkedIn](www.linkedin.com/in/ayush-kushwah144)
 
 <br/>
 

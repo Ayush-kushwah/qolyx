@@ -269,9 +269,9 @@ qolyx/
 
 | Phase | Status | Description |
 |---|---|---|
-| Phase 1 — Repository + Governance | 🔄 In Progress | Repo structure, Docker skeleton, project foundation |
-| Phase 2 — Backend Skeleton | ⏳ Pending | FastAPI, Alembic migrations, database foundation |
-| Phase 3 — Ingestion + Bronze Layer | ⏳ Pending | 3 Airflow DAGs, raw data loading, error handling |
+| Phase 1 — Repository + Governance | ✅ Complete | Repo structure, Docker skeleton, project foundation |
+| Phase 2 — Backend Skeleton | ✅ Complete | FastAPI, Alembic migrations, database foundation |
+| Phase 3 — Ingestion + Bronze Layer | 🔄 In Progress | 3 Airflow DAGs, raw data loading, error handling |
 | Phase 4 — dbt Transformations | ⏳ Pending | Bronze → Silver → Gold, CI/CD for models |
 | Phase 5 — Contracts Module | ⏳ Pending | Schema validation, pipeline gating, YAML contracts |
 | Phase 6 — Profiling + Anomaly Engine | ⏳ Pending | Baseline learning, Isolation Forest, PSI |

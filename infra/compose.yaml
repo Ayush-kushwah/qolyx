@@ -1,0 +1,69 @@
+version: "3.8"
+
+services:
+  qolyx-db:
+    image: postgres:15-alpine
+    container_name: qolyx-db
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    ports:
+      - "${POSTGRES_PORT}:5432"
+    volumes:
+      - qolyx-db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  qolyx-cache:
+    image: redis:7-alpine
+    container_name: qolyx-cache
+    ports:
+      - "${REDIS_PORT}:6379"
+    volumes:
+      - qolyx-redis-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 3
+
+  qolyx-backend:
+    build:
+      context: ../backend
+      dockerfile: Dockerfile
+    container_name: qolyx-backend
+    command: >
+      sh -c "alembic upgrade head && uvicorn backend.main:app --host 0.0.0.0 --port 8000"
+    ports:
+      - "${BACKEND_PORT}:8000"
+    environment:
+      - ENVIRONMENT=${ENVIRONMENT}
+      - DEBUG=${DEBUG}
+      - SECRET_KEY=${SECRET_KEY}
+      - DATABASE_URL=${DATABASE_URL}
+      - REDIS_URL=${REDIS_URL}
+      - BACKEND_PORT=${BACKEND_PORT}
+      - POSTGRES_PORT=${POSTGRES_PORT}
+      - REDIS_PORT=${REDIS_PORT}
+      - ALERT_EMAIL_SENDER=${ALERT_EMAIL_SENDER}
+      - SLACK_WEBHOOK_URL=${SLACK_WEBHOOK_URL}
+    depends_on:
+      qolyx-db:
+        condition: service_healthy
+      qolyx-cache:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/api/health')"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
+volumes:
+  qolyx-db-data:
+    driver: local
+  qolyx-redis-data:
+    driver: local

@@ -1,4 +1,4 @@
-.PHONY: help up down restart build logs migrate migration-create migration-history test test-local format lint clean
+.PHONY: help up down restart build logs migrate migration-create migration-history test test-local format lint clean dbt dbt-deps dbt-seed dbt-run dbt-test dbt-clean dbt-build
 
 # Default command shows help
 help:
@@ -18,6 +18,13 @@ help:
 	@echo "format             - Automatically format backend source code using black & isort"
 	@echo "lint               - Validate python static analysis rules via flake8 & mypy"
 	@echo "clean              - Wipe all transient build, cache, and compiled file relics"
+	@echo "dbt                - Run a custom dbt command. Usage: make dbt cmd=\"<command>\""
+	@echo "dbt-deps           - Install dbt packages and dependencies"
+	@echo "dbt-seed           - Run dbt seeds with full-refresh"
+	@echo "dbt-run            - Run bronze+ dbt models"
+	@echo "dbt-test           - Run dbt tests and store failures"
+	@echo "dbt-clean          - Clean dbt artifacts"
+	@echo "dbt-build          - Run dbt build (seeds, runs, and tests)"
 	@echo "=============================================================================="
 
 up:
@@ -66,3 +73,24 @@ clean:
 	rm -rf .pytest_cache .mypy_cache .coverage htmlcov build dist *.egg-info
 	find . -type d -name "__pycache__" -exec rm -rf {} +
 	find . -type f -name "*.pyc" -delete
+
+dbt:
+	docker compose --env-file .env -f infra/compose.yaml run --rm qolyx-dbt dbt $(cmd)
+
+dbt-deps:
+	docker compose --env-file .env -f infra/compose.yaml run --rm qolyx-dbt dbt deps
+
+dbt-seed:
+	docker compose --env-file .env -f infra/compose.yaml run --rm qolyx-dbt dbt seed --full-refresh
+
+dbt-run:
+	docker compose --env-file .env -f infra/compose.yaml run --rm qolyx-dbt dbt run --models bronze+
+
+dbt-test:
+	docker compose --env-file .env -f infra/compose.yaml run --rm qolyx-dbt dbt test --store-failures
+
+dbt-clean:
+	docker compose --env-file .env -f infra/compose.yaml run --rm qolyx-dbt dbt clean
+
+dbt-build:
+	docker compose --env-file .env -f infra/compose.yaml run --rm qolyx-dbt dbt build

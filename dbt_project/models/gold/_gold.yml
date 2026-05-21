@@ -1,0 +1,115 @@
+version: 2
+
+models:
+  - name: gold_daily_market_summary
+    description: "Gold aggregate table containing daily stock market summaries, including volatility and latency."
+    columns:
+      - name: gold_id
+        description: "Primary key / surrogate key generated from symbol and candle_date"
+        tests:
+          - unique
+          - not_null
+      - name: symbol
+        description: "Stock symbol"
+        tests:
+          - not_null
+      - name: candle_date
+        description: "Calendar date for the stock candles"
+        tests:
+          - not_null
+      - name: avg_close_price
+        description: "Daily average of candle close prices"
+        tests:
+          - dbt_expectations.expect_column_values_to_be_between:
+              min_value: 0
+      - name: max_high_price
+        description: "Daily maximum price recorded across all candles"
+      - name: min_low_price
+        description: "Daily minimum price recorded across all candles"
+      - name: total_volume
+        description: "Daily sum of transaction volume"
+      - name: candle_count
+        description: "Number of candles aggregated for the day"
+      - name: price_volatility
+        description: "Standard deviation of close prices during the day"
+      - name: volume_volatility
+        description: "Standard deviation of trade volume during the day"
+      - name: volume_deviation_pct
+        description: "Percent deviation of total volume compared to 30 days ago"
+      - name: processing_latency_seconds
+        description: "Average delay in seconds between candle generation and ingestion"
+      - name: last_ingested_at
+        description: "Most recent ingested_at timestamp for the day's candles"
+
+  - name: gold_fda_severity_stats
+    description: "Gold aggregate table containing daily adverse event statistics per drug."
+    columns:
+      - name: gold_id
+        description: "Primary key / surrogate key generated from drug_name and receipt_date"
+        tests:
+          - unique
+          - not_null
+      - name: drug_name
+        description: "Normalized brand or generic drug name"
+        tests:
+          - not_null
+      - name: receipt_date
+        description: "Date the report was received by the FDA"
+        tests:
+          - not_null
+      - name: total_cases
+        description: "Total number of adverse event reports received for the drug"
+      - name: serious_cases
+        description: "Count of reports classified as serious"
+      - name: hospitalization_cases
+        description: "Count of reports indicating hospitalization"
+      - name: serious_ratio
+        description: "Ratio of serious cases to total cases"
+        tests:
+          - dbt_expectations.expect_column_values_to_be_between:
+              min_value: 0
+              max_value: 1
+      - name: hospitalization_ratio
+        description: "Ratio of hospitalization cases to total cases"
+      - name: cases_deviation_pct
+        description: "Percent deviation of daily cases compared to 7 days ago"
+      - name: processing_latency_seconds
+        description: "Average delay in seconds between event receipt date and ingestion"
+      - name: last_ingested_at
+        description: "Most recent ingested_at timestamp for the day's events"
+
+  - name: gold_github_activity_summary
+    description: "Gold aggregate table containing daily event and developer activity statistics per repository."
+    columns:
+      - name: gold_id
+        description: "Primary key / surrogate key generated from repo_name and activity_date"
+        tests:
+          - unique
+          - not_null
+      - name: repo_name
+        description: "Full name of the GitHub repository"
+        tests:
+          - not_null
+      - name: activity_date
+        description: "Date when the events occurred on GitHub"
+        tests:
+          - not_null
+      - name: total_events
+        description: "Total number of GitHub events recorded for the repository"
+        tests:
+          - dbt_expectations.expect_column_values_to_be_between:
+              min_value: 0
+      - name: push_events
+        description: "Count of PushEvent occurrences"
+      - name: pull_request_events
+        description: "Count of PullRequestEvent occurrences"
+      - name: issue_comment_events
+        description: "Count of IssueCommentEvent occurrences"
+      - name: distinct_actors
+        description: "Count of unique GitHub actors performing events"
+      - name: events_deviation_pct
+        description: "Percent deviation of daily events compared to 7 days ago"
+      - name: processing_latency_seconds
+        description: "Average delay in seconds between event creation and ingestion"
+      - name: last_ingested_at
+        description: "Most recent ingested_at timestamp for the day's events"

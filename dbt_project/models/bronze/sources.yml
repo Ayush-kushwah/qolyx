@@ -1,0 +1,12 @@
+version: 2
+
+sources:
+  - name: qolyx_source
+    schema: public
+    tables:
+      - name: bronze_financial_candles
+        description: "Raw Finnhub stock candle data ingested every 5 minutes"
+      - name: bronze_fda_events
+        description: "Raw FDA adverse event data ingested every 5 minutes"
+      - name: bronze_github_events
+        description: "Raw GitHub Archive event data ingested every 5 minutes"

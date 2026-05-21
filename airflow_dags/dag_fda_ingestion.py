@@ -1,5 +1,6 @@
 from datetime import datetime, timedelta
 import logging
+from typing import Any
 from airflow import DAG
 from airflow.operators.python import PythonOperator
 
@@ -15,7 +16,7 @@ default_args = {
     "retry_delay": timedelta(minutes=5),
 }
 
-def execute_fda_ingestion(**context) -> None:
+def execute_fda_ingestion(**context: Any) -> None:
     """Task callable to execute the FDA Adverse Drug Events ingestion."""
     from backend.core.database import SessionLocal
     from backend.modules.ingestion.services import run_ingestion_sync
@@ -31,6 +32,37 @@ def execute_fda_ingestion(**context) -> None:
     finally:
         db.close()
 
+def execute_dbt_run(**context: Any) -> None:
+    """Task callable to execute DBT models and tests for FDA."""
+    import subprocess
+
+    logger.info("Starting DBT transformation and tests for FDA")
+    
+    commands = [
+        ["dbt", "run", "--models", "bronze_fda_events", "silver_fda_events", "gold_fda_severity_stats"],
+        ["dbt", "test", "--models", "bronze_fda_events", "--store-failures"]
+    ]
+    
+    for cmd in commands:
+        logger.info(f"Running DBT command: {' '.join(cmd)}")
+        result = subprocess.run(
+            cmd,
+            cwd="/usr/app/dbt_project",
+            capture_output=True,
+            text=True
+        )
+        
+        if result.stdout:
+            logger.info(f"DBT STDOUT:\n{result.stdout}")
+        if result.stderr:
+            logger.warning(f"DBT STDERR:\n{result.stderr}")
+            
+        if result.returncode != 0:
+            logger.error(f"DBT command failed with return code {result.returncode}")
+            raise Exception(f"DBT command failed: {' '.join(cmd)}")
+            
+    logger.info("DBT transformation and tests completed successfully")
+
 with DAG(
     dag_id="qolyx_fda_ingestion",
     default_args=default_args,
@@ -45,3 +77,12 @@ with DAG(
         python_callable=execute_fda_ingestion,
         provide_context=True,
     )
+
+    task_dbt = PythonOperator(
+        task_id="run_dbt_models",
+        python_callable=execute_dbt_run,
+        provide_context=True,
+    )
+
+    task_ingest >> task_dbt
+

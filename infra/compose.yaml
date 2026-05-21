@@ -103,6 +103,30 @@ services:
       timeout: 10s
       retries: 5
 
+  qolyx-dbt:
+    image: ghcr.io/dbt-labs/dbt-postgres:1.7.0
+    container_name: qolyx-dbt
+    restart: "no"
+    entrypoint: []
+    environment:
+      - DBT_HOST=qolyx-db
+      - DBT_USER=${POSTGRES_USER}
+      - DBT_PASSWORD=${POSTGRES_PASSWORD}
+      - DBT_PORT=5432
+      - DBT_DBNAME=${POSTGRES_DB}
+      - DBT_PROFILES_DIR=/usr/app/dbt_project
+    volumes:
+      - ../dbt_project:/usr/app/dbt_project
+    working_dir: /usr/app/dbt_project
+    depends_on:
+      qolyx-db:
+        condition: service_healthy
+    command: >
+      sh -c "dbt deps &&
+             dbt seed --full-refresh &&
+             dbt run --models bronze+ &&
+             dbt test --store-failures"
+
 volumes:
   qolyx-db-data:
     driver: local

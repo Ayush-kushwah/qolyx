@@ -1,5 +1,6 @@
 from datetime import datetime, timedelta
 import logging
+from typing import Any
 from airflow import DAG
 from airflow.operators.python import PythonOperator
 
@@ -15,7 +16,7 @@ default_args = {
     "retry_delay": timedelta(minutes=5),
 }
 
-def execute_finnhub_ingestion(**context) -> None:
+def execute_finnhub_ingestion(**context: Any) -> None:
     """Task callable to execute the Finnhub stock candles ingestion."""
     from backend.core.database import SessionLocal
     from backend.modules.ingestion.services import run_ingestion_sync
@@ -31,6 +32,37 @@ def execute_finnhub_ingestion(**context) -> None:
     finally:
         db.close()
 
+def execute_dbt_run(**context: Any) -> None:
+    """Task callable to execute DBT models and tests for Finnhub."""
+    import subprocess
+
+    logger.info("Starting DBT transformation and tests for Finnhub")
+    
+    commands = [
+        ["dbt", "run", "--models", "bronze_financial_candles", "silver_financial_candles", "gold_daily_market_summary"],
+        ["dbt", "test", "--models", "bronze_financial_candles", "--store-failures"]
+    ]
+    
+    for cmd in commands:
+        logger.info(f"Running DBT command: {' '.join(cmd)}")
+        result = subprocess.run(
+            cmd,
+            cwd="/usr/app/dbt_project",
+            capture_output=True,
+            text=True
+        )
+        
+        if result.stdout:
+            logger.info(f"DBT STDOUT:\n{result.stdout}")
+        if result.stderr:
+            logger.warning(f"DBT STDERR:\n{result.stderr}")
+            
+        if result.returncode != 0:
+            logger.error(f"DBT command failed with return code {result.returncode}")
+            raise Exception(f"DBT command failed: {' '.join(cmd)}")
+            
+    logger.info("DBT transformation and tests completed successfully")
+
 with DAG(
     dag_id="qolyx_finnhub_ingestion",
     default_args=default_args,
@@ -45,3 +77,12 @@ with DAG(
         python_callable=execute_finnhub_ingestion,
         provide_context=True,
     )
+
+    task_dbt = PythonOperator(
+        task_id="run_dbt_models",
+        python_callable=execute_dbt_run,
+        provide_context=True,
+    )
+
+    task_ingest >> task_dbt
+

@@ -41,6 +41,32 @@ class Settings(BaseSettings):
     AIRFLOW_FERNET_KEY: str = ""
     AIRFLOW_SECRET_KEY: str = ""
 
+    # JWT configuration
+    JWT_ALGORITHM: str = "HS256"
+    JWT_EXPIRY_MINUTES: int = 60
+
+    # Database Pool configurations
+    DB_POOL_SIZE: int = 20
+    DB_MAX_OVERFLOW: int = 10
+
+    # SMTP configurations
+    SMTP_SERVER: str = "qolyx-mail"
+    SMTP_PORT: int = 1025
+
+    # Additional Airflow settings
+    AIRFLOW_UID: int = 50000
+    AIRFLOW_GID: int = 0
+    AIRFLOW__CORE__EXECUTOR: str = "LocalExecutor"
+
+    # dbt Configuration
+    DBT_HOST: str = "qolyx-db"
+    DBT_USER: str = ""
+    DBT_PASSWORD: str = ""
+    DBT_PORT: int = 5432
+    DBT_DBNAME: str = ""
+    DBT_TARGET: str = "dev"
+
+
     # Load parameters strictly from file
     model_config = SettingsConfigDict(
         env_file=".env",

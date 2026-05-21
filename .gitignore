@@ -266,3 +266,10 @@ Thumbs.db
 *.crt
 secrets/
 
+# dbt folders
+dbt_project/dbt_packages/
+dbt_project/logs/
+dbt_project/target/
+
+# Scratch folder
+scratch/

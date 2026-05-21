@@ -1,0 +1,136 @@
+version: 2
+
+models:
+  - name: silver_financial_candles
+    description: "Silver table for cleaned and validated financial candle data."
+    columns:
+      - name: silver_id
+        description: "Surrogate key generated from pipeline_run_id, symbol, and candle_timestamp"
+        tests:
+          - unique
+          - not_null
+      - name: bronze_id
+        description: "Reference to the original record ID in the bronze table"
+        tests:
+          - not_null
+          - relationships:
+              to: ref('bronze_financial_candles')
+              field: id
+      - name: pipeline_run_id
+        description: "Identifier for the pipeline ingestion run"
+        tests:
+          - not_null
+      - name: symbol
+        description: "Stock symbol associated with the candles"
+        tests:
+          - not_null
+      - name: open_price
+        description: "Cleaned stock price at market open"
+      - name: high_price
+        description: "Cleaned highest stock price during the candle interval"
+      - name: low_price
+        description: "Cleaned lowest stock price during the candle interval"
+      - name: close_price
+        description: "Cleaned stock price at market close"
+      - name: volume
+        description: "Cleaned volume (always > 0)"
+      - name: candle_timestamp
+        description: "Timestamp of the stock candle"
+      - name: ingested_at
+        description: "Timestamp when the record was ingested"
+      - name: validation_status
+        description: "Quality validation status of the candle data"
+        tests:
+          - not_null
+          - accepted_values:
+              values: ['VALID', 'INVALID_HIGH_LOW', 'INVALID_CLOSE']
+
+  - name: silver_fda_events
+    description: "Silver table for cleaned and validated FDA adverse events data."
+    columns:
+      - name: silver_id
+        description: "Surrogate key generated from pipeline_run_id, receipt_date, and drug_name"
+        tests:
+          - unique
+          - not_null
+      - name: bronze_id
+        description: "Reference to the original record ID in the bronze table"
+        tests:
+          - not_null
+          - relationships:
+              to: ref('bronze_fda_events')
+              field: id
+      - name: pipeline_run_id
+        description: "Identifier for the pipeline ingestion run"
+        tests:
+          - not_null
+      - name: receipt_date
+        description: "The date the FDA received the adverse event report"
+        tests:
+          - not_null
+      - name: serious
+        description: "Seriousness code of the event (1 for serious, 2 for other)"
+      - name: reporter_country
+        description: "Country of the reporter"
+      - name: drug_name
+        description: "Name of the drug involved in the event"
+      - name: reaction_description
+        description: "Description of the adverse reaction"
+      - name: seriousness_hospitalization
+        description: "Whether the adverse event resulted in hospitalization"
+      - name: raw_payload
+        description: "The full raw JSON payload of the event"
+      - name: ingested_at
+        description: "Timestamp when the record was ingested"
+      - name: validation_status
+        description: "Quality validation status of the FDA event"
+        tests:
+          - not_null
+          - accepted_values:
+              values: ['VALID', 'INVALID_RECEIPT_DATE', 'INVALID_SERIOUS_VALUE', 'WARNING_MISSING_SERIOUS']
+
+  - name: silver_github_events
+    description: "Silver table for cleaned and validated GitHub event data."
+    columns:
+      - name: silver_id
+        description: "Surrogate key generated from pipeline_run_id and event_id"
+        tests:
+          - unique
+          - not_null
+      - name: bronze_id
+        description: "Reference to the original record ID in the bronze table"
+        tests:
+          - not_null
+          - relationships:
+              to: ref('bronze_github_events')
+              field: id
+      - name: pipeline_run_id
+        description: "Identifier for the pipeline ingestion run"
+        tests:
+          - not_null
+      - name: event_id
+        description: "The unique event ID from the GitHub Archive"
+        tests:
+          - not_null
+      - name: event_type
+        description: "The type of GitHub event"
+        tests:
+          - not_null
+      - name: actor_login
+        description: "The username of the actor who performed the event"
+      - name: repo_name
+        description: "The name of the GitHub repository"
+      - name: payload_action
+        description: "The action performed (if applicable, e.g. opened)"
+      - name: created_at
+        description: "The timestamp when the event was created on GitHub"
+      - name: raw_payload
+        description: "The full raw JSON payload of the event"
+      - name: ingested_at
+        description: "Timestamp when the record was ingested"
+      - name: validation_status
+        description: "Quality validation status of the GitHub event"
+        tests:
+          - not_null
+          - accepted_values:
+              values: ['VALID', 'INVALID_CREATED_AT']

@@ -1,0 +1,15 @@
+qolyx:
+  target: dev
+  outputs:
+    dev:
+      type: postgres
+      host: "{{ env_var('DBT_HOST', 'qolyx-db') }}"
+      user: "{{ env_var('DBT_USER', 'qolyx_admin') }}"
+      password: "{{ env_var('DBT_PASSWORD', 'qolyx_secure_pass') }}"
+      port: "{{ env_var('DBT_PORT', '5432') | int }}"
+      dbname: "{{ env_var('DBT_DBNAME', 'qolyx_prod') }}"
+      schema: public
+      threads: 4
+      keepalives_idle: 0
+      connect_timeout: 10
+      retries: 3

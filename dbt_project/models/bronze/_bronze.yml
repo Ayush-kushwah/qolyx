@@ -1,0 +1,100 @@
+version: 2
+
+models:
+  - name: bronze_financial_candles
+    description: "Bronze table for raw financial candle data, filtered to the last 24 hours."
+    columns:
+      - name: id
+        description: "Primary key of the raw record"
+        tests:
+          - unique
+          - not_null
+      - name: pipeline_run_id
+        description: "Identifier for the pipeline ingestion run"
+        tests:
+          - not_null
+      - name: symbol
+        description: "Stock symbol associated with the candles"
+        tests:
+          - not_null
+      - name: open_price
+        description: "Stock price at market open"
+      - name: high_price
+        description: "Highest stock price during the candle interval"
+      - name: low_price
+        description: "Lowest stock price during the candle interval"
+      - name: close_price
+        description: "Stock price at market close"
+      - name: volume
+        description: "Number of shares traded during the candle interval"
+      - name: candle_timestamp
+        description: "Timestamp of the stock candle"
+      - name: ingested_at
+        description: "Timestamp when the record was ingested"
+        tests:
+          - not_null
+
+  - name: bronze_fda_events
+    description: "Bronze table for raw FDA adverse events data, filtered to the last 24 hours."
+    columns:
+      - name: id
+        description: "Primary key of the raw record"
+        tests:
+          - unique
+          - not_null
+      - name: pipeline_run_id
+        description: "Identifier for the pipeline ingestion run"
+        tests:
+          - not_null
+      - name: receipt_date
+        description: "The date the FDA received the adverse event report"
+      - name: serious
+        description: "Seriousness code of the event (1 for serious, 2 for other)"
+      - name: reporter_country
+        description: "Country of the reporter"
+      - name: drug_name
+        description: "Name of the drug involved in the event"
+      - name: reaction_description
+        description: "Description of the adverse reaction"
+      - name: seriousness_hospitalization
+        description: "Whether the adverse event resulted in hospitalization (1 for yes)"
+      - name: raw_payload
+        description: "The full raw JSON payload of the event"
+      - name: ingested_at
+        description: "Timestamp when the record was ingested"
+        tests:
+          - not_null
+
+  - name: bronze_github_events
+    description: "Bronze table for raw GitHub Archive event data, filtered to the last 24 hours."
+    columns:
+      - name: id
+        description: "Primary key of the raw record"
+        tests:
+          - unique
+          - not_null
+      - name: pipeline_run_id
+        description: "Identifier for the pipeline ingestion run"
+        tests:
+          - not_null
+      - name: event_id
+        description: "The unique event ID from the GitHub Archive"
+        tests:
+          - unique
+          - not_null
+      - name: event_type
+        description: "The type of GitHub event (e.g. PushEvent)"
+      - name: actor_login
+        description: "The username of the actor who performed the event"
+      - name: repo_name
+        description: "The name of the GitHub repository"
+      - name: payload_action
+        description: "The action performed (if applicable, e.g. opened)"
+      - name: created_at
+        description: "The timestamp when the event was created on GitHub"
+      - name: raw_payload
+        description: "The full raw JSON payload of the event"
+      - name: ingested_at
+        description: "Timestamp when the record was ingested"
+        tests:
+          - not_null

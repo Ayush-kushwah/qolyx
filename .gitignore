@@ -220,27 +220,49 @@ __marimo__/
 # Internal AI governance — never push
 .ai/
 
-# Python
+# Antigravity temporary scratch files
+*.txt
+match_*
+step_*
+prompt_*
+scenario_mentions*
+task_9_*
+full_task_9_*
+pdf_search*
+demo/extract.py
+*.log
+
+# Python cache
 __pycache__/
 *.pyc
-*.pyo
-venv/
-.venv/
-*.egg-info/
 .pytest_cache/
+.mypy_cache/
+.coverage
+htmlcov/
+*.egg-info/
 
-# Environment secrets
+# Environment files with secrets
 .env
 .env.local
+.env.production
+.env.*.local
 
-# Next.js
-frontend/.next/
-frontend/node_modules/
-
-# Docker
-*.log
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
 
 # OS
 .DS_Store
 Thumbs.db
+
+# Docker
+*.log
+
+# Secrets and keys
+*.pem
+*.key
+*.crt
+secrets/
 

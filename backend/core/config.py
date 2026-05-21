@@ -33,6 +33,13 @@ class Settings(BaseSettings):
     # Alert bindings
     ALERT_EMAIL_SENDER: str = "alerts@qolyx.ai"
     SLACK_WEBHOOK_URL: Optional[str] = None
+    
+    # External APIs
+    FINNHUB_API_KEY: Optional[str] = None
+
+    # Airflow configuration keys
+    AIRFLOW_FERNET_KEY: str = ""
+    AIRFLOW_SECRET_KEY: str = ""
 
     # Load parameters strictly from file
     model_config = SettingsConfigDict(

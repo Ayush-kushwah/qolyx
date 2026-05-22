@@ -1,5 +1,6 @@
 from datetime import datetime, timedelta
 import logging
+import uuid
 from typing import Any
 from airflow import DAG
 from airflow.operators.python import PythonOperator
@@ -16,7 +17,7 @@ default_args = {
     "retry_delay": timedelta(minutes=5),
 }
 
-def execute_github_ingestion(**context: Any) -> None:
+def execute_github_ingestion(**context: Any) -> uuid.UUID:
     """Task callable to execute the GitHub Archive events ingestion."""
     from backend.core.database import SessionLocal
     from backend.modules.ingestion.services import run_ingestion_sync
@@ -26,6 +27,7 @@ def execute_github_ingestion(**context: Any) -> None:
     try:
         pipeline_run_id = run_ingestion_sync(db, "github")
         logger.info("GitHub Archive events ingestion task completed successfully", extra={"pipeline_run_id": str(pipeline_run_id)})
+        return pipeline_run_id
     except Exception as exc:
         logger.error("GitHub Archive events ingestion task failed", exc_info=True)
         raise
@@ -35,6 +37,28 @@ def execute_github_ingestion(**context: Any) -> None:
 def execute_dbt_run(**context: Any) -> None:
     """Task callable to execute DBT models and tests for GitHub."""
     import subprocess
+    from backend.core.database import SessionLocal
+    from backend.modules.contracts.services import get_violations_for_run, get_total_penalty_for_run
+
+    from backend.core.exceptions import PipelineBlockedException
+
+    pipeline_run_id = context["task_instance"].xcom_pull(task_ids="ingest_github_events")
+    if not pipeline_run_id:
+        raise Exception("No pipeline_run_id found in XCom.")
+
+    if isinstance(pipeline_run_id, str):
+        pipeline_run_id = uuid.UUID(pipeline_run_id)
+
+    db = SessionLocal()
+    try:
+        violations = get_violations_for_run(db, pipeline_run_id)
+        if violations:
+            total_penalty = get_total_penalty_for_run(db, pipeline_run_id)
+            for v in violations:
+                logger.error(f"Contract violation: {v.violation_type} - {v.description}")
+            raise PipelineBlockedException(f"Pipeline BLOCKED: {len(violations)} contract violations. Total penalty: {total_penalty}/40. Fix schema issues and retry.")
+    finally:
+        db.close()
 
     logger.info("Starting DBT transformation and tests for GitHub")
     
@@ -85,4 +109,3 @@ with DAG(
     )
 
     task_ingest >> task_dbt
-

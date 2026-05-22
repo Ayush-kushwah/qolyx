@@ -15,6 +15,7 @@ from backend.core import events
 from backend.core.events import redis_client
 from backend.core.exceptions import QolyxException
 from backend.modules.ingestion.models import BronzeFdaEvent, BronzeFinancialCandle, BronzeGithubEvent
+from backend.modules.contracts.services import validate_pipeline_run
 
 logger = logging.getLogger("qolyx.ingestion.service")
 
@@ -363,6 +364,30 @@ class IngestionService:
 
         # Save records to the corresponding Bronze table
         cls.save_bronze_records(db, source_name, records, pipeline_run_id)
+
+        # Determine table_name from source_name
+        table_name_map = {
+            "finnhub": "bronze_financial_candles",
+            "fda": "bronze_fda_events",
+            "github": "bronze_github_events",
+        }
+        table_name = table_name_map[source_name]
+
+        validation_result = validate_pipeline_run(
+            db=db,
+            table_name=table_name,
+            pipeline_run_id=pipeline_run_id,
+            sample_data=records[0] if records else None
+        )
+
+        logger.info(
+            f"Contract validation for {source_name}: {'PASSED' if validation_result.is_valid else 'FAILED'}",
+            extra={
+                "pipeline_run_id": str(pipeline_run_id),
+                "violation_count": validation_result.violation_count,
+                "total_penalty": validation_result.total_penalty
+            }
+        )
 
         return pipeline_run_id
 

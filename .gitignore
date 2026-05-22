@@ -266,10 +266,11 @@ Thumbs.db
 *.crt
 secrets/
 
-# dbt folders
+# dbt compiled output — never commit
+dbt_project/target/
+dbt_project/.user.yml
 dbt_project/dbt_packages/
 dbt_project/logs/
-dbt_project/target/
 
 # Scratch folder
 scratch/

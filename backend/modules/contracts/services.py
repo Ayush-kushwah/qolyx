@@ -1,11 +1,15 @@
 import uuid
 import json
+import logging
 from typing import Dict, List, Optional, Union
 from sqlalchemy.orm import Session
 from sqlalchemy import inspect
 
 from backend.core.events import publish
+from backend.core.exceptions import PipelineBlockedException
 from backend.modules.contracts.models import Contract, ContractViolation
+
+logger = logging.getLogger("qolyx.contracts.services")
 from backend.modules.contracts.schemas import (
     ColumnExpectation,
     ContractValidationResult,
@@ -343,3 +347,38 @@ def get_total_penalty_for_run(db: Session, pipeline_run_id: uuid.UUID) -> int:
     """Calculate the total contract violations trust penalty for a pipeline run, capped at 40 points."""
     violations_count = db.query(ContractViolation).filter(ContractViolation.pipeline_run_id == pipeline_run_id).count()
     return min(violations_count * 10, 40)
+
+
+def enforce_pipeline_gate(
+    db: Session, 
+    pipeline_run_id: uuid.UUID
+) -> None:
+    """Checks contract violations and raises 
+    PipelineBlockedException if any exist.
+    Called after validation completes.
+    
+    Raises:
+        PipelineBlockedException: if violations exist
+    """
+    violations = get_violations_for_run(db, pipeline_run_id)
+    if violations:
+        total_penalty = get_total_penalty_for_run(
+            db, pipeline_run_id)
+        logger.error(
+            "Pipeline BLOCKED due to contract violations",
+            extra={
+                "pipeline_run_id": str(pipeline_run_id),
+                "violations_count": len(violations),
+                "total_penalty": total_penalty
+            }
+        )
+        raise PipelineBlockedException(
+            f"Pipeline BLOCKED: {len(violations)} contract "
+            f"violations detected. Total penalty: "
+            f"{total_penalty}/40.",
+            details={
+                "pipeline_run_id": str(pipeline_run_id),
+                "violations_count": len(violations),
+                "total_penalty": total_penalty
+            }
+        )

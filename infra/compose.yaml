@@ -95,7 +95,7 @@ services:
     command: >
       bash -c "pip install httpx sqlalchemy psycopg2-binary redis &&
                airflow db migrate &&
-               airflow users create --username admin --password admin --firstname Qolyx --lastname Admin --role Admin --email admin@qolyx.ai &&
+               (airflow users create --username admin --password admin --firstname Qolyx --lastname Admin --role Admin --email admin@qolyx.ai || true) &&
                airflow webserver & airflow scheduler"
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8080/health"]

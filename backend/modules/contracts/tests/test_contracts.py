@@ -12,9 +12,11 @@ from backend.modules.contracts.services import (
     generate_contract_from_table,
     initialize_contracts,
     get_violations_for_run,
-    get_total_penalty_for_run
+    get_total_penalty_for_run,
+    enforce_pipeline_gate
 )
 from backend.modules.contracts.schemas import ColumnExpectation, GenerateContractResponse
+from backend.core.exceptions import PipelineBlockedException
 from backend.modules.ingestion.models import BronzeFinancialCandle, BronzeFdaEvent, BronzeGithubEvent
 
 
@@ -333,3 +335,45 @@ def test_generate_contract_saves_after_edit(db_session):
     assert retrieved is not None
     assert retrieved.schema_definition["symbol"]["max_length"] == 20
     assert retrieved.schema_definition["open_price"]["is_required"] is True
+
+
+def test_enforce_pipeline_gate(db_session):
+    """Test that enforce_pipeline_gate passes when there are no violations,
+    and raises PipelineBlockedException when violations exist.
+    """
+    pipeline_run_id = uuid.uuid4()
+    
+    # 1. No violations -> Should not raise
+    enforce_pipeline_gate(db_session, pipeline_run_id)
+    
+    # Seed contract
+    contract = Contract(
+        name="Test Contract",
+        table_name="bronze_financial_candles",
+        version=1,
+        schema_definition={},
+        is_active=True
+    )
+    db_session.add(contract)
+    db_session.commit()
+    db_session.refresh(contract)
+    
+    # 2. Add a violation
+    viol = ContractViolation(
+        contract_id=contract.id,
+        pipeline_run_id=pipeline_run_id,
+        violation_type="missing_column",
+        description="Missing required column symbol",
+        penalty_amount=10
+    )
+    db_session.add(viol)
+    db_session.commit()
+    
+    # Enforce -> Should raise PipelineBlockedException
+    with pytest.raises(PipelineBlockedException) as exc_info:
+        enforce_pipeline_gate(db_session, pipeline_run_id)
+        
+    assert "Pipeline BLOCKED" in str(exc_info.value)
+    assert exc_info.value.details["pipeline_run_id"] == str(pipeline_run_id)
+    assert exc_info.value.details["violations_count"] == 1
+    assert exc_info.value.details["total_penalty"] == 10

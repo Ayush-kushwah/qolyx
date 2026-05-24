@@ -38,9 +38,7 @@ def execute_dbt_run(**context: Any) -> None:
     """Task callable to execute DBT models and tests for FDA."""
     import subprocess
     from backend.core.database import SessionLocal
-    from backend.modules.contracts.services import get_violations_for_run, get_total_penalty_for_run
-
-    from backend.core.exceptions import PipelineBlockedException
+    from backend.modules.contracts.services import enforce_pipeline_gate
 
     pipeline_run_id = context["task_instance"].xcom_pull(task_ids="ingest_fda_events")
     if not pipeline_run_id:
@@ -51,12 +49,7 @@ def execute_dbt_run(**context: Any) -> None:
 
     db = SessionLocal()
     try:
-        violations = get_violations_for_run(db, pipeline_run_id)
-        if violations:
-            total_penalty = get_total_penalty_for_run(db, pipeline_run_id)
-            for v in violations:
-                logger.error(f"Contract violation: {v.violation_type} - {v.description}")
-            raise PipelineBlockedException(f"Pipeline BLOCKED: {len(violations)} contract violations. Total penalty: {total_penalty}/40. Fix schema issues and retry.")
+        enforce_pipeline_gate(db, pipeline_run_id)
     finally:
         db.close()
 

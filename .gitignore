@@ -275,6 +275,6 @@ dbt_project/logs/
 # Scratch folder
 scratch/
 
-# Contracts module — local test files
-contracts/test_contracts/
-contracts/*.local.yml
+# Anomaly detection models
+*.pkl
+models/

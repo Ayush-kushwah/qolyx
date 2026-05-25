@@ -53,6 +53,7 @@ services:
       - ALERT_EMAIL_SENDER=${ALERT_EMAIL_SENDER}
       - SLACK_WEBHOOK_URL=${SLACK_WEBHOOK_URL}
       - FINNHUB_API_KEY=${FINNHUB_API_KEY}
+      - ANOMALY_DECAY_FACTOR=${ANOMALY_DECAY_FACTOR}
     depends_on:
       qolyx-db:
         condition: service_healthy
@@ -81,6 +82,7 @@ services:
       - FINNHUB_API_KEY=${FINNHUB_API_KEY}
       - SECRET_KEY=${SECRET_KEY}
       - ENVIRONMENT=${ENVIRONMENT}
+      - ANOMALY_DECAY_FACTOR=${ANOMALY_DECAY_FACTOR}
     volumes:
       - ../airflow_dags:/opt/airflow/dags
       - ../backend:/opt/airflow/backend

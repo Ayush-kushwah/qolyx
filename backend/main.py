@@ -6,7 +6,7 @@ from fastapi.middleware.cors import CORSMiddleware
 # Ensure structured logging is configured
 from backend.core import logging as _logging
 from backend.core.config import settings
-from backend.api.routes import health, contracts
+from backend.api.routes import health, contracts, anomaly
 
 logger = logging.getLogger("qolyx.main")
 
@@ -52,6 +52,7 @@ app.add_middleware(
 # Register endpoints under canonical prefix /api
 app.include_router(health.router, prefix="/api")
 app.include_router(contracts.router, prefix="/api")
+app.include_router(anomaly.router, prefix="/api")
 
 
 @app.get("/")

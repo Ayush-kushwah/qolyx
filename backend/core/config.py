@@ -36,6 +36,7 @@ class Settings(BaseSettings):
     
     # External APIs
     FINNHUB_API_KEY: Optional[str] = None
+    ANOMALY_DECAY_FACTOR: float = 0.95
 
     # Airflow configuration keys
     AIRFLOW_FERNET_KEY: str = ""

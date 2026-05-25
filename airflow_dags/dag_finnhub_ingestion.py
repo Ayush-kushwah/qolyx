@@ -80,6 +80,30 @@ def execute_dbt_run(**context: Any) -> None:
             
     logger.info("DBT transformation and tests completed successfully")
 
+def execute_anomaly_detection(**context: Any) -> None:
+    """Task callable to execute anomaly detection using Isolation Forest."""
+    from backend.core.database import SessionLocal
+    from backend.modules.anomaly.feature_service import get_features_for_run
+    from backend.modules.anomaly.detection_service import detect_anomalies
+
+    pipeline_run_id = context["task_instance"].xcom_pull(task_ids="ingest_finnhub_candles")
+    if not pipeline_run_id:
+        logger.warning("No pipeline_run_id found in XCom.")
+        return
+
+    if isinstance(pipeline_run_id, str):
+        pipeline_run_id = uuid.UUID(pipeline_run_id)
+
+    db = SessionLocal()
+    try:
+        feature_values = get_features_for_run(db, pipeline_run_id)
+        if feature_values:
+            detect_anomalies(db, pipeline_run_id, "bronze_financial_candles", feature_values)
+        else:
+            logger.warning(f"No SilverAnomalyFeature values found for run: {pipeline_run_id}")
+    finally:
+        db.close()
+
 with DAG(
     dag_id="qolyx_finnhub_ingestion",
     default_args=default_args,
@@ -101,4 +125,10 @@ with DAG(
         provide_context=True,
     )
 
-    task_ingest >> task_dbt
+    task_anomaly = PythonOperator(
+        task_id="run_anomaly_detection",
+        python_callable=execute_anomaly_detection,
+        provide_context=True,
+    )
+
+    task_ingest >> task_dbt >> task_anomaly

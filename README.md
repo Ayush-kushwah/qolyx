@@ -274,8 +274,8 @@ qolyx/
 | Phase 3 — Ingestion + Bronze Layer | ✅ Complete | 3 Airflow DAGs, raw data loading, error handling |
 | Phase 4 — dbt Transformations | ✅ Complete | Bronze → Silver → Gold, CI/CD for models |
 | Phase 5 — Contracts Module | ✅ Complete | Schema validation, pipeline gating, YAML contracts |
-| Phase 6 — Profiling + Anomaly Engine | 🔄 In Progress | Baseline learning, Isolation Forest, PSI |
-| Phase 7 — Trust Score System | ⏳ Pending | Core scoring engine, explainability breakdown |
+| Phase 6 — Profiling + Anomaly Engine | ✅ Complete | Baseline learning, Isolation Forest, PSI |
+| Phase 7 — Trust Score System | 🔄 In Progress | Core scoring engine, explainability breakdown |
 | Phase 8 — Incidents + Timeline | ⏳ Pending | RCA generation, event timeline, severity grading |
 | Phase 9 — Lineage Tracking | ⏳ Pending | OpenLineage, graph traversal, affected assets API |
 | Phase 10 — Frontend Dashboards | ⏳ Pending | Next.js, D3 lineage explorer, real-time updates |

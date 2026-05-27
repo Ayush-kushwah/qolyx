@@ -54,6 +54,8 @@ services:
       - SLACK_WEBHOOK_URL=${SLACK_WEBHOOK_URL}
       - FINNHUB_API_KEY=${FINNHUB_API_KEY}
       - ANOMALY_DECAY_FACTOR=${ANOMALY_DECAY_FACTOR}
+      - EVENT_RETRY_COUNT=${EVENT_RETRY_COUNT}
+      - EVENT_RETRY_DELAY_SECONDS=${EVENT_RETRY_DELAY_SECONDS}
     depends_on:
       qolyx-db:
         condition: service_healthy
@@ -83,9 +85,15 @@ services:
       - SECRET_KEY=${SECRET_KEY}
       - ENVIRONMENT=${ENVIRONMENT}
       - ANOMALY_DECAY_FACTOR=${ANOMALY_DECAY_FACTOR}
+      - EVENT_RETRY_COUNT=${EVENT_RETRY_COUNT}
+      - EVENT_RETRY_DELAY_SECONDS=${EVENT_RETRY_DELAY_SECONDS}
+      - DBT_LOG_PATH=/tmp/dbt_logs
+      - DBT_TARGET_PATH=/tmp/dbt_target
+      - AIRFLOW__CORE__DAGBAG_IMPORT_TIMEOUT=60
     volumes:
       - ../airflow_dags:/opt/airflow/dags
       - ../backend:/opt/airflow/backend
+      - ../dbt_project:/usr/app/dbt_project
       - airflow-logs:/opt/airflow/logs
     ports:
       - "${AIRFLOW_PORT}:8080"
@@ -95,10 +103,10 @@ services:
       qolyx-cache:
         condition: service_healthy
     command: >
-      bash -c "pip install httpx sqlalchemy psycopg2-binary redis &&
+      bash -c "pip install --no-cache-dir \"numpy<2\" \"pandas<2.2\" \"sqlalchemy<1.5\" \"redis<5.0\" \"pydantic<2.7\" scikit-learn shap pydantic-settings dbt-postgres==1.7.0 psycopg2-binary &&
                airflow db migrate &&
                (airflow users create --username admin --password admin --firstname Qolyx --lastname Admin --role Admin --email admin@qolyx.ai || true) &&
-               airflow webserver & airflow scheduler"
+               (airflow webserver & airflow scheduler)"
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
       interval: 30s

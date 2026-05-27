@@ -59,6 +59,54 @@ def publish(event_type: str, payload: dict) -> None:
         )
         raise
 
+def publish_with_retry(
+    event_type: str, 
+    payload: dict, 
+    retries: Optional[int] = None, 
+    delay: Optional[float] = None
+) -> None:
+    """Publish event with retry logic. Logs error but does not raise if all retries fail."""
+    import time
+    
+    if retries is None:
+        retries = getattr(settings, 'EVENT_RETRY_COUNT', 3)
+    if delay is None:
+        delay = getattr(settings, 'EVENT_RETRY_DELAY_SECONDS', 0.5)
+        
+    for attempt in range(retries):
+        try:
+            publish(event_type, payload)
+            logger.info(
+                "Successfully published event",
+                extra={
+                    "event_type": event_type,
+                    "attempt": attempt + 1,
+                    "max_retries": retries
+                }
+            )
+            return
+        except Exception as exc:
+            logger.warning(
+                "Failed to publish event, retrying...",
+                exc_info=True,
+                extra={
+                    "event_type": event_type,
+                    "attempt": attempt + 1,
+                    "max_retries": retries,
+                    "error": str(exc)
+                }
+            )
+            if attempt < retries - 1:
+                time.sleep(delay)
+                
+    logger.error(
+        "Failed to publish event after all retry attempts",
+        extra={
+            "event_type": event_type,
+            "max_retries": retries
+        }
+    )
+
 def subscribe(event_type: str, handler: Callable[[dict], None]) -> Any:
     """Subscribes a callable handler to a specific event type channel.
     

@@ -37,6 +37,8 @@ class Settings(BaseSettings):
     # External APIs
     FINNHUB_API_KEY: Optional[str] = None
     ANOMALY_DECAY_FACTOR: float = 0.95
+    EVENT_RETRY_COUNT: int = 3
+    EVENT_RETRY_DELAY_SECONDS: float = 0.5
 
     # Airflow configuration keys
     AIRFLOW_FERNET_KEY: str = ""

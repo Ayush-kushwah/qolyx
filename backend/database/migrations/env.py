@@ -13,8 +13,9 @@ sys.path.insert(0, dirname(dirname(dirname(dirname(abspath(__file__))))))
 
 from backend.core.config import settings
 from backend.core.database import Base
-from backend.modules.trust_scoring import models as _
 from backend.modules.contracts import models as _
+from backend.modules.trust_score import models as _
+from backend.modules.anomaly import models as _
 from backend.modules.incidents import models as _
 from backend.modules.lineage import models as _
 from backend.modules.profiling import models as _

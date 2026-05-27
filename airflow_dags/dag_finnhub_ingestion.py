@@ -17,7 +17,7 @@ default_args = {
     "retry_delay": timedelta(minutes=5),
 }
 
-def execute_finnhub_ingestion(**context: Any) -> uuid.UUID:
+def execute_finnhub_ingestion(**context: Any) -> str:
     """Task callable to execute the Finnhub stock candles ingestion."""
     from backend.core.database import SessionLocal
     from backend.modules.ingestion.services import run_ingestion_sync
@@ -27,7 +27,7 @@ def execute_finnhub_ingestion(**context: Any) -> uuid.UUID:
     try:
         pipeline_run_id = run_ingestion_sync(db, "finnhub")
         logger.info("Finnhub ingestion task completed successfully", extra={"pipeline_run_id": str(pipeline_run_id)})
-        return pipeline_run_id
+        return str(pipeline_run_id)
     except Exception as exc:
         logger.error("Finnhub ingestion task failed", exc_info=True)
         raise

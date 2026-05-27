@@ -17,7 +17,7 @@ default_args = {
     "retry_delay": timedelta(minutes=5),
 }
 
-def execute_github_ingestion(**context: Any) -> uuid.UUID:
+def execute_github_ingestion(**context: Any) -> str:
     """Task callable to execute the GitHub Archive events ingestion."""
     from backend.core.database import SessionLocal
     from backend.modules.ingestion.services import run_ingestion_sync
@@ -27,7 +27,7 @@ def execute_github_ingestion(**context: Any) -> uuid.UUID:
     try:
         pipeline_run_id = run_ingestion_sync(db, "github")
         logger.info("GitHub Archive events ingestion task completed successfully", extra={"pipeline_run_id": str(pipeline_run_id)})
-        return pipeline_run_id
+        return str(pipeline_run_id)
     except Exception as exc:
         logger.error("GitHub Archive events ingestion task failed", exc_info=True)
         raise

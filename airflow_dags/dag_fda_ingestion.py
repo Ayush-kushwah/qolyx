@@ -17,7 +17,7 @@ default_args = {
     "retry_delay": timedelta(minutes=5),
 }
 
-def execute_fda_ingestion(**context: Any) -> uuid.UUID:
+def execute_fda_ingestion(**context: Any) -> str:
     """Task callable to execute the FDA Adverse Drug Events ingestion."""
     from backend.core.database import SessionLocal
     from backend.modules.ingestion.services import run_ingestion_sync
@@ -27,7 +27,7 @@ def execute_fda_ingestion(**context: Any) -> uuid.UUID:
     try:
         pipeline_run_id = run_ingestion_sync(db, "fda")
         logger.info("FDA drug events ingestion task completed successfully", extra={"pipeline_run_id": str(pipeline_run_id)})
-        return pipeline_run_id
+        return str(pipeline_run_id)
     except Exception as exc:
         logger.error("FDA drug events ingestion task failed", exc_info=True)
         raise

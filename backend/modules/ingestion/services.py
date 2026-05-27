@@ -97,6 +97,22 @@ class IngestionService:
                         exc_info=True,
                         extra={"symbol": symbol}
                     )
+                    if settings.ENVIRONMENT == "development":
+                        logger.warning(
+                            f"Falling back to mock stock candles for {symbol} in development environment due to fetch failure: {str(exc)}"
+                        )
+                        import random
+                        now_ts = int(time.time())
+                        records.append({
+                            "symbol": symbol,
+                            "open_price": 150.0 + random.uniform(-2, 2),
+                            "high_price": 153.0 + random.uniform(0, 2),
+                            "low_price": 147.0 - random.uniform(0, 2),
+                            "close_price": 150.5 + random.uniform(-2, 2),
+                            "volume": random.randint(500, 5000),
+                            "candle_timestamp": datetime.fromtimestamp(now_ts, tz=timezone.utc)
+                        })
+                        continue
                     raise QolyxException(f"Finnhub API fetch failure for {symbol}: {str(exc)}") from exc
         return records
 
@@ -330,6 +346,7 @@ class IngestionService:
 
         pipeline_run_id = uuid.uuid4()
         dataset_id = DATASET_IDS[source_name]
+        run_created_at = datetime.now(timezone.utc)
 
         # Emit pipeline.started event to Redis event bus
         logger.info(
@@ -388,6 +405,59 @@ class IngestionService:
                 "total_penalty": validation_result.total_penalty
             }
         )
+
+        # Trust Score calculation with retry logic (3 attempts max)
+        try:
+            from backend.modules.trust_score.service import TrustScoreService
+            logger.info(
+                "Triggering Trust Score calculation",
+                extra={"pipeline_run_id": str(pipeline_run_id), "table_name": table_name}
+            )
+            trust_score_success = False
+            for attempt in range(1, 4):
+                try:
+                    penalties = TrustScoreService.calculate_penalties(db, pipeline_run_id, table_name, run_created_at)
+                    score, total_penalty, status = TrustScoreService.calculate_trust_score(penalties)
+                    TrustScoreService.save_trust_score(
+                        db=db,
+                        pipeline_run_id=pipeline_run_id,
+                        table_name=table_name,
+                        penalties=penalties,
+                        trust_score=score,
+                        total_penalty=total_penalty,
+                        status=status
+                    )
+                    logger.info(
+                        "Trust Score calculated and saved successfully",
+                        extra={
+                            "pipeline_run_id": str(pipeline_run_id),
+                            "trust_score": score,
+                            "status": status,
+                            "attempt": attempt
+                        }
+                    )
+                    trust_score_success = True
+                    break
+                except Exception as exc:
+                    logger.warning(
+                        f"Trust Score calculation attempt {attempt}/3 failed: {str(exc)}",
+                        exc_info=True,
+                        extra={"pipeline_run_id": str(pipeline_run_id)}
+                    )
+                    if attempt < 3:
+                        time.sleep(0.5)
+
+            if not trust_score_success:
+                logger.error(
+                    "Trust Score calculation failed after 3 attempts.",
+                    extra={"pipeline_run_id": str(pipeline_run_id)}
+                )
+        except Exception as exc:
+            logger.error(
+                "Fatal error in Trust Score integration block",
+                exc_info=True,
+                extra={"pipeline_run_id": str(pipeline_run_id)}
+            )
 
         return pipeline_run_id
 

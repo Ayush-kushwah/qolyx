@@ -554,7 +554,7 @@ def test_calculate_dbt_penalty_graceful_degradation(db_session):
     db_session.commit()
     
     run_id = uuid.uuid4()
-    with patch("backend.modules.trust_score.service.logger.error") as mock_logger:
+    with patch("backend.modules.trust_score.service.logger.info") as mock_logger:
         penalties = TrustScoreService.calculate_penalties(db_session, run_id, "bronze_financial_candles")
         assert penalties["dbt_penalty"] == 0
         mock_logger.assert_called()

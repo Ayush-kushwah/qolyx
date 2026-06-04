@@ -56,6 +56,20 @@ services:
       - ANOMALY_DECAY_FACTOR=${ANOMALY_DECAY_FACTOR}
       - EVENT_RETRY_COUNT=${EVENT_RETRY_COUNT}
       - EVENT_RETRY_DELAY_SECONDS=${EVENT_RETRY_DELAY_SECONDS}
+      - NTFY_HOST=https://ntfy.sh
+      - NTFY_ENABLED=${NTFY_ENABLED}
+      - NTFY_TOPIC=${NTFY_TOPIC}
+      - DISCORD_WEBHOOK_URL=${DISCORD_WEBHOOK_URL}
+      - TEAMS_WEBHOOK_URL=${TEAMS_WEBHOOK_URL}
+      - TELEGRAM_BOT_TOKEN=${TELEGRAM_BOT_TOKEN}
+      - TELEGRAM_CHAT_ID=${TELEGRAM_CHAT_ID}
+      - SMTP_SERVER=${SMTP_SERVER}
+      - SMTP_PORT=${SMTP_PORT}
+      - SMTP_HOST=${SMTP_HOST}
+      - SMTP_USER=${SMTP_USER}
+      - SMTP_PASSWORD=${SMTP_PASSWORD}
+      - ALERT_EMAIL_FROM=${ALERT_EMAIL_FROM}
+      - ALERT_EMAIL_TO=${ALERT_EMAIL_TO}
     depends_on:
       qolyx-db:
         condition: service_healthy
@@ -137,10 +151,33 @@ services:
              dbt run --models bronze+ &&
              dbt test --store-failures"
 
+  ntfy:
+    image: binwiederhier/ntfy:latest
+    container_name: qolyx-ntfy
+    command: serve
+    ports:
+      - "8081:80"
+    volumes:
+      - ntfy-cache:/var/cache/ntfy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:80/v1/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
+  qolyx-mail:
+    image: mailhog/mailhog:latest
+    container_name: qolyx-mail
+    ports:
+      - "${MAIL_SMTP_PORT}:1025"
+      - "${MAIL_UI_PORT}:8025"
+
 volumes:
   qolyx-db-data:
     driver: local
   qolyx-redis-data:
     driver: local
   airflow-logs:
+    driver: local
+  ntfy-cache:
     driver: local

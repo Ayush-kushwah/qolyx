@@ -156,6 +156,7 @@ class TrustScoreService:
                 exc_info=True,
                 extra={"pipeline_run_id": str(pipeline_run_id)}
             )
+            db.rollback()
             contract_penalty = 0
             
         # 2. Anomaly Penalty from anomaly_detections
@@ -174,54 +175,64 @@ class TrustScoreService:
                 exc_info=True,
                 extra={"pipeline_run_id": str(pipeline_run_id)}
             )
+            db.rollback()
             anomaly_penalty = 0
             
         # 3. DBT Penalty
         dbt_penalty = 0
         try:
-            from sqlalchemy import text
+            from sqlalchemy import text, inspect
             from datetime import timedelta
             
-            if run_created_at is None:
-                end_time = datetime.now(timezone.utc)
-                start_time = end_time - timedelta(minutes=15)
+            inspector = inspect(db.bind)
+            if not inspector.has_table("dbt_test_results", schema="test_results"):
+                logger.info(
+                    "Table test_results.dbt_test_results does not exist; defaulting to 0 DBT penalty",
+                    extra={"pipeline_run_id": str(pipeline_run_id)}
+                )
+                dbt_penalty = 0
             else:
-                if run_created_at.tzinfo is None:
-                    run_created_at = run_created_at.replace(tzinfo=timezone.utc)
-                start_time = run_created_at
-                end_time = run_created_at + timedelta(minutes=15)
+                if run_created_at is None:
+                    end_time = datetime.now(timezone.utc)
+                    start_time = end_time - timedelta(minutes=15)
+                else:
+                    if run_created_at.tzinfo is None:
+                        run_created_at = run_created_at.replace(tzinfo=timezone.utc)
+                    start_time = run_created_at
+                    end_time = run_created_at + timedelta(minutes=15)
+                    
+                # Convert to naive UTC datetimes for database compatibility
+                start_naive = start_time.astimezone(timezone.utc).replace(tzinfo=None)
+                end_naive = end_time.astimezone(timezone.utc).replace(tzinfo=None)
                 
-            # Convert to naive UTC datetimes for database compatibility
-            start_naive = start_time.astimezone(timezone.utc).replace(tzinfo=None)
-            end_naive = end_time.astimezone(timezone.utc).replace(tzinfo=None)
-            
-            query = text("""
-                SELECT COUNT(*) FROM test_results.dbt_test_results
-                WHERE status = 'fail'
-                  AND execution_completed_at >= :start_time
-                  AND execution_completed_at <= :end_time
-            """)
-            failed_count = db.scalar(query, {"start_time": start_naive, "end_time": end_naive})
-            failed_count = int(failed_count) if failed_count is not None else 0
-            
-            dbt_penalty = min(failed_count * 7, CAP_DBT)
-            
-            logger.info(
-                "Calculated DBT test failure penalty",
-                extra={
-                    "pipeline_run_id": str(pipeline_run_id),
-                    "failed_count": failed_count,
-                    "dbt_penalty": dbt_penalty,
-                    "start_time": start_time.isoformat(),
-                    "end_time": end_time.isoformat()
-                }
-            )
+                query = text("""
+                    SELECT COUNT(*) FROM test_results.dbt_test_results
+                    WHERE status = 'fail'
+                      AND execution_completed_at >= :start_time
+                      AND execution_completed_at <= :end_time
+                """)
+                failed_count = db.scalar(query, {"start_time": start_naive, "end_time": end_naive})
+                failed_count = int(failed_count) if failed_count is not None else 0
+                
+                dbt_penalty = min(failed_count * 7, CAP_DBT)
+                
+                logger.info(
+                    "Calculated DBT test failure penalty",
+                    extra={
+                        "pipeline_run_id": str(pipeline_run_id),
+                        "failed_count": failed_count,
+                        "dbt_penalty": dbt_penalty,
+                        "start_time": start_time.isoformat(),
+                        "end_time": end_time.isoformat()
+                    }
+                )
         except Exception as exc:
             logger.error(
                 "Failed to calculate DBT test failures penalty; defaulting to 0",
                 exc_info=True,
                 extra={"pipeline_run_id": str(pipeline_run_id)}
             )
+            db.rollback()
             dbt_penalty = 0
         
         # 4. Freshness Penalty
@@ -267,6 +278,7 @@ class TrustScoreService:
                 exc_info=True,
                 extra={"pipeline_run_id": str(pipeline_run_id)}
             )
+            db.rollback()
             freshness_penalty = 0
         
         # 5. Volume Penalty
@@ -312,6 +324,7 @@ class TrustScoreService:
                 exc_info=True,
                 extra={"pipeline_run_id": str(pipeline_run_id)}
             )
+            db.rollback()
             volume_penalty = 0
         
         return {
@@ -410,6 +423,24 @@ class TrustScoreService:
             
             # Audit score change
             TrustScoreService._audit_score_change(previous_score, record.trust_score, record.pipeline_run_id)
+
+            # Import settings and IncidentService
+            from backend.core.config import settings
+            from backend.modules.incidents.service import IncidentService
+
+            if record.trust_score < settings.INCIDENT_TRUST_SCORE_THRESHOLD:
+                try:
+                    IncidentService.create_incident(db, record)
+                    logger.info(
+                        "Successfully triggered incident creation for degraded trust score",
+                        extra={"pipeline_run_id": str(record.pipeline_run_id), "score": record.trust_score}
+                    )
+                except Exception as inc_exc:
+                    logger.error(
+                        "Failed to trigger incident creation for degraded trust score",
+                        exc_info=True,
+                        extra={"pipeline_run_id": str(record.pipeline_run_id), "score": record.trust_score}
+                    )
             
             return record
         except Exception as exc:

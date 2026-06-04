@@ -21,7 +21,7 @@ class Contract(Base):
     updated_at: Any = Column(DateTime, nullable=False, default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
 
     # Relationship to violations
-    violations: Any = relationship("ContractViolation", back_populates="contract", cascade="all, delete-orphan")
+    violations = relationship("ContractViolation", back_populates="contract", cascade="all, delete-orphan", uselist=True)
 
 
 class ContractViolation(Base):

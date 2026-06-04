@@ -278,3 +278,10 @@ scratch/
 # Anomaly detection models
 *.pkl
 models/
+
+# Ignore learning documents
+Git-Learning-Guide.pdf
+
+# Local SQLite databases
+*.db
+*.sqlite

@@ -33,6 +33,36 @@ class Settings(BaseSettings):
     # Alert bindings
     ALERT_EMAIL_SENDER: str = "alerts@qolyx.ai"
     SLACK_WEBHOOK_URL: Optional[str] = None
+    DISCORD_WEBHOOK_URL: Optional[str] = None
+    TEAMS_WEBHOOK_URL: Optional[str] = None
+    TELEGRAM_BOT_TOKEN: Optional[str] = None
+    TELEGRAM_CHAT_ID: Optional[str] = None
+
+    # Email settings
+    SMTP_HOST: Optional[str] = None
+    SMTP_PORT: Optional[int] = None
+    SMTP_USER: Optional[str] = None
+    SMTP_PASSWORD: Optional[str] = None
+    ALERT_EMAIL_FROM: Optional[str] = None
+    ALERT_EMAIL_TO: Optional[str] = None
+
+    # Incident thresholds
+    INCIDENT_TRUST_SCORE_THRESHOLD: int = 70
+
+    # Ntfy settings
+    NTFY_ENABLED: bool = True
+    NTFY_HOST: str = "http://ntfy:8080"
+    NTFY_TOPIC: str = ""
+
+    # Escalation defaults (in minutes)
+    ESCALATION_CRITICAL_TIMEOUT_MINUTES: int = 15
+    ESCALATION_HIGH_TIMEOUT_MINUTES: int = 30
+    ESCALATION_MEDIUM_TIMEOUT_MINUTES: int = 60
+    ESCALATION_LOW_TIMEOUT_MINUTES: int = 120
+
+    # Incident defaults
+    INCIDENT_DEFAULT_PAGE_SIZE: int = 20
+    INCIDENT_MAX_PAGE_SIZE: int = 100
     
     # External APIs
     FINNHUB_API_KEY: Optional[str] = None
@@ -80,8 +110,8 @@ class Settings(BaseSettings):
 
     @field_validator("DATABASE_URL")
     def validate_postgres_protocol(cls, v: AnyUrl) -> AnyUrl:
-        if v.scheme != "postgresql":
-            raise ValueError("DATABASE_URL must be a valid PostgreSQL connection scheme.")
+        if v.scheme not in ("postgresql", "sqlite"):
+            raise ValueError("DATABASE_URL must be a valid PostgreSQL or SQLite connection scheme.")
         return v
 
 # Singleton instantiation

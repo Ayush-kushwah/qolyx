@@ -47,7 +47,7 @@ class AnomalyDetection(Base):
     updated_at: Any = Column(DateTime, nullable=False, default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
 
     # Relationships
-    feedback: Any = relationship("AnomalyFeedback", back_populates="detection", cascade="all, delete-orphan")
+    feedback = relationship("AnomalyFeedback", back_populates="detection", cascade="all, delete-orphan", uselist=True)
 
 
 class AnomalyFeedback(Base):

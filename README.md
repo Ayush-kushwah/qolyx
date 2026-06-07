@@ -276,9 +276,9 @@ qolyx/
 | Phase 5 — Contracts Module | ✅ Complete | Schema validation, pipeline gating, YAML contracts |
 | Phase 6 — Profiling + Anomaly Engine | ✅ Complete | Baseline learning, Isolation Forest, PSI |
 | Phase 7 — Trust Score System | ✅ Complete | Core scoring engine, explainability breakdown |
-| Phase 8 — Incidents + Timeline | 🔄 In Progress | RCA generation, event timeline, severity grading |
+| Phase 8 — Incidents + Timeline | ✅ Complete | RCA generation, event timeline, severity grading |
 | Phase 9 — Lineage Tracking | ⏳ Pending | OpenLineage, graph traversal, affected assets API |
-| Phase 10 — Frontend Dashboards | ⏳ Pending | Next.js, D3 lineage explorer, real-time updates |
+| Phase 10 — Frontend Dashboards | 🔄 In Progress | Next.js, D3 lineage explorer, real-time updates |
 | Phase 11 — make demo | ⏳ Pending | One-command full platform demo experience |
 | Phase 12 — Open Source Launch | ⏳ Pending | Docs, contribution guide, community |
 

@@ -181,6 +181,15 @@ def detect_anomalies(
         created_at=now,
         updated_at=now
     )
+    # Check lineage-driven suppression before committing
+    try:
+        from backend.modules.lineage.anomaly_suppression import check_and_suppress_new_anomaly
+        check_and_suppress_new_anomaly(db, detection)
+    except Exception as prop_exc:
+        logger.error(
+            f"Failed to check lineage-driven suppression for table {table_name}",
+            exc_info=True
+        )
 
     try:
         db.add(detection)

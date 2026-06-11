@@ -114,7 +114,7 @@ def get_incident_stats(
         )
 
 
-@router.get("/{incident_id}", response_model=IncidentResponse)
+@router.get("/{incident_id:uuid}", response_model=IncidentResponse)
 def get_incident(incident_id: uuid.UUID, db: Session = Depends(get_db)) -> IncidentResponse:
     """Retrieve details of a single incident by its unique ID."""
     incident = IncidentService.get(db, incident_id)
@@ -126,7 +126,7 @@ def get_incident(incident_id: uuid.UUID, db: Session = Depends(get_db)) -> Incid
     return incident
 
 
-@router.patch("/{incident_id}", response_model=IncidentResponse)
+@router.patch("/{incident_id:uuid}", response_model=IncidentResponse)
 def update_incident(
     incident_id: uuid.UUID,
     payload: IncidentUpdate,
@@ -175,7 +175,7 @@ def update_incident(
         )
 
 
-@router.post("/{incident_id}/acknowledge", response_model=IncidentResponse)
+@router.post("/{incident_id:uuid}/acknowledge", response_model=IncidentResponse)
 def acknowledge_incident(incident_id: uuid.UUID, db: Session = Depends(get_db)) -> IncidentResponse:
     """Acknowledge an open incident, setting the state to ACKNOWLEDGED."""
     incident = IncidentService.acknowledge(db, incident_id, acknowledged_by="operator")
@@ -187,7 +187,7 @@ def acknowledge_incident(incident_id: uuid.UUID, db: Session = Depends(get_db)) 
     return incident
 
 
-@router.post("/{incident_id}/resolve", response_model=IncidentResponse)
+@router.post("/{incident_id:uuid}/resolve", response_model=IncidentResponse)
 def resolve_incident(
     incident_id: uuid.UUID,
     resolution_notes: str = Query(..., min_length=1, description="Notes summarizing the resolution"),
@@ -203,7 +203,7 @@ def resolve_incident(
     return incident
 
 
-@router.post("/{incident_id}/close", response_model=IncidentResponse)
+@router.post("/{incident_id:uuid}/close", response_model=IncidentResponse)
 def close_incident(incident_id: uuid.UUID, db: Session = Depends(get_db)) -> IncidentResponse:
     """Mark a resolved incident as CLOSED."""
     incident = IncidentService.close(db, incident_id, closed_by="operator")
@@ -215,7 +215,7 @@ def close_incident(incident_id: uuid.UUID, db: Session = Depends(get_db)) -> Inc
     return incident
 
 
-@router.post("/{incident_id}/reopen", response_model=IncidentResponse)
+@router.post("/{incident_id:uuid}/reopen", response_model=IncidentResponse)
 def reopen_incident(incident_id: uuid.UUID, db: Session = Depends(get_db)) -> IncidentResponse:
     """Reopen a resolved or closed incident."""
     incident = IncidentService.reopen(db, incident_id, reopened_by="operator")
@@ -229,7 +229,7 @@ def reopen_incident(incident_id: uuid.UUID, db: Session = Depends(get_db)) -> In
 
 # --- TIMELINE & COMMENTS ENDPOINTS (10-12) ---
 
-@router.get("/{incident_id}/timeline", response_model=List[IncidentTimelineResponse])
+@router.get("/{incident_id:uuid}/timeline", response_model=List[IncidentTimelineResponse])
 def get_incident_timeline(incident_id: uuid.UUID, db: Session = Depends(get_db)) -> List[IncidentTimelineResponse]:
     """Retrieve the full event timeline for an incident."""
     # Ensure incident exists
@@ -245,7 +245,7 @@ def get_incident_timeline(incident_id: uuid.UUID, db: Session = Depends(get_db))
     return timeline
 
 
-@router.get("/{incident_id}/comments", response_model=List[IncidentCommentResponse])
+@router.get("/{incident_id:uuid}/comments", response_model=List[IncidentCommentResponse])
 def get_incident_comments(incident_id: uuid.UUID, db: Session = Depends(get_db)) -> List[IncidentCommentResponse]:
     """Retrieve comments logged for a specific incident."""
     # Ensure incident exists
@@ -261,7 +261,7 @@ def get_incident_comments(incident_id: uuid.UUID, db: Session = Depends(get_db))
     return comments
 
 
-@router.post("/{incident_id}/comments", response_model=IncidentCommentResponse, status_code=status.HTTP_201_CREATED)
+@router.post("/{incident_id:uuid}/comments", response_model=IncidentCommentResponse, status_code=status.HTTP_201_CREATED)
 def add_incident_comment(
     incident_id: uuid.UUID,
     payload: IncidentCommentRequest,
@@ -283,7 +283,7 @@ def add_incident_comment(
 
 # --- ROOT CAUSE ANALYSIS (RCA) ENDPOINTS (13-15) ---
 
-@router.get("/{incident_id}/rca", response_model=IncidentRCAResponse)
+@router.get("/{incident_id:uuid}/rca", response_model=IncidentRCAResponse)
 def get_latest_rca(incident_id: uuid.UUID, db: Session = Depends(get_db)) -> IncidentRCAResponse:
     """Retrieve the latest Root Cause Analysis (RCA) version generated for an incident."""
     rca = db.query(IncidentRCA).filter(
@@ -298,7 +298,7 @@ def get_latest_rca(incident_id: uuid.UUID, db: Session = Depends(get_db)) -> Inc
     return rca
 
 
-@router.get("/{incident_id}/rca/version/{version}", response_model=IncidentRCAResponse)
+@router.get("/{incident_id:uuid}/rca/version/{version}", response_model=IncidentRCAResponse)
 def get_rca_by_version(
     incident_id: uuid.UUID,
     version: int,
@@ -318,7 +318,7 @@ def get_rca_by_version(
     return rca
 
 
-@router.post("/{incident_id}/rca/regenerate", response_model=IncidentRCAResponse)
+@router.post("/{incident_id:uuid}/rca/regenerate", response_model=IncidentRCAResponse)
 def regenerate_rca(incident_id: uuid.UUID, db: Session = Depends(get_db)) -> IncidentRCAResponse:
     """Trigger manual regeneration of the Root Cause Analysis (RCA) metrics."""
     try:

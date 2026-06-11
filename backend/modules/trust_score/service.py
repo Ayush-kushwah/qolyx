@@ -424,8 +424,26 @@ class TrustScoreService:
             # Audit score change
             TrustScoreService._audit_score_change(previous_score, record.trust_score, record.pipeline_run_id)
 
+            # Trigger downstream health score propagation through lineage
+            try:
+                from backend.modules.lineage.health_propagation import propagate_health_score
+                from backend.modules.lineage.models import LineageNode
+
+                node = db.query(LineageNode).filter(LineageNode.node_id == record.table_name).first()
+                if not node:
+                    node = db.query(LineageNode).filter(LineageNode.node_id.like(f"%.{record.table_name}")).first()
+                if node:
+                    propagate_health_score(db, node.node_id, record.trust_score)
+            except Exception as prop_exc:
+                logger.error(
+                    "Failed to propagate trust score downstream through lineage",
+                    exc_info=True,
+                    extra={"table_name": record.table_name}
+                )
+
             # Import settings and IncidentService
             from backend.core.config import settings
+
             from backend.modules.incidents.service import IncidentService
 
             if record.trust_score < settings.INCIDENT_TRUST_SCORE_THRESHOLD:

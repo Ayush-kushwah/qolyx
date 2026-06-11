@@ -279,9 +279,18 @@ scratch/
 *.pkl
 models/
 
-# Ignore learning documents
-Git-Learning-Guide.pdf
-
 # Local SQLite databases
 *.db
 *.sqlite
+
+# Node dependencies
+node_modules/
+**/node_modules/
+
+# Next.js build output
+.next/
+**/.next/
+
+# TypeScript build cache
+*.tsbuildinfo
+**/tsconfig.tsbuildinfo

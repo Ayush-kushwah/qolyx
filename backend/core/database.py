@@ -18,12 +18,18 @@ try:
             pool_recycle=1800,
             pool_pre_ping=True
         )
+        import os
         from sqlalchemy import event
+        # database.py is in backend/core/database.py, so root is two levels up
+        workspace_root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+        public_silver_path = os.path.join(workspace_root, "public_silver.db")
+        test_results_path = os.path.join(workspace_root, "test_results.db")
+        
         @event.listens_for(engine, "connect")
         def connect(dbapi_connection, connection_record):
             cursor = dbapi_connection.cursor()
-            cursor.execute("ATTACH DATABASE 'public_silver.db' AS public_silver")
-            cursor.execute("ATTACH DATABASE 'test_results.db' AS test_results")
+            cursor.execute(f"ATTACH DATABASE '{public_silver_path.replace(chr(92), chr(47))}' AS public_silver")
+            cursor.execute(f"ATTACH DATABASE '{test_results_path.replace(chr(92), chr(47))}' AS test_results")
             cursor.close()
     else:
         engine = create_engine(

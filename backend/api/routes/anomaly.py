@@ -6,7 +6,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
 from backend.core.database import get_db
-from backend.modules.anomaly.models import AnomalyDetection, AnomalyFeedback
+from backend.modules.anomaly.models import AnomalyDetection, AnomalyFeedback, SilverAnomalyFeature
 from backend.modules.anomaly.baseline_service import AnomalyBaselineService
 from backend.modules.anomaly.schemas import (
     AnomalyDetectionResponse,
@@ -15,6 +15,8 @@ from backend.modules.anomaly.schemas import (
     AnomalyListResponse,
     BaselineTrainingRequest,
     BaselineTrainingResponse,
+    BaselineProgress,
+    BaselineProgressResponse,
 )
 
 logger = logging.getLogger("qolyx.api.routes.anomaly")
@@ -150,6 +152,44 @@ def trigger_baseline_training(
         )
 
 
+@router.get("/baseline/progress", response_model=BaselineProgressResponse)
+def get_baseline_progress(db: Session = Depends(get_db)) -> BaselineProgressResponse:
+    """Retrieve detailed machine learning baseline training progress for all ingestion tables."""
+    tables = ["bronze_financial_candles", "bronze_fda_events", "bronze_github_events"]
+    progress_details = {}
+
+    for table in tables:
+        try:
+            runs_completed = db.query(SilverAnomalyFeature).filter(
+                SilverAnomalyFeature.source_name == table
+            ).count()
+        except Exception as exc:
+            logger.error(
+                f"Graceful degradation: failed to query SilverAnomalyFeature count for table '{table}': {str(exc)}",
+                exc_info=True
+            )
+            runs_completed = 0
+
+        is_ready = AnomalyBaselineService.is_baseline_ready(db, table)
+        
+        if is_ready or runs_completed >= 7:
+            runs_completed = max(runs_completed, 7)
+            estimated_minutes = 0
+            is_ready = True
+        else:
+            remaining_runs = max(0, 7 - runs_completed)
+            estimated_minutes = remaining_runs * 5
+
+        progress_details[table] = BaselineProgress(
+            runs_completed=runs_completed,
+            runs_needed=7,
+            is_ready=is_ready,
+            estimated_minutes_remaining=estimated_minutes
+        )
+
+    return BaselineProgressResponse(**progress_details)
+
+
 @router.get("/baseline/{table_name}", response_model=Dict[str, Dict[str, Any]])
 def get_baseline_stats(
     table_name: str,
@@ -185,3 +225,4 @@ def check_baseline_health(db: Session = Depends(get_db)) -> Dict[str, bool]:
     """Check if baseline is ready (at least 7 runs) for each ingestion table."""
     tables = ["bronze_financial_candles", "bronze_fda_events", "bronze_github_events"]
     return {table: AnomalyBaselineService.is_baseline_ready(db, table) for table in tables}
+

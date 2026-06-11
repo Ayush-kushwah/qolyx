@@ -43,8 +43,11 @@ class AnomalyDetection(Base):
     is_acknowledged: Any = Column(Boolean, nullable=False, default=False)
     is_false_positive: Any = Column(Boolean, nullable=False, default=False)
     last_alerted_at: Any = Column(DateTime, nullable=True)
+    suppressed_by_lineage: Any = Column(Boolean, nullable=False, default=False)
+    root_cause_anomaly_id: Any = Column(UUID(as_uuid=True), nullable=True)
     created_at: Any = Column(DateTime, nullable=False, default=lambda: datetime.now(timezone.utc))
     updated_at: Any = Column(DateTime, nullable=False, default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
+
 
     # Relationships
     feedback = relationship("AnomalyFeedback", back_populates="detection", cascade="all, delete-orphan", uselist=True)

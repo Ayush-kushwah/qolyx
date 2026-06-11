@@ -28,10 +28,30 @@ class TrustScore(Base):
     @property
     def breakdown(self) -> dict[str, int]:
         """Penalty breakdown dictionary for easy JSON API serialization."""
+        from sqlalchemy.orm import object_session
+        from backend.modules.lineage.models import LineageNode
+
+        lineage_pen = 0
+        session = object_session(self)
+        if session:
+            # Look up lineage node representing this table
+            node = session.query(LineageNode).filter(
+                LineageNode.node_id == self.table_name
+            ).first()
+            if not node:
+                # Fallback check for dbt style node_id: model.project.table_name
+                node = session.query(LineageNode).filter(
+                    LineageNode.node_id.like(f"%.{self.table_name}")
+                ).first()
+            if node and node.meta:
+                lineage_pen = int(node.meta.get("lineage_penalty", 0))
+
         return {
             "contract_penalty": self.contract_penalty or 0,
             "freshness_penalty": self.freshness_penalty or 0,
             "volume_penalty": self.volume_penalty or 0,
             "anomaly_penalty": self.anomaly_penalty or 0,
             "dbt_penalty": self.dbt_penalty or 0,
+            "lineage_penalty": lineage_pen,
         }
+

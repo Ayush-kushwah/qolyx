@@ -6,7 +6,7 @@ from fastapi.middleware.cors import CORSMiddleware
 # Ensure structured logging is configured
 from backend.core import logging as _logging
 from backend.core.config import settings
-from backend.api.routes import health, contracts, anomaly, trust_score, incidents
+from backend.api.routes import health, contracts, anomaly, trust_score, incidents, users, settings as settings_route, lineage
 from backend.scheduler import start_scheduler, shutdown_scheduler
 
 logger = logging.getLogger("qolyx.main")
@@ -142,6 +142,58 @@ def seed_default_alert_config() -> None:
         db.close()
 
 
+def seed_default_user() -> None:
+    """Seeds the default administrator account if they don't exist."""
+    import uuid
+    from datetime import datetime, timezone
+    from backend.core.database import SessionLocal
+    from backend.modules.users.models import User
+    from backend.modules.users.utils import hash_password
+
+    db = SessionLocal()
+    try:
+        exists_user = db.query(User).filter(User.email == "admin@qolyx.io").first()
+        if not exists_user:
+            logger.info("Seeding default administrator user...")
+            hashed = hash_password("adminpassword123")
+            admin_user = User(
+                id=uuid.uuid4(),
+                name="Administrator",
+                email="admin@qolyx.io",
+                username="admin",
+                hashed_password=hashed,
+                avatar_url=None,
+                job_title="Lead Data Reliability Engineer",
+                department="Platform Engineering",
+                timezone="UTC",
+                theme="system",
+                date_format="ISO",
+                notification_preferences={
+                    "email": True,
+                    "slack": True,
+                    "telegram": False,
+                    "severity": "MEDIUM",
+                    "quiet_hours": {
+                        "enabled": False,
+                        "start": "22:00",
+                        "end": "08:00"
+                    }
+                },
+                created_at=datetime.now(timezone.utc),
+                updated_at=datetime.now(timezone.utc)
+            )
+            db.add(admin_user)
+            db.commit()
+            logger.info("Default administrator user successfully seeded.")
+        else:
+            logger.info("Default administrator user already exists.")
+    except Exception as exc:
+        db.rollback()
+        logger.error("Failed to seed default administrator user", exc_info=True)
+    finally:
+        db.close()
+
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     # Startup tasks
@@ -150,6 +202,7 @@ async def lifespan(app: FastAPI):
         extra={"status": "starting", "environment": settings.ENVIRONMENT},
     )
     seed_default_alert_config()
+    seed_default_user()
     start_scheduler()
     yield
     # Shutdown tasks
@@ -160,12 +213,18 @@ async def lifespan(app: FastAPI):
     shutdown_scheduler()
 
 
+from fastapi.staticfiles import StaticFiles
+import os
+
 app = FastAPI(
     title="Qolyx API",
     description="REST Engine Ingress serving JSON APIs and health gates.",
     version="1.0.0",
     lifespan=lifespan,
 )
+
+os.makedirs("backend/static/avatars", exist_ok=True)
+app.mount("/static", StaticFiles(directory="backend/static"), name="static")
 
 # CORS configuration targeting standard client ports dynamically
 origins = [
@@ -189,6 +248,9 @@ app.include_router(contracts.router, prefix="/api")
 app.include_router(anomaly.router, prefix="/api")
 app.include_router(trust_score.router, prefix="/api")
 app.include_router(incidents.router, prefix="/api")
+app.include_router(users.router, prefix="/api")
+app.include_router(settings_route.router, prefix="/api")
+app.include_router(lineage.router, prefix="/api")
 
 
 @app.get("/")

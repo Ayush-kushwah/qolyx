@@ -183,3 +183,40 @@ class AnomalyListResponse(BaseModel):
         ...,
         description="The limit of items returned per page."
     )
+
+
+class BaselineProgress(BaseModel):
+    """Schema representing baseline training progress for a table."""
+    runs_completed: int = Field(
+        ...,
+        description="The actual count of pipeline runs completed for this table."
+    )
+    runs_needed: int = Field(
+        7,
+        description="The target number of pipeline runs needed to establish the baseline."
+    )
+    is_ready: bool = Field(
+        ...,
+        description="Whether the baseline is ready (runs_completed >= runs_needed)."
+    )
+    estimated_minutes_remaining: Optional[int] = Field(
+        None,
+        description="The estimated number of minutes remaining for baseline training."
+    )
+
+
+class BaselineProgressResponse(BaseModel):
+    """Schema representing baseline training progress for all tables."""
+    bronze_financial_candles: BaselineProgress = Field(
+        ...,
+        description="Baseline training progress for the Financial Candles table."
+    )
+    bronze_fda_events: BaselineProgress = Field(
+        ...,
+        description="Baseline training progress for the FDA Events table."
+    )
+    bronze_github_events: BaselineProgress = Field(
+        ...,
+        description="Baseline training progress for the GitHub Events table."
+    )
+

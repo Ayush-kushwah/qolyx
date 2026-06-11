@@ -22,6 +22,7 @@ from backend.modules.profiling import models as _
 from backend.modules.ingestion import models as _
 from backend.modules.timeline import models as _
 from backend.modules.alerts import models as _
+from backend.modules.users import models as _
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
@@ -75,6 +76,21 @@ def run_migrations_online() -> None:
         prefix="sqlalchemy.",
         poolclass=pool.NullPool,
     )
+
+    url = config.get_main_option("sqlalchemy.url")
+    if url and url.startswith("sqlite"):
+        import os
+        from sqlalchemy import event
+        workspace_root = dirname(dirname(dirname(dirname(abspath(__file__)))))
+        public_silver_path = os.path.join(workspace_root, "public_silver.db")
+        test_results_path = os.path.join(workspace_root, "test_results.db")
+        
+        @event.listens_for(connectable, "connect")
+        def connect(dbapi_connection, connection_record):
+            cursor = dbapi_connection.cursor()
+            cursor.execute(f"ATTACH DATABASE '{public_silver_path.replace(chr(92), chr(47))}' AS public_silver")
+            cursor.execute(f"ATTACH DATABASE '{test_results_path.replace(chr(92), chr(47))}' AS test_results")
+            cursor.close()
 
     with connectable.connect() as connection:
         context.configure(

@@ -1,0 +1,272 @@
+'use client'
+
+import React, { memo, useCallback, useEffect, useMemo, useState } from 'react';
+import ReactFlow, {
+  MiniMap,
+  Controls,
+  Background,
+  Node,
+  Edge,
+  Position,
+  useNodesState,
+  useEdgesState,
+  MarkerType,
+} from 'reactflow';
+import 'reactflow/dist/style.css';
+import { Database, FileCode, CheckCircle, HelpCircle, Eye, ShieldAlert, Award, AlertTriangle } from 'lucide-react';
+
+// Custom Node Component
+const CustomLineageNode = memo(({ data }: { data: any }) => {
+  const { name, type, trust_score, selected } = data;
+
+  const getIcon = () => {
+    switch (type) {
+      case 'source':
+        return <Database className="h-5 w-5 text-indigo-500" />;
+      case 'model':
+        return <FileCode className="h-5 w-5 text-sky-500" />;
+      case 'seed':
+        return <Award className="h-5 w-5 text-teal-500" />;
+      case 'test':
+        return <CheckCircle className="h-5 w-5 text-green-500" />;
+      case 'exposure':
+        return <Eye className="h-5 w-5 text-purple-500" />;
+      case 'warehouse_table':
+        return <Database className="h-5 w-5 text-emerald-500" />;
+      default:
+        return <HelpCircle className="h-5 w-5 text-slate-500" />;
+    }
+  };
+
+  const score = trust_score !== undefined && trust_score !== null ? trust_score : 100;
+  let scoreColor = 'bg-emerald-500';
+  let badgeBg = 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/30 dark:text-emerald-400';
+  let borderColor = selected 
+    ? 'border-indigo-600 dark:border-indigo-400 ring-2 ring-indigo-600/20 dark:ring-indigo-400/20' 
+    : 'border-slate-200 dark:border-slate-800';
+
+  if (score < 60) {
+    scoreColor = 'bg-rose-500';
+    badgeBg = 'bg-rose-50 text-rose-700 dark:bg-rose-950/30 dark:text-rose-400';
+    if (!selected) borderColor = 'border-rose-500/40 dark:border-rose-500/20';
+  } else if (score < 80) {
+    scoreColor = 'bg-amber-500';
+    badgeBg = 'bg-amber-50 text-amber-700 dark:bg-amber-950/30 dark:text-amber-400';
+    if (!selected) borderColor = 'border-amber-500/40 dark:border-amber-500/20';
+  }
+
+  return (
+    <div className={`px-4 py-3 shadow-md rounded-xl border-2 bg-white dark:bg-slate-900 ${borderColor} transition-all duration-200 w-64`}>
+      <HandleComponent type="target" position={Position.Left} />
+      
+      <div className="flex items-center justify-between space-x-3">
+        <div className="flex items-center space-x-2.5 w-40 overflow-hidden">
+          <div className="p-2 bg-slate-50 dark:bg-slate-800 rounded-lg">
+            {getIcon()}
+          </div>
+          <div className="flex flex-col">
+            <span className="text-xs font-semibold text-slate-800 dark:text-slate-100 truncate w-32" title={name}>
+              {name}
+            </span>
+            <span className="text-[10px] text-slate-400 uppercase tracking-wider font-semibold">
+              {type.replace('_', ' ')}
+            </span>
+          </div>
+        </div>
+
+        <div className={`px-2 py-0.5 rounded-full text-xs font-bold ${badgeBg} flex items-center space-x-1`}>
+          <span className={`w-1.5 h-1.5 rounded-full ${scoreColor}`} />
+          <span>{Math.round(score)}%</span>
+        </div>
+      </div>
+
+      {score < 80 && (
+        <div className="mt-1.5 pt-1.5 border-t border-slate-100 dark:border-slate-800/60 flex items-center text-[10px] text-amber-600 dark:text-amber-400">
+          <AlertTriangle className="h-3 w-3 mr-1" />
+          <span>Lineage Propagation Penalty Applied</span>
+        </div>
+      )}
+      
+      <HandleComponent type="source" position={Position.Right} />
+    </div>
+  );
+});
+CustomLineageNode.displayName = 'CustomLineageNode';
+
+// Wrapper handles to satisfy React Flow layout requirements
+import { Handle } from 'reactflow';
+const HandleComponent = ({ type, position }: { type: 'source' | 'target', position: Position }) => (
+  <Handle
+    type={type}
+    position={position}
+    className="w-2 h-2 bg-slate-400 border-2 border-white dark:border-slate-900 !top-1/2"
+  />
+);
+
+interface LineageGraphProps {
+  nodesData: any[];
+  edgesData: any[];
+  onSelectNode: (nodeId: string) => void;
+  selectedNodeId: string | null;
+  criticalPathNodeIds?: string[];
+}
+
+export default function LineageGraph({
+  nodesData,
+  edgesData,
+  onSelectNode,
+  selectedNodeId,
+  criticalPathNodeIds = []
+}: LineageGraphProps) {
+  const [nodes, setNodes, onNodesChange] = useNodesState([]);
+  const [edges, setEdges, onEdgesChange] = useEdgesState([]);
+
+  const nodeTypes = useMemo(() => ({
+    lineageNode: CustomLineageNode
+  }), []);
+
+  // Topological / grid layouter to arrange nodes horizontally from source to downstream
+  const layoutGraph = useCallback((nodesList: any[], edgesList: any[]) => {
+    // 1. Map adjacencies
+    const adjList: Dict<string, string[]> = {};
+    const inDegree: Dict<string, number> = {};
+
+    nodesList.forEach(node => {
+      adjList[node.node_id] = [];
+      inDegree[node.node_id] = 0;
+    });
+
+    edgesList.forEach(edge => {
+      if (adjList[edge.source_node_id]) {
+        adjList[edge.source_node_id].push(edge.target_node_id);
+      }
+      if (inDegree[edge.target_node_id] !== undefined) {
+        inDegree[edge.target_node_id]++;
+      }
+    });
+
+    // 2. BFS topological-like level sorting
+    const levels: Dict<string, number> = {};
+    const queue: string[] = [];
+
+    nodesList.forEach(node => {
+      if (inDegree[node.node_id] === 0) {
+        queue.push(node.node_id);
+        levels[node.node_id] = 0;
+      }
+    });
+
+    while (queue.length > 0) {
+      const u = queue.shift()!;
+      const currLevel = levels[u] || 0;
+      
+      (adjList[u] || []).forEach(v => {
+        levels[v] = Math.max(levels[v] || 0, currLevel + 1);
+        queue.push(v);
+      });
+    }
+
+    // fallback levels for disconnected nodes
+    nodesList.forEach(node => {
+      if (levels[node.node_id] === undefined) {
+        levels[node.node_id] = 0;
+      }
+    });
+
+    // Group nodes by level to assign Y coordinates
+    const nodesByLevel: Dict<number, string[]> = {};
+    nodesList.forEach(node => {
+      const lvl = levels[node.node_id];
+      if (!nodesByLevel[lvl]) {
+        nodesByLevel[lvl] = [];
+      }
+      nodesByLevel[lvl].push(node.node_id);
+    });
+
+    // Create React Flow node representations
+    const formattedNodes: Node[] = nodesList.map(node => {
+      const lvl = levels[node.node_id];
+      const indexInLevel = nodesByLevel[lvl].indexOf(node.node_id);
+      const levelCount = nodesByLevel[lvl].length;
+
+      // Center layout vertically per level
+      const x = lvl * 320 + 50;
+      const y = (indexInLevel - (levelCount - 1) / 2) * 120 + 250;
+
+      return {
+        id: node.node_id,
+        type: 'lineageNode',
+        position: { x, y },
+        data: {
+          ...node,
+          selected: node.node_id === selectedNodeId
+        }
+      };
+    });
+
+    // Create edges representations
+    const formattedEdges: Edge[] = edgesList.map(edge => {
+      const isCritical = criticalPathNodeIds.includes(edge.source_node_id) && 
+                         criticalPathNodeIds.includes(edge.target_node_id);
+
+      return {
+        id: `e-${edge.source_node_id}-${edge.target_node_id}`,
+        source: edge.source_node_id,
+        target: edge.target_node_id,
+        animated: isCritical || edge.edge_type === 'depends_on',
+        style: {
+          stroke: isCritical ? '#f43f5e' : '#cbd5e1',
+          strokeWidth: isCritical ? 3 : 2
+        },
+        markerEnd: {
+          type: MarkerType.ArrowClosed,
+          color: isCritical ? '#f43f5e' : '#cbd5e1'
+        }
+      };
+    });
+
+    return { nodes: formattedNodes, edges: formattedEdges };
+  }, [selectedNodeId, criticalPathNodeIds]);
+
+  // Re-layout when raw nodes/edges data or selections change
+  useEffect(() => {
+    const { nodes: fn, edges: fe } = layoutGraph(nodesData, edgesData);
+    setNodes(fn);
+    setEdges(fe);
+  }, [nodesData, edgesData, layoutGraph, setNodes, setEdges]);
+
+  const onNodeClick = useCallback((_: React.MouseEvent, node: Node) => {
+    onSelectNode(node.id);
+  }, [onSelectNode]);
+
+  return (
+    <div className="w-full h-full border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden bg-slate-50 dark:bg-slate-950 relative min-h-[500px]">
+      <ReactFlow
+        nodes={nodes}
+        edges={edges}
+        onNodesChange={onNodesChange}
+        onEdgesChange={onEdgesChange}
+        nodeTypes={nodeTypes}
+        onNodeClick={onNodeClick}
+        fitView
+        className="text-slate-900 dark:text-slate-100"
+      >
+        <Controls className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow rounded" />
+        <MiniMap
+          nodeColor={(n) => {
+            const score = n.data?.trust_score ?? 100;
+            if (score < 60) return '#f43f5e';
+            if (score < 80) return '#f59e0b';
+            return '#10b981';
+          }}
+          className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow rounded"
+          maskColor="rgba(241, 245, 249, 0.2)"
+        />
+        <Background gap={16} size={1} color="#94a3b8" style={{ opacity: 0.3 }} />
+      </ReactFlow>
+    </div>
+  );
+}
+
+// Inline Dict helper
+type Dict<K extends string | number, V> = { [key in K]: V };

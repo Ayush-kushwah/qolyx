@@ -135,6 +135,16 @@ class IncidentService:
                     f"Graceful degradation: failed to auto-dispatch alerts for incident {db_incident.id}",
                     exc_info=True
                 )
+
+            # Auto-dispatch BI downstream impact alerts
+            try:
+                from backend.modules.lineage.bi_impact_notifier import notify_dashboard_impact
+                notify_dashboard_impact(db, db_incident)
+            except Exception as bi_exc:
+                logger.error(
+                    f"Graceful degradation: failed to dispatch BI impact alerts for incident {db_incident.id}",
+                    exc_info=True
+                )
                 
             IncidentService._emit_incident_event("incident.created", db_incident)
             return db_incident

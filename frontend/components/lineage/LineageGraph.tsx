@@ -13,11 +13,16 @@ import ReactFlow, {
   MarkerType,
 } from 'reactflow';
 import 'reactflow/dist/style.css';
-import { Database, FileCode, CheckCircle, HelpCircle, Eye, ShieldAlert, Award, AlertTriangle } from 'lucide-react';
+import { Database, FileCode, CheckCircle, HelpCircle, Eye, ShieldAlert, Award, AlertTriangle, ChevronDown, ChevronUp, AlertCircle } from 'lucide-react';
 
 // Custom Node Component
 const CustomLineageNode = memo(({ data }: { data: any }) => {
   const { name, type, trust_score, selected } = data;
+  const [localExpanded, setLocalExpanded] = useState(false);
+  const [showAll, setShowAll] = useState(false);
+
+  const isExpanded = data.isExpanded !== undefined ? data.isExpanded : localExpanded;
+  const toggleExpand = data.toggleExpand || (() => setLocalExpanded(prev => !prev));
 
   const getIcon = () => {
     switch (type) {
@@ -55,17 +60,48 @@ const CustomLineageNode = memo(({ data }: { data: any }) => {
     if (!selected) borderColor = 'border-amber-500/40 dark:border-amber-500/20';
   }
 
+  // Parse columns data format (either dict or array)
+  const columns = useMemo(() => {
+    if (!data.meta) return [];
+    
+    const metaCols = data.meta.columns;
+    if (!metaCols) return [];
+
+    let colsList: { name: string; type: string; penalty: number }[] = [];
+
+    if (Array.isArray(metaCols)) {
+      colsList = metaCols.map(col => {
+        const name = typeof col === 'string' ? col : col.name || '';
+        const type = typeof col === 'string' ? 'UNKNOWN' : col.type || 'UNKNOWN';
+        const penalty = data.meta.column_penalties?.[name] || 0;
+        return { name, type, penalty };
+      });
+    } else if (typeof metaCols === 'object') {
+      colsList = Object.entries(metaCols).map(([colName, colVal]) => {
+        const type = typeof colVal === 'string' ? colVal : (colVal as any)?.data_type || 'UNKNOWN';
+        const penalty = data.meta.column_penalties?.[colName] || 0;
+        return { name: colName, type, penalty };
+      });
+    }
+
+    // Sort: columns with health decay/penalties first, then alphabetical
+    return colsList.sort((a, b) => {
+      if (b.penalty !== a.penalty) return b.penalty - a.penalty;
+      return a.name.localeCompare(b.name);
+    });
+  }, [data.meta]);
+
   return (
-    <div className={`px-4 py-3 shadow-md rounded-xl border-2 bg-white dark:bg-slate-900 ${borderColor} transition-all duration-200 w-64`}>
+    <div className={`px-4 py-3 shadow-md rounded-xl border-2 bg-white dark:bg-slate-900 ${borderColor} transition-all duration-200 w-72`}>
       <HandleComponent type="target" position={Position.Left} />
       
       <div className="flex items-center justify-between space-x-3">
-        <div className="flex items-center space-x-2.5 w-40 overflow-hidden">
+        <div className="flex items-center space-x-2.5 w-48 overflow-hidden">
           <div className="p-2 bg-slate-50 dark:bg-slate-800 rounded-lg">
             {getIcon()}
           </div>
           <div className="flex flex-col">
-            <span className="text-xs font-semibold text-slate-800 dark:text-slate-100 truncate w-32" title={name}>
+            <span className="text-xs font-semibold text-slate-800 dark:text-slate-100 truncate w-36" title={name}>
               {name}
             </span>
             <span className="text-[10px] text-slate-400 uppercase tracking-wider font-semibold">
@@ -74,7 +110,7 @@ const CustomLineageNode = memo(({ data }: { data: any }) => {
           </div>
         </div>
 
-        <div className={`px-2 py-0.5 rounded-full text-xs font-bold ${badgeBg} flex items-center space-x-1`}>
+        <div className={`px-2 py-0.5 rounded-full text-xs font-bold ${badgeBg} flex items-center space-x-1 shrink-0`}>
           <span className={`w-1.5 h-1.5 rounded-full ${scoreColor}`} />
           <span>{Math.round(score)}%</span>
         </div>
@@ -84,6 +120,75 @@ const CustomLineageNode = memo(({ data }: { data: any }) => {
         <div className="mt-1.5 pt-1.5 border-t border-slate-100 dark:border-slate-800/60 flex items-center text-[10px] text-amber-600 dark:text-amber-400">
           <AlertTriangle className="h-3 w-3 mr-1" />
           <span>Lineage Propagation Penalty Applied</span>
+        </div>
+      )}
+
+      {columns.length > 0 && (
+        <div className="mt-2.5 pt-2 border-t border-slate-100 dark:border-slate-800/60 nodrag">
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              toggleExpand();
+            }}
+            className="w-full flex items-center justify-between text-[11px] font-semibold text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 transition-colors"
+          >
+            <span>Columns ({columns.length})</span>
+            {isExpanded ? (
+              <ChevronUp className="h-3.5 w-3.5" />
+            ) : (
+              <ChevronDown className="h-3.5 w-3.5" />
+            )}
+          </button>
+
+          {isExpanded && (
+            <div className="mt-2 space-y-1 max-h-60 overflow-y-auto pr-1">
+              {(showAll ? columns : columns.slice(0, 10)).map((col) => (
+                <div
+                  key={col.name}
+                  className={`flex items-center justify-between p-1 rounded text-[10px] ${
+                    col.penalty > 0
+                      ? 'bg-rose-50/50 dark:bg-rose-950/20 border border-rose-100/50 dark:border-rose-900/30'
+                      : 'hover:bg-slate-55 dark:hover:bg-slate-800/40'
+                  }`}
+                >
+                  <div className="flex flex-col truncate pr-1">
+                    <span
+                      className={`font-mono font-medium truncate ${
+                        col.penalty > 0
+                          ? 'text-rose-700 dark:text-rose-400'
+                          : 'text-slate-700 dark:text-slate-300'
+                      }`}
+                      title={col.name}
+                    >
+                      {col.name}
+                    </span>
+                    <span className="text-[8px] text-slate-400 font-sans tracking-wide uppercase">
+                      {col.type}
+                    </span>
+                  </div>
+
+                  {col.penalty > 0 && (
+                    <div className="flex items-center space-x-1 text-rose-600 dark:text-rose-400 font-bold shrink-0">
+                      <AlertCircle className="h-3 w-3 shrink-0" />
+                      <span>-{Math.round(col.penalty)}%</span>
+                    </div>
+                  )}
+                </div>
+              ))}
+
+              {columns.length > 10 && (
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setShowAll(!showAll);
+                  }}
+                  className="w-full text-center text-[10px] text-indigo-600 dark:text-indigo-400 hover:underline pt-1 font-medium"
+                >
+                  {showAll ? 'Show less' : `Show more (+${columns.length - 10})`}
+                </button>
+              )}
+            </div>
+          )}
         </div>
       )}
       
@@ -120,10 +225,23 @@ export default function LineageGraph({
 }: LineageGraphProps) {
   const [nodes, setNodes, onNodesChange] = useNodesState([]);
   const [edges, setEdges, onEdgesChange] = useEdgesState([]);
+  const [expandedNodeIds, setExpandedNodeIds] = useState<Set<string>>(new Set());
 
   const nodeTypes = useMemo(() => ({
     lineageNode: CustomLineageNode
   }), []);
+
+  const onNodeDoubleClick = useCallback((_: React.MouseEvent, node: Node) => {
+    setExpandedNodeIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(node.id)) {
+        next.delete(node.id);
+      } else {
+        next.add(node.id);
+      }
+      return next;
+    });
+  }, []);
 
   // Topological / grid layouter to arrange nodes horizontally from source to downstream
   const layoutGraph = useCallback((nodesList: any[], edgesList: any[]) => {
@@ -190,7 +308,7 @@ export default function LineageGraph({
       const levelCount = nodesByLevel[lvl].length;
 
       // Center layout vertically per level
-      const x = lvl * 320 + 50;
+      const x = lvl * 380 + 50;
       const y = (indexInLevel - (levelCount - 1) / 2) * 120 + 250;
 
       return {
@@ -199,7 +317,19 @@ export default function LineageGraph({
         position: { x, y },
         data: {
           ...node,
-          selected: node.node_id === selectedNodeId
+          selected: node.node_id === selectedNodeId,
+          isExpanded: expandedNodeIds.has(node.node_id),
+          toggleExpand: () => {
+            setExpandedNodeIds((prev) => {
+              const next = new Set(prev);
+              if (next.has(node.node_id)) {
+                next.delete(node.node_id);
+              } else {
+                next.add(node.node_id);
+              }
+              return next;
+            });
+          }
         }
       };
     });
@@ -226,7 +356,7 @@ export default function LineageGraph({
     });
 
     return { nodes: formattedNodes, edges: formattedEdges };
-  }, [selectedNodeId, criticalPathNodeIds]);
+  }, [selectedNodeId, criticalPathNodeIds, expandedNodeIds]);
 
   // Re-layout when raw nodes/edges data or selections change
   useEffect(() => {
@@ -248,6 +378,7 @@ export default function LineageGraph({
         onEdgesChange={onEdgesChange}
         nodeTypes={nodeTypes}
         onNodeClick={onNodeClick}
+        onNodeDoubleClick={onNodeDoubleClick}
         fitView
         className="text-slate-900 dark:text-slate-100"
       >

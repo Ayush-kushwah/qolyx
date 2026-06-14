@@ -194,6 +194,28 @@ def seed_default_user() -> None:
         db.close()
 
 
+async def run_auto_lineage_sync():
+    import asyncio
+    from backend.core.database import SessionLocal
+    from backend.modules.lineage.lineage_parser import sync_all_lineage
+    
+    logger.info("Auto-lineage sync background task starting in 5 seconds...")
+    await asyncio.sleep(5)
+    
+    db = SessionLocal()
+    try:
+        logger.info("Executing auto-lineage sync...")
+        loop = asyncio.get_running_loop()
+        await loop.run_in_executor(None, sync_all_lineage, db)
+        db.commit()
+        logger.info("Auto-lineage sync completed successfully.")
+    except Exception as e:
+        db.rollback()
+        logger.error(f"Auto-lineage sync failed: {e}", exc_info=True)
+    finally:
+        db.close()
+
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     # Startup tasks
@@ -204,6 +226,8 @@ async def lifespan(app: FastAPI):
     seed_default_alert_config()
     seed_default_user()
     start_scheduler()
+    import asyncio
+    asyncio.create_task(run_auto_lineage_sync())
     yield
     # Shutdown tasks
     logger.info(

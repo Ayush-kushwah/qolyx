@@ -27,8 +27,9 @@ class Settings(BaseSettings):
     REDIS_HOST: str = "qolyx-cache"
 
     # Storage URLs
-    DATABASE_URL: AnyUrl
+    DATABASE_URL: AnyUrl = "postgresql://qolyx_admin:postgres_secure_pass@qolyx-db:5432/qolyx_prod"
     REDIS_URL: AnyUrl
+    DBT_PROJECT_PATH: str = "/app/dbt_project"
 
     # Alert bindings
     ALERT_EMAIL_SENDER: str = "alerts@qolyx.ai"
@@ -98,6 +99,25 @@ class Settings(BaseSettings):
     DBT_PORT: int = 5432
     DBT_DBNAME: str = ""
     DBT_TARGET: str = "dev"
+    DBT_TARGET_PATH: Optional[str] = None
+
+    # Power BI
+    POWER_BI_TENANT_ID: str = ""
+    POWER_BI_CLIENT_ID: str = ""
+    POWER_BI_CLIENT_SECRET: str = ""
+
+    # Tableau
+    TABLEAU_SERVER_URL: str = ""
+    TABLEAU_PERSONAL_ACCESS_TOKEN: str = ""
+
+    # Looker
+    LOOKER_HOST: str = ""
+    LOOKER_CLIENT_ID: str = ""
+    LOOKER_CLIENT_SECRET: str = ""
+
+    # BI Rate Limits
+    POWER_BI_RATE_LIMIT_PER_HOUR: int = 200
+    POWER_BI_SYNC_INTERVAL_HOURS: int = 1
 
 
     # Load parameters strictly from file
@@ -110,8 +130,8 @@ class Settings(BaseSettings):
 
     @field_validator("DATABASE_URL")
     def validate_postgres_protocol(cls, v: AnyUrl) -> AnyUrl:
-        if v.scheme not in ("postgresql", "sqlite"):
-            raise ValueError("DATABASE_URL must be a valid PostgreSQL or SQLite connection scheme.")
+        if v.scheme not in ("postgresql", "postgresql+psycopg2"):
+            raise ValueError("DATABASE_URL must be a valid PostgreSQL connection scheme.")
         return v
 
 # Singleton instantiation

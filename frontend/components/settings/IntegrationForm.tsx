@@ -14,7 +14,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { Database, Link2, Server, Key, Info, CheckCircle2, XCircle } from 'lucide-react'
+import { Database, Link2, Server, Key, Info, CheckCircle2, XCircle, Globe, Sliders, Activity } from 'lucide-react'
 import { useCreateIntegration, useTestIntegration } from '@/hooks/useSettings'
 
 interface IntegrationFormProps {
@@ -43,6 +43,12 @@ export default function IntegrationForm({ isOpen, onOpenChange, provider }: Inte
         setConfig({ project_id: '', client_email: '', private_key: '' })
       } else if (provider === 'REDSHIFT') {
         setConfig({ host: '', port: '5439', database: 'dev', username: 'awsuser', password: '' })
+      } else if (provider === 'TABLEAU') {
+        setConfig({ url: 'https://tableau.qolyx.local', token: '', token_name: 'qolyx_token', site_name: '' })
+      } else if (provider === 'LOOKER') {
+        setConfig({ url: 'https://looker.qolyx.local:19999', client_id: '', client_secret: '' })
+      } else if (provider === 'POWERBI') {
+        setConfig({ tenant_id: '', client_id: '', client_secret: '' })
       }
     }
   }, [isOpen, provider])
@@ -89,6 +95,12 @@ export default function IntegrationForm({ isOpen, onOpenChange, provider }: Inte
         return <Server className="h-6 w-6 text-cyan-400" />
       case 'BIGQUERY':
         return <Key className="h-6 w-6 text-yellow-400" />
+      case 'POWERBI':
+        return <Globe className="h-6 w-6 text-amber-500" />
+      case 'TABLEAU':
+        return <Sliders className="h-6 w-6 text-indigo-500" />
+      case 'LOOKER':
+        return <Activity className="h-6 w-6 text-violet-500" />
       default:
         return <Database className="h-6 w-6 text-primary" />
     }
@@ -423,6 +435,142 @@ export default function IntegrationForm({ isOpen, onOpenChange, provider }: Inte
                     onChange={(e) => handleConfigChange('private_key', e.target.value)}
                     className="font-mono text-xs bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 resize-none"
                   />
+                </div>
+              </div>
+            )}
+
+            {/* Tableau Fields */}
+            {provider === 'TABLEAU' && (
+              <div className="space-y-4">
+                <div className="space-y-1">
+                  <Label htmlFor="tab-url">Tableau Server URL</Label>
+                  <Input
+                    id="tab-url"
+                    required
+                    placeholder="https://tableau.qolyx.local"
+                    value={config.url || ''}
+                    onChange={(e) => handleConfigChange('url', e.target.value)}
+                    className="bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-xs"
+                  />
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="space-y-1">
+                    <Label htmlFor="tab-token-name">PAT Name</Label>
+                    <Input
+                      id="tab-token-name"
+                      required
+                      placeholder="qolyx_token"
+                      value={config.token_name || ''}
+                      onChange={(e) => handleConfigChange('token_name', e.target.value)}
+                      className="bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-xs"
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <Label htmlFor="tab-site-name">Site Name (contentUrl)</Label>
+                    <Input
+                      id="tab-site-name"
+                      placeholder="Default Site (leave blank if empty)"
+                      value={config.site_name || ''}
+                      onChange={(e) => handleConfigChange('site_name', e.target.value)}
+                      className="bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-xs"
+                    />
+                  </div>
+                </div>
+                <div className="space-y-1">
+                  <Label htmlFor="tab-token">Personal Access Token (PAT) Secret</Label>
+                  <Input
+                    id="tab-token"
+                    type="password"
+                    required
+                    placeholder="PAT Secret String"
+                    value={config.token || ''}
+                    onChange={(e) => handleConfigChange('token', e.target.value)}
+                    className="bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-xs"
+                  />
+                </div>
+              </div>
+            )}
+
+            {/* Looker Fields */}
+            {provider === 'LOOKER' && (
+              <div className="space-y-4">
+                <div className="space-y-1">
+                  <Label htmlFor="look-url">Looker Host URL (with Port)</Label>
+                  <Input
+                    id="look-url"
+                    required
+                    placeholder="https://looker.qolyx.local:19999"
+                    value={config.url || ''}
+                    onChange={(e) => handleConfigChange('url', e.target.value)}
+                    className="bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-xs"
+                  />
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="space-y-1">
+                    <Label htmlFor="look-cid">Client ID</Label>
+                    <Input
+                      id="look-cid"
+                      required
+                      placeholder="API Client ID"
+                      value={config.client_id || ''}
+                      onChange={(e) => handleConfigChange('client_id', e.target.value)}
+                      className="bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-xs"
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <Label htmlFor="look-sec">Client Secret</Label>
+                    <Input
+                      id="look-sec"
+                      type="password"
+                      required
+                      placeholder="API Client Secret"
+                      value={config.client_secret || ''}
+                      onChange={(e) => handleConfigChange('client_secret', e.target.value)}
+                      className="bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-xs"
+                    />
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Power BI Fields */}
+            {provider === 'POWERBI' && (
+              <div className="space-y-4">
+                <div className="space-y-1">
+                  <Label htmlFor="pbi-tenant">Azure AD Tenant ID</Label>
+                  <Input
+                    id="pbi-tenant"
+                    required
+                    placeholder="Tenant UUID"
+                    value={config.tenant_id || ''}
+                    onChange={(e) => handleConfigChange('tenant_id', e.target.value)}
+                    className="bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-xs"
+                  />
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="space-y-1">
+                    <Label htmlFor="pbi-cid">App Client ID</Label>
+                    <Input
+                      id="pbi-cid"
+                      required
+                      placeholder="App Client UUID"
+                      value={config.client_id || ''}
+                      onChange={(e) => handleConfigChange('client_id', e.target.value)}
+                      className="bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-xs"
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <Label htmlFor="pbi-sec">Client Secret</Label>
+                    <Input
+                      id="pbi-sec"
+                      type="password"
+                      required
+                      placeholder="App Client Secret"
+                      value={config.client_secret || ''}
+                      onChange={(e) => handleConfigChange('client_secret', e.target.value)}
+                      className="bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-xs"
+                    />
+                  </div>
                 </div>
               </div>
             )}

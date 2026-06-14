@@ -20,7 +20,13 @@ EXCLUDED_FOLDERS = {
     "frontend",
     "dbt_packages",
     "infra",
-    ".ai"
+    ".ai",
+    "database",
+    "migrations",
+    "target",
+    "modules",
+    "backend",
+    "scratch"
 }
 
 # Heuristic ETL keywords inside Python files to qualify them as data pipelines

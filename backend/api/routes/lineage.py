@@ -237,7 +237,8 @@ def show_health_propagation(node_id: str, db: Session = Depends(get_db)) -> Dict
             "hops": hops,
             "base_score": child.meta.get("base_score", 100.0) if child and child.meta else 100.0,
             "propagated_penalty": decayed_penalty,
-            "resulting_score": child.trust_score if child else max(0.0, 100.0 - decayed_penalty)
+            "resulting_score": child.trust_score if child else max(0.0, 100.0 - decayed_penalty),
+            "column_penalties": child.meta.get("column_penalties", {}) if child and child.meta else {}
         })
 
     return {
@@ -295,4 +296,32 @@ def run_schema_comparison(node_id: str, db: Session = Depends(get_db)) -> Dict[s
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Schema comparison failed: {str(e)}"
+        )
+
+
+@router.get("/upstream-columns")
+def get_upstream_columns_endpoint(
+    table: str = Query(..., description="Target table name (e.g. gold_daily_market_summary)"),
+    column: str = Query(..., description="Target column name (e.g. avg_close_price)"),
+    db: Session = Depends(get_db)
+) -> List[Dict[str, str]]:
+    """Query upstream source columns that flow into a specific target table and column."""
+    try:
+        resolved_node_id = resolve_node_id(db, table)
+        from backend.modules.lineage.anomaly_suppression import get_upstream_columns
+        upstream = get_upstream_columns(db, resolved_node_id, column)
+        
+        results = []
+        for src_node_id, src_col in upstream:
+            src_table = src_node_id.split(".")[-1]
+            results.append({
+                "source_table": src_table,
+                "source_column": src_col
+            })
+        return results
+    except Exception as e:
+        logger.error(f"Failed to query upstream columns for table={table}, column={column}", exc_info=True)
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error querying upstream columns: {str(e)}"
         )

@@ -41,11 +41,13 @@ services:
     volumes:
       - ../backend:/app/backend
       - ../demo:/app/demo
+      - ../dbt_project:/app/dbt_project
     environment:
       - ENVIRONMENT=${ENVIRONMENT}
       - DEBUG=${DEBUG}
       - SECRET_KEY=${SECRET_KEY}
-      - DATABASE_URL=${DATABASE_URL}
+      - DATABASE_URL=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@qolyx-db:5432/${POSTGRES_DB}
+      - DBT_PROJECT_PATH=/app/dbt_project
       - REDIS_URL=${REDIS_URL}
       - BACKEND_PORT=${BACKEND_PORT}
       - POSTGRES_PORT=${POSTGRES_PORT}
@@ -93,7 +95,7 @@ services:
       - AIRFLOW__CORE__LOAD_EXAMPLES=False
       - AIRFLOW__LOGGING__LOGGING_LEVEL=INFO
       - PYTHONPATH=/opt/airflow
-      - DATABASE_URL=${DATABASE_URL}
+      - DATABASE_URL=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@qolyx-db:5432/${POSTGRES_DB}
       - REDIS_URL=${REDIS_URL}
       - FINNHUB_API_KEY=${FINNHUB_API_KEY}
       - SECRET_KEY=${SECRET_KEY}

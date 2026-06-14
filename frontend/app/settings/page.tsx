@@ -232,6 +232,12 @@ export default function SettingsPage() {
         return <Server className="h-5 w-5 text-cyan-400" />
       case 'BIGQUERY':
         return <Key className="h-5 w-5 text-yellow-400" />
+      case 'POWERBI':
+        return <Globe className="h-5 w-5 text-amber-500" />
+      case 'TABLEAU':
+        return <Sliders className="h-5 w-5 text-indigo-500" />
+      case 'LOOKER':
+        return <Activity className="h-5 w-5 text-violet-500" />
       default:
         return <Database className="h-5 w-5 text-slate-400" />
     }
@@ -568,13 +574,16 @@ export default function SettingsPage() {
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+                <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-4">
                   {[
                     { id: 'POSTGRESQL', name: 'PostgreSQL', desc: 'Query relational tables', icon: <Database className="h-5 w-5 text-sky-400" /> },
                     { id: 'AIRFLOW', name: 'Apache Airflow', desc: 'Sync pipeline DAGs', icon: <Link2 className="h-5 w-5 text-emerald-400" /> },
                     { id: 'SNOWFLAKE', name: 'Snowflake', desc: 'Monitor cloud catalogs', icon: <Server className="h-5 w-5 text-cyan-400" /> },
                     { id: 'BIGQUERY', name: 'BigQuery', desc: 'Audit serverless datasets', icon: <Key className="h-5 w-5 text-yellow-400" /> },
-                    { id: 'REDSHIFT', name: 'Redshift', desc: 'Track data warehouse runs', icon: <Database className="h-5 w-5 text-rose-400" /> }
+                    { id: 'REDSHIFT', name: 'Redshift', desc: 'Track data warehouse runs', icon: <Database className="h-5 w-5 text-rose-400" /> },
+                    { id: 'POWERBI', name: 'Power BI', desc: 'Sync workspaces & reports', icon: <Globe className="h-5 w-5 text-amber-500" /> },
+                    { id: 'TABLEAU', name: 'Tableau', desc: 'Query workbook details', icon: <Sliders className="h-5 w-5 text-indigo-500" /> },
+                    { id: 'LOOKER', name: 'Looker', desc: 'Monitor dashboard Explores', icon: <Activity className="h-5 w-5 text-violet-500" /> }
                   ].map((provider) => (
                     <button
                       key={provider.id}

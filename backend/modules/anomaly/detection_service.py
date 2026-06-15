@@ -14,6 +14,32 @@ from backend.modules.anomaly.shap_service import SHAPService
 logger = logging.getLogger("qolyx.anomaly")
 
 
+def _get_pipeline_sensitivity(db: Session, table_name: str) -> str:
+    """Helper to query the configured sensitivity (LOW, MEDIUM, HIGH) for a table's pipeline."""
+    pipeline_name = "finnhub"
+    if "fda" in table_name:
+        pipeline_name = "fda"
+    elif "github" in table_name:
+        pipeline_name = "github"
+    else:
+        for pk in ["finnhub", "fda", "github"]:
+            if pk in table_name:
+                pipeline_name = pk
+                break
+                
+    from backend.modules.incidents.models import SystemSettings
+    rec = db.query(SystemSettings).filter(SystemSettings.key == "pipeline_frequency_settings").first()
+    if rec and rec.value:
+        try:
+            import json
+            settings_dict = json.loads(rec.value)
+            if pipeline_name in settings_dict:
+                return settings_dict[pipeline_name].get("sensitivity", "MEDIUM")
+        except Exception:
+            pass
+    return "MEDIUM"
+
+
 def _classify_anomaly_type(
     db: Session,
     table_name: str,
@@ -123,15 +149,28 @@ def detect_anomalies(
 
     X = np.array([vector], dtype=float)
 
-    # 4. Predict anomaly label (-1 = anomaly, 1 = normal)
-    prediction = int(model.predict(X)[0])
+    # 4. Predict anomaly label using dynamic sensitivity threshold
+    decision_score = float(model.decision_function(X)[0])
+    sensitivity = _get_pipeline_sensitivity(db, table_name)
     
-    if prediction != -1:
+    SENSITIVITY_OFFSETS = {
+        "HIGH": 0.05,    # More sensitive: triggers if decision_score < 0.05 (even minor outliers)
+        "MEDIUM": 0.0,   # Default: triggers if decision_score < 0.0
+        "LOW": -0.05     # Less sensitive: triggers only if decision_score < -0.05 (extreme outliers only)
+    }
+    
+    threshold = SENSITIVITY_OFFSETS.get(sensitivity, 0.0)
+    is_anomaly = decision_score < threshold
+    
+    if not is_anomaly:
         logger.info(
-            "No anomalies detected by Isolation Forest model",
+            "No anomalies detected by Isolation Forest model under current sensitivity parameters",
             extra={
                 "table_name": table_name, 
-                "pipeline_run_id": str(pipeline_run_id)
+                "pipeline_run_id": str(pipeline_run_id),
+                "decision_score": decision_score,
+                "sensitivity": sensitivity,
+                "threshold": threshold
             }
         )
         return None

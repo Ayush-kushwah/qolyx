@@ -64,15 +64,22 @@ export default function SettingsPage() {
   const deleteIntegrationMutation = useDeleteIntegration()
   const syncIntegrationMutation = useSyncIntegration()
 
-  // --- Original Zustand Pipeline Settings ---
+  // --- Zustand Pipeline Settings ---
   const {
     pipelineSettings,
+    isLoading: isPipelineSettingsLoading,
+    fetchSettings,
     setPipelineRunFrequency,
     setAlertFrequency,
     setAnomalyImmediateAlert,
+    setSensitivity,
     setSeverityOverride,
     saveSettings: savePipelineSettings
   } = useSettingsStore()
+
+  useEffect(() => {
+    fetchSettings()
+  }, [])
 
   // --- Local UI States ---
   const [activeTab, setActiveTab] = useState('pipelines')
@@ -134,11 +141,12 @@ export default function SettingsPage() {
 
   // Reset to default settings helper
   const handleResetDefaults = () => {
-    const pipelines = ['finnhub', 'fda', 'github'] as const
+    const pipelines = Object.keys(pipelineSettings)
     pipelines.forEach(p => {
       setPipelineRunFrequency(p, 15)
       setAlertFrequency(p, 30)
       setAnomalyImmediateAlert(p, true)
+      setSensitivity(p, 'MEDIUM')
       setSeverityOverride(p, 'CRITICAL', 1)
       setSeverityOverride(p, 'HIGH', 5)
       setSeverityOverride(p, 'MEDIUM', 15)
@@ -286,212 +294,244 @@ export default function SettingsPage() {
 
           {/* 1. Pipelines Tab Content */}
           <TabsContent value="pipelines" className="space-y-6">
-            <div className="space-y-6">
-              {(['finnhub', 'fda', 'github'] as const).map((pipelineKey) => {
-                const config = pipelineSettings[pipelineKey]
-                const isAlertInvalid = config.alert_frequency_minutes < config.run_frequency_minutes
+            {isPipelineSettingsLoading ? (
+              <div className="flex flex-col items-center justify-center py-20 gap-2 text-slate-500 dark:text-slate-400">
+                <LoadingSpinner text="Fetching schedules from Qolyx database..." />
+              </div>
+            ) : (
+              <>
+                <div className="space-y-6">
+                  {Object.keys(pipelineSettings).map((pipelineKey) => {
+                    const config = pipelineSettings[pipelineKey]
+                    const isAlertInvalid = config.alert_frequency_minutes < config.run_frequency_minutes
 
-                return (
-                  <div 
-                    key={pipelineKey}
-                    className="glass-panel p-6 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/10 space-y-6 relative overflow-hidden"
-                  >
-                    <div className="absolute top-0 left-0 w-1 h-full bg-gradient-to-b from-primary to-transparent" />
-
-                    <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-4">
-                      <div className="flex items-center gap-3">
-                        <div className="p-2 bg-slate-100 dark:bg-slate-950/40 rounded-lg border border-slate-200 dark:border-white/5">
-                          {getPipelineIcon(pipelineKey)}
-                        </div>
-                        <div>
-                          <h3 className="font-extrabold text-slate-800 dark:text-slate-200 text-sm tracking-tight">
-                            {getPipelineTitle(pipelineKey)}
-                          </h3>
-                          <span className="text-[10px] text-slate-600 dark:text-slate-500 font-mono">Key: {pipelineKey}</span>
-                        </div>
-                      </div>
-                      <Badge variant="outline" className="bg-slate-100 dark:bg-slate-950/40 border-slate-200 dark:border-slate-800 text-[9px] font-mono font-bold py-0.5 px-2 text-slate-600 dark:text-slate-400">
-                        Active
-                      </Badge>
-                    </div>
-
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                      <div className="space-y-3">
-                        <div className="flex items-center justify-between">
-                          <Label className="text-xs font-semibold uppercase tracking-wider text-slate-600 dark:text-slate-400 flex items-center gap-1.5">
-                            <Clock className="h-3.5 w-3.5 text-primary" />
-                            Ingestion Interval
-                          </Label>
-                          <div className="flex items-center gap-1.5">
-                            <Input
-                              type="number"
-                              min="1"
-                              max="1440"
-                              value={config.run_frequency_minutes}
-                              onChange={(e) => setPipelineRunFrequency(pipelineKey, parseInt(e.target.value, 10) || 1)}
-                              className="w-16 h-7 text-center bg-white dark:bg-slate-950/50 border-slate-200 dark:border-slate-800 text-xs font-mono font-black text-slate-800 dark:text-slate-200 p-0"
-                            />
-                            <span className="text-[10px] text-slate-600 dark:text-slate-500 font-bold">m</span>
-                          </div>
-                        </div>
-
-                        <div className="flex items-center gap-4">
-                          <input 
-                            type="range"
-                            min="1"
-                            max="360"
-                            value={config.run_frequency_minutes}
-                            onChange={(e) => setPipelineRunFrequency(pipelineKey, parseInt(e.target.value, 10) || 1)}
-                            className="w-full h-1 bg-slate-200 dark:bg-slate-950/80 rounded-lg appearance-none cursor-pointer accent-primary"
-                          />
-                          <span className="text-[10px] text-slate-600 dark:text-slate-500 font-mono min-w-[30px] text-right">360m</span>
-                        </div>
-                        <span className="text-[10px] text-slate-500 dark:text-slate-400 leading-normal block">
-                          Controls how frequently schedulers invoke the raw fetch methods.
-                        </span>
-                      </div>
-
-                      <div className="space-y-3">
-                        <div className="flex items-center justify-between">
-                          <Label className="text-xs font-semibold uppercase tracking-wider text-slate-600 dark:text-slate-400 flex items-center gap-1.5">
-                            <Volume2 className="h-3.5 w-3.5 text-emerald-400" />
-                            Alert Suppress Duration
-                          </Label>
-                          <div className="flex items-center gap-1.5">
-                            <Input
-                              type="number"
-                              min="1"
-                              max="1440"
-                              value={config.alert_frequency_minutes}
-                              onChange={(e) => setAlertFrequency(pipelineKey, parseInt(e.target.value, 10) || 1)}
-                              className="w-16 h-7 text-center bg-white dark:bg-slate-950/50 border-slate-200 dark:border-slate-800 text-xs font-mono font-black text-slate-800 dark:text-slate-200 p-0"
-                            />
-                            <span className="text-[10px] text-slate-600 dark:text-slate-500 font-bold">m</span>
-                          </div>
-                        </div>
-
-                        <div className="flex items-center gap-4">
-                          <input 
-                            type="range"
-                            min="1"
-                            max="360"
-                            value={config.alert_frequency_minutes}
-                            onChange={(e) => setAlertFrequency(pipelineKey, parseInt(e.target.value, 10) || 1)}
-                            className="w-full h-1 bg-slate-200 dark:bg-slate-950/80 rounded-lg appearance-none cursor-pointer accent-primary"
-                          />
-                          <span className="text-[10px] text-slate-600 dark:text-slate-500 font-mono min-w-[30px] text-right">360m</span>
-                        </div>
-                        <span className="text-[10px] text-slate-500 dark:text-slate-400 leading-normal block">
-                          Suppresses consecutive notifications to avoid spamming alerts to Teams/Slack channels.
-                        </span>
-                      </div>
-                    </div>
-
-                    {isAlertInvalid && (
-                      <div className="p-3 bg-amber-500/10 border border-amber-500/20 rounded-lg text-xs text-amber-500 flex items-center gap-2">
-                        <AlertTriangle className="h-4 w-4 flex-shrink-0" />
-                        <span>
-                          Warning: Alert suppression interval ({config.alert_frequency_minutes}m) should be greater than or equal to ingestion run frequency ({config.run_frequency_minutes}m) to avoid skipped alerts.
-                        </span>
-                      </div>
-                    )}
-
-                    <div className="flex items-center justify-between p-3.5 rounded-lg bg-slate-100 dark:bg-slate-950/20 border border-slate-200 dark:border-slate-800">
-                      <div className="space-y-0.5">
-                        <span className="text-xs font-bold text-slate-800 dark:text-slate-300">Bypass Suppression on Anomalies</span>
-                        <p className="text-[10px] text-slate-500 dark:text-slate-400">
-                          Disregard suppressions and alert immediately when statistical anomalies or contract violations are detected.
-                        </p>
-                      </div>
-                      <Switch
-                        checked={config.anomaly_immediate_alert}
-                        onCheckedChange={(checked) => setAnomalyImmediateAlert(pipelineKey, checked)}
-                        className="data-[state=checked]:bg-primary"
-                      />
-                    </div>
-
-                    <div className="border-t border-slate-200 dark:border-slate-800 pt-4">
-                      <button
-                        type="button"
-                        onClick={() => toggleCollapse(pipelineKey)}
-                        className="flex items-center justify-between w-full text-xs font-bold text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200 transition-colors"
+                    return (
+                      <div 
+                        key={pipelineKey}
+                        className="glass-panel p-6 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/10 space-y-6 relative overflow-hidden"
                       >
-                        <span className="flex items-center gap-1.5 uppercase tracking-wider font-mono">
-                          <Sliders className="h-3.5 w-3.5 text-primary" />
-                          Severity-Based Alert Overrides
-                        </span>
-                        {collapsedPipeline[pipelineKey] ? (
-                          <ChevronDown className="h-4 w-4" />
-                        ) : (
-                          <ChevronUp className="h-4 w-4" />
-                        )}
-                      </button>
+                        <div className="absolute top-0 left-0 w-1 h-full bg-gradient-to-b from-primary to-transparent" />
 
-                      {!collapsedPipeline[pipelineKey] && (
-                        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 mt-4 p-4 rounded-lg bg-slate-100 dark:bg-slate-950/20 border border-slate-200 dark:border-slate-800 animate-fadeIn">
-                          <div className="space-y-2">
-                            <div className="flex items-center justify-between text-[10px] font-bold">
-                              <span className="text-rose-500">CRITICAL</span>
-                              <span className="font-mono">{config.severity_overrides?.CRITICAL ?? 'N/A'} min</span>
+                        <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-4">
+                          <div className="flex items-center gap-3">
+                            <div className="p-2 bg-slate-100 dark:bg-slate-950/40 rounded-lg border border-slate-200 dark:border-white/5">
+                              {getPipelineIcon(pipelineKey)}
                             </div>
-                            <input
-                              type="range"
-                              min="1"
-                              max="120"
-                              value={config.severity_overrides?.CRITICAL ?? 1}
-                              onChange={(e) => setSeverityOverride(pipelineKey, 'CRITICAL', parseInt(e.target.value, 10))}
-                              className="w-full h-1 bg-slate-200 dark:bg-slate-900 rounded-lg appearance-none cursor-pointer accent-rose-500"
-                            />
+                            <div>
+                              <h3 className="font-extrabold text-slate-800 dark:text-slate-200 text-sm tracking-tight">
+                                {getPipelineTitle(pipelineKey)}
+                              </h3>
+                              <span className="text-[10px] text-slate-600 dark:text-slate-500 font-mono">Key: {pipelineKey}</span>
+                            </div>
                           </div>
-                          <div className="space-y-2">
-                            <div className="flex items-center justify-between text-[10px] font-bold">
-                              <span className="text-orange-500">HIGH</span>
-                              <span className="font-mono">{config.severity_overrides?.HIGH ?? 'N/A'} min</span>
+                          <Badge variant="outline" className="bg-slate-100 dark:bg-slate-950/40 border-slate-200 dark:border-slate-800 text-[9px] font-mono font-bold py-0.5 px-2 text-slate-600 dark:text-slate-400">
+                            Active
+                          </Badge>
+                        </div>
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                          <div className="space-y-3">
+                            <div className="flex items-center justify-between">
+                              <Label className="text-xs font-semibold uppercase tracking-wider text-slate-600 dark:text-slate-400 flex items-center gap-1.5">
+                                <Clock className="h-3.5 w-3.5 text-primary" />
+                                Ingestion Interval
+                              </Label>
+                              <div className="flex items-center gap-1.5">
+                                <Input
+                                  type="number"
+                                  min="1"
+                                  max="1440"
+                                  value={config.run_frequency_minutes}
+                                  onChange={(e) => setPipelineRunFrequency(pipelineKey, parseInt(e.target.value, 10) || 1)}
+                                  className="w-16 h-7 text-center bg-white dark:bg-slate-950/50 border-slate-200 dark:border-slate-800 text-xs font-mono font-black text-slate-800 dark:text-slate-200 p-0"
+                                />
+                                <span className="text-[10px] text-slate-600 dark:text-slate-500 font-bold">m</span>
+                              </div>
                             </div>
-                            <input
-                              type="range"
-                              min="1"
-                              max="120"
-                              value={config.severity_overrides?.HIGH ?? 5}
-                              onChange={(e) => setSeverityOverride(pipelineKey, 'HIGH', parseInt(e.target.value, 10))}
-                              className="w-full h-1 bg-slate-200 dark:bg-slate-900 rounded-lg appearance-none cursor-pointer accent-orange-500"
-                            />
+
+                            <div className="flex items-center gap-4">
+                              <input 
+                                type="range"
+                                min="1"
+                                max="360"
+                                value={config.run_frequency_minutes}
+                                onChange={(e) => setPipelineRunFrequency(pipelineKey, parseInt(e.target.value, 10) || 1)}
+                                className="w-full h-1 bg-slate-200 dark:bg-slate-950/80 rounded-lg appearance-none cursor-pointer accent-primary"
+                              />
+                              <span className="text-[10px] text-slate-600 dark:text-slate-500 font-mono min-w-[30px] text-right">360m</span>
+                            </div>
+                            <span className="text-[10px] text-slate-500 dark:text-slate-400 leading-normal block">
+                              Controls how frequently schedulers invoke the raw fetch methods.
+                            </span>
                           </div>
-                          <div className="space-y-2">
-                            <div className="flex items-center justify-between text-[10px] font-bold">
-                              <span className="text-amber-500">MEDIUM</span>
-                              <span className="font-mono">{config.severity_overrides?.MEDIUM ?? 'N/A'} min</span>
+
+                          <div className="space-y-3">
+                            <div className="flex items-center justify-between">
+                              <Label className="text-xs font-semibold uppercase tracking-wider text-slate-600 dark:text-slate-400 flex items-center gap-1.5">
+                                <Volume2 className="h-3.5 w-3.5 text-emerald-400" />
+                                Alert Suppress Duration
+                              </Label>
+                              <div className="flex items-center gap-1.5">
+                                <Input
+                                  type="number"
+                                  min="1"
+                                  max="1440"
+                                  value={config.alert_frequency_minutes}
+                                  onChange={(e) => setAlertFrequency(pipelineKey, parseInt(e.target.value, 10) || 1)}
+                                  className="w-16 h-7 text-center bg-white dark:bg-slate-950/50 border-slate-200 dark:border-slate-800 text-xs font-mono font-black text-slate-800 dark:text-slate-200 p-0"
+                                />
+                                <span className="text-[10px] text-slate-600 dark:text-slate-500 font-bold">m</span>
+                              </div>
                             </div>
-                            <input
-                              type="range"
-                              min="1"
-                              max="120"
-                              value={config.severity_overrides?.MEDIUM ?? 15}
-                              onChange={(e) => setSeverityOverride(pipelineKey, 'MEDIUM', parseInt(e.target.value, 10))}
-                              className="w-full h-1 bg-slate-200 dark:bg-slate-900 rounded-lg appearance-none cursor-pointer accent-amber-500"
-                            />
-                          </div>
-                          <div className="space-y-2">
-                            <div className="flex items-center justify-between text-[10px] font-bold">
-                              <span className="text-sky-500">LOW</span>
-                              <span className="font-mono">{config.severity_overrides?.LOW ?? 'N/A'} min</span>
+
+                            <div className="flex items-center gap-4">
+                              <input 
+                                type="range"
+                                min="1"
+                                max="360"
+                                value={config.alert_frequency_minutes}
+                                onChange={(e) => setAlertFrequency(pipelineKey, parseInt(e.target.value, 10) || 1)}
+                                className="w-full h-1 bg-slate-200 dark:bg-slate-950/80 rounded-lg appearance-none cursor-pointer accent-primary"
+                              />
+                              <span className="text-[10px] text-slate-600 dark:text-slate-500 font-mono min-w-[30px] text-right">360m</span>
                             </div>
-                            <input
-                              type="range"
-                              min="1"
-                              max="240"
-                              value={config.severity_overrides?.LOW ?? 60}
-                              onChange={(e) => setSeverityOverride(pipelineKey, 'LOW', parseInt(e.target.value, 10))}
-                              className="w-full h-1 bg-slate-200 dark:bg-slate-900 rounded-lg appearance-none cursor-pointer accent-sky-500"
-                            />
+                            <span className="text-[10px] text-slate-500 dark:text-slate-400 leading-normal block">
+                              Suppresses consecutive notifications to avoid spamming alerts to Teams/Slack channels.
+                            </span>
                           </div>
                         </div>
-                      )}
-                    </div>
-                  </div>
-                )
-              })}
-            </div>
+
+                        {isAlertInvalid && (
+                          <div className="p-3 bg-amber-500/10 border border-amber-500/20 rounded-lg text-xs text-amber-500 flex items-center gap-2">
+                            <AlertTriangle className="h-4 w-4 flex-shrink-0" />
+                            <span>
+                              Warning: Alert suppression interval ({config.alert_frequency_minutes}m) should be greater than or equal to ingestion run frequency ({config.run_frequency_minutes}m) to avoid skipped alerts.
+                            </span>
+                          </div>
+                        )}
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          <div className="flex items-center justify-between p-3.5 rounded-lg bg-slate-100 dark:bg-slate-950/20 border border-slate-200 dark:border-slate-800">
+                            <div className="space-y-0.5">
+                              <span className="text-xs font-bold text-slate-800 dark:text-slate-300">Bypass Suppression</span>
+                              <p className="text-[10px] text-slate-500 dark:text-slate-400">
+                                Disregard suppressions and alert immediately when statistical anomalies are detected.
+                              </p>
+                            </div>
+                            <Switch
+                              checked={config.anomaly_immediate_alert}
+                              onCheckedChange={(checked) => setAnomalyImmediateAlert(pipelineKey, checked)}
+                              className="data-[state=checked]:bg-primary"
+                            />
+                          </div>
+
+                          <div className="flex items-center justify-between p-3.5 rounded-lg bg-slate-100 dark:bg-slate-950/20 border border-slate-200 dark:border-slate-800 gap-4">
+                            <div className="space-y-0.5">
+                              <span className="text-xs font-bold text-slate-800 dark:text-slate-300">Anomaly Sensitivity</span>
+                              <p className="text-[10px] text-slate-500 dark:text-slate-400">
+                                Tune outlier detection sensitivity threshold for Isolation Forest.
+                              </p>
+                            </div>
+                            <Select
+                              value={config.sensitivity || 'MEDIUM'}
+                              onValueChange={(val) => setSensitivity(pipelineKey, val as any)}
+                            >
+                              <SelectTrigger className="w-28 h-8 text-xs font-bold bg-white dark:bg-slate-950/40 border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white">
+                                <SelectValue placeholder="Sensitivity" />
+                              </SelectTrigger>
+                              <SelectContent className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white">
+                                <SelectItem value="LOW" className="text-xs font-semibold">Low</SelectItem>
+                                <SelectItem value="MEDIUM" className="text-xs font-semibold">Medium</SelectItem>
+                                <SelectItem value="HIGH" className="text-xs font-semibold">High</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </div>
+                        </div>
+
+                        <div className="border-t border-slate-200 dark:border-slate-800 pt-4">
+                          <button
+                            type="button"
+                            onClick={() => toggleCollapse(pipelineKey)}
+                            className="flex items-center justify-between w-full text-xs font-bold text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200 transition-colors"
+                          >
+                            <span className="flex items-center gap-1.5 uppercase tracking-wider font-mono">
+                              <Sliders className="h-3.5 w-3.5 text-primary" />
+                              Severity-Based Alert Overrides
+                            </span>
+                            {collapsedPipeline[pipelineKey] ? (
+                              <ChevronDown className="h-4 w-4" />
+                            ) : (
+                              <ChevronUp className="h-4 w-4" />
+                            )}
+                          </button>
+
+                          {!collapsedPipeline[pipelineKey] && (
+                            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 mt-4 p-4 rounded-lg bg-slate-100 dark:bg-slate-950/20 border border-slate-200 dark:border-slate-800 animate-fadeIn">
+                              <div className="space-y-2">
+                                <div className="flex items-center justify-between text-[10px] font-bold">
+                                  <span className="text-rose-500">CRITICAL</span>
+                                  <span className="font-mono">{config.severity_overrides?.CRITICAL ?? 'N/A'} min</span>
+                                </div>
+                                <input
+                                  type="range"
+                                  min="1"
+                                  max="120"
+                                  value={config.severity_overrides?.CRITICAL ?? 1}
+                                  onChange={(e) => setSeverityOverride(pipelineKey, 'CRITICAL', parseInt(e.target.value, 10))}
+                                  className="w-full h-1 bg-slate-200 dark:bg-slate-900 rounded-lg appearance-none cursor-pointer accent-rose-500"
+                                />
+                              </div>
+                              <div className="space-y-2">
+                                <div className="flex items-center justify-between text-[10px] font-bold">
+                                  <span className="text-orange-500">HIGH</span>
+                                  <span className="font-mono">{config.severity_overrides?.HIGH ?? 'N/A'} min</span>
+                                </div>
+                                <input
+                                  type="range"
+                                  min="1"
+                                  max="120"
+                                  value={config.severity_overrides?.HIGH ?? 5}
+                                  onChange={(e) => setSeverityOverride(pipelineKey, 'HIGH', parseInt(e.target.value, 10))}
+                                  className="w-full h-1 bg-slate-200 dark:bg-slate-900 rounded-lg appearance-none cursor-pointer accent-orange-500"
+                                />
+                              </div>
+                              <div className="space-y-2">
+                                <div className="flex items-center justify-between text-[10px] font-bold">
+                                  <span className="text-amber-500">MEDIUM</span>
+                                  <span className="font-mono">{config.severity_overrides?.MEDIUM ?? 'N/A'} min</span>
+                                </div>
+                                <input
+                                  type="range"
+                                  min="1"
+                                  max="120"
+                                  value={config.severity_overrides?.MEDIUM ?? 15}
+                                  onChange={(e) => setSeverityOverride(pipelineKey, 'MEDIUM', parseInt(e.target.value, 10))}
+                                  className="w-full h-1 bg-slate-200 dark:bg-slate-900 rounded-lg appearance-none cursor-pointer accent-amber-500"
+                                />
+                              </div>
+                              <div className="space-y-2">
+                                <div className="flex items-center justify-between text-[10px] font-bold">
+                                  <span className="text-sky-500">LOW</span>
+                                  <span className="font-mono">{config.severity_overrides?.LOW ?? 'N/A'} min</span>
+                                </div>
+                                <input
+                                  type="range"
+                                  min="1"
+                                  max="240"
+                                  value={config.severity_overrides?.LOW ?? 60}
+                                  onChange={(e) => setSeverityOverride(pipelineKey, 'LOW', parseInt(e.target.value, 10))}
+                                  className="w-full h-1 bg-slate-200 dark:bg-slate-900 rounded-lg appearance-none cursor-pointer accent-sky-500"
+                                />
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    )
+                  })}
+                </div>
+              </>
+            )}
             
             {/* Sticky footer Save Action (Pipelines Tab Only) */}
             <div className="fixed bottom-0 left-0 right-0 md:left-64 bg-white/85 dark:bg-slate-950/85 backdrop-blur-md border-t border-slate-200 dark:border-slate-800 py-4 px-6 flex items-center justify-between z-30">

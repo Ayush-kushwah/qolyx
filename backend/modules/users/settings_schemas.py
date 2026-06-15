@@ -1,4 +1,5 @@
 from pydantic import BaseModel, Field
+from enum import Enum
 from typing import Optional, List, Dict, Any
 from datetime import datetime
 from uuid import UUID
@@ -61,3 +62,24 @@ class IntegrationConnectionResponse(BaseModel):
 class IntegrationTestResponse(BaseModel):
     success: bool
     message: str
+
+
+class SensitivityLevel(str, Enum):
+    LOW = "LOW"
+    MEDIUM = "MEDIUM"
+    HIGH = "HIGH"
+
+
+class PipelineFrequencySettings(BaseModel):
+    pipeline_name: str
+    run_frequency_minutes: int = Field(15, ge=1)
+    alert_frequency_minutes: int = Field(30, ge=1)
+    anomaly_immediate_alert: bool = True
+    sensitivity: SensitivityLevel = SensitivityLevel.MEDIUM
+    severity_overrides: Dict[str, int] = Field(default_factory=lambda: {
+        "CRITICAL": 1,
+        "HIGH": 5,
+        "MEDIUM": 15,
+        "LOW": 60
+    })
+

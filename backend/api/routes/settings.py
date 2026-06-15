@@ -21,6 +21,8 @@ from backend.modules.users.settings_schemas import (
     IntegrationConnectionRequest,
     IntegrationConnectionResponse,
     IntegrationTestResponse,
+    PipelineFrequencySettings,
+    SensitivityLevel,
 )
 from backend.modules.users.utils import encrypt_config, decrypt_config
 
@@ -92,6 +94,123 @@ def update_app_settings(
 
     db.commit()
     return get_app_settings(db, current_user)
+
+
+# --- Pipeline Frequency & Alert Settings Endpoints ---
+
+@router.get("/pipelines", response_model=Dict[str, PipelineFrequencySettings])
+def get_pipeline_settings(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+) -> Dict[str, PipelineFrequencySettings]:
+    """Get active pipeline schedules, alert intervals, suppression, and sensitivity parameters."""
+    rec = db.query(SystemSettings).filter(SystemSettings.key == "pipeline_frequency_settings").first()
+    
+    # Defaults for known pipelines
+    defaults = {
+        "finnhub": {
+            "pipeline_name": "finnhub",
+            "run_frequency_minutes": 15,
+            "alert_frequency_minutes": 30,
+            "anomaly_immediate_alert": True,
+            "sensitivity": "MEDIUM",
+            "severity_overrides": {
+                "CRITICAL": 1,
+                "HIGH": 5,
+                "MEDIUM": 15,
+                "LOW": 60
+            }
+        },
+        "fda": {
+            "pipeline_name": "fda",
+            "run_frequency_minutes": 15,
+            "alert_frequency_minutes": 30,
+            "anomaly_immediate_alert": True,
+            "sensitivity": "MEDIUM",
+            "severity_overrides": {
+                "CRITICAL": 1,
+                "HIGH": 5,
+                "MEDIUM": 15,
+                "LOW": 60
+            }
+        },
+        "github": {
+            "pipeline_name": "github",
+            "run_frequency_minutes": 15,
+            "alert_frequency_minutes": 30,
+            "anomaly_immediate_alert": True,
+            "sensitivity": "MEDIUM",
+            "severity_overrides": {
+                "CRITICAL": 1,
+                "HIGH": 5,
+                "MEDIUM": 15,
+                "LOW": 60
+            }
+        }
+    }
+    
+    settings_dict = {}
+    if rec and rec.value:
+        try:
+            settings_dict = json.loads(rec.value)
+        except Exception:
+            settings_dict = {}
+
+    # Merge defaults for any missing core pipelines
+    for k, v in defaults.items():
+        if k not in settings_dict:
+            settings_dict[k] = v
+
+    # Standardize result using Pydantic
+    parsed_settings = {}
+    for name, config in settings_dict.items():
+        try:
+            parsed_settings[name] = PipelineFrequencySettings(**config)
+        except Exception as e:
+            logger.warning(f"Failed to parse settings for pipeline {name}: {e}")
+            
+    return parsed_settings
+
+
+@router.put("/pipelines", response_model=Dict[str, PipelineFrequencySettings])
+def update_pipeline_settings(
+    payload: Dict[str, PipelineFrequencySettings],
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+) -> Dict[str, PipelineFrequencySettings]:
+    """Update active pipeline schedules, alert intervals, and parameters."""
+    logger.info("Updating pipeline scheduling configurations...")
+    
+    # Validate each config in payload
+    serialized_dict = {}
+    for name, config in payload.items():
+        # Enforce that pipeline_name in body matches key
+        config.pipeline_name = name
+        # Enforce rule: alert_frequency_minutes >= run_frequency_minutes
+        if config.alert_frequency_minutes < config.run_frequency_minutes:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"Validation failed for {name}: Alert frequency ({config.alert_frequency_minutes}) cannot be less than run frequency ({config.run_frequency_minutes})."
+            )
+        serialized_dict[name] = config.model_dump()
+        
+    rec = db.query(SystemSettings).filter(SystemSettings.key == "pipeline_frequency_settings").first()
+    val_str = json.dumps(serialized_dict)
+    
+    if not rec:
+        rec = SystemSettings(
+            id=uuid.uuid4(),
+            key="pipeline_frequency_settings",
+            value=val_str,
+            updated_at=datetime.now(timezone.utc)
+        )
+        db.add(rec)
+    else:
+        rec.value = val_str
+        rec.updated_at = datetime.now(timezone.utc)
+        
+    db.commit()
+    return get_pipeline_settings(db, current_user)
 
 
 # --- API Key Endpoints ---

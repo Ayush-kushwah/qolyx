@@ -187,10 +187,11 @@ export interface EscalationPolicy {
 
 // Settings types (for custom frequency feature - UI only, backend pending)
 export interface PipelineFrequencySettings {
-  pipeline_name: 'finnhub' | 'fda' | 'github';
+  pipeline_name: string;
   run_frequency_minutes: number;
   alert_frequency_minutes: number;
   anomaly_immediate_alert: boolean;
+  sensitivity: 'LOW' | 'MEDIUM' | 'HIGH';
   severity_overrides?: Record<string, number>;
 }
 

@@ -4,15 +4,15 @@ import json
 import os
 from fastapi.testclient import TestClient
 from sqlalchemy import create_engine
+from sqlalchemy.pool import StaticPool
 from sqlalchemy.orm import sessionmaker
 
 from backend.main import app
 from backend.core.database import Base, get_db
 from backend.core.config import settings as app_settings
 
-# Use a local SQLite database for testing.
-DB_FILE = "test_qolyx.db"
-engine = create_engine(f"sqlite:///{DB_FILE}", connect_args={"check_same_thread": False})
+# Use an in-memory SQLite database for testing.
+engine = create_engine("sqlite://", connect_args={"check_same_thread": False}, poolclass=StaticPool)
 TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 @pytest.fixture(scope="function", autouse=True)
@@ -167,6 +167,53 @@ def test_app_settings_endpoints():
     data_put = response_put.json()
     assert data_put["data_retention_days"] == 180
     assert data_put["incident_threshold"] == 85
+
+
+def test_pipeline_settings_endpoints():
+    """Test retrieving and saving pipeline settings."""
+    # 1. GET settings (should return defaults)
+    response = client.get("/api/settings/pipelines")
+    assert response.status_code == 200
+    data = response.json()
+    assert "finnhub" in data
+    assert "fda" in data
+    assert "github" in data
+    assert data["finnhub"]["sensitivity"] == "MEDIUM"
+
+    # 2. PUT settings (update values)
+    update_payload = {
+        "finnhub": {
+            "pipeline_name": "finnhub",
+            "run_frequency_minutes": 30,
+            "alert_frequency_minutes": 60,
+            "anomaly_immediate_alert": False,
+            "sensitivity": "HIGH",
+            "severity_overrides": {
+                "CRITICAL": 1,
+                "HIGH": 10
+            }
+        }
+    }
+    response_put = client.put("/api/settings/pipelines", json=update_payload)
+    assert response_put.status_code == 200
+    data_put = response_put.json()
+    assert data_put["finnhub"]["run_frequency_minutes"] == 30
+    assert data_put["finnhub"]["alert_frequency_minutes"] == 60
+    assert data_put["finnhub"]["anomaly_immediate_alert"] is False
+    assert data_put["finnhub"]["sensitivity"] == "HIGH"
+    
+    # 3. Test validation constraint: alert_frequency_minutes < run_frequency_minutes
+    invalid_payload = {
+        "finnhub": {
+            "pipeline_name": "finnhub",
+            "run_frequency_minutes": 30,
+            "alert_frequency_minutes": 15,
+            "anomaly_immediate_alert": False,
+            "sensitivity": "HIGH"
+        }
+    }
+    response_invalid = client.put("/api/settings/pipelines", json=invalid_payload)
+    assert response_invalid.status_code == 400
 
 
 def test_api_keys_workflow():

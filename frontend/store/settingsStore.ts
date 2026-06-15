@@ -1,35 +1,35 @@
 import { create } from 'zustand'
 import { PipelineFrequencySettings } from '@/types'
 import { toast } from 'sonner'
+import * as api from '@/lib/api'
 
 interface SettingsState {
-  pipelineSettings: Record<'finnhub' | 'fda' | 'github', PipelineFrequencySettings>
-  setPipelineRunFrequency: (pipeline: 'finnhub' | 'fda' | 'github', minutes: number) => void
-  setAlertFrequency: (pipeline: 'finnhub' | 'fda' | 'github', minutes: number) => void
-  setAnomalyImmediateAlert: (pipeline: 'finnhub' | 'fda' | 'github', enabled: boolean) => void
-  setSeverityOverride: (pipeline: 'finnhub' | 'fda' | 'github', severity: string, minutes: number | undefined) => void
+  pipelineSettings: Record<string, PipelineFrequencySettings>
+  isLoading: boolean
+  fetchSettings: () => Promise<void>
+  setPipelineRunFrequency: (pipeline: string, minutes: number) => void
+  setAlertFrequency: (pipeline: string, minutes: number) => void
+  setAnomalyImmediateAlert: (pipeline: string, enabled: boolean) => void
+  setSensitivity: (pipeline: string, sensitivity: 'LOW' | 'MEDIUM' | 'HIGH') => void
+  setSeverityOverride: (pipeline: string, severity: string, minutes: number | undefined) => void
   validateFrequencies: () => Record<string, string>
   saveSettings: () => Promise<boolean>
 }
 
-const defaultPipelineSettings = (pipeline: 'finnhub' | 'fda' | 'github'): PipelineFrequencySettings => ({
-  pipeline_name: pipeline,
-  run_frequency_minutes: 15,
-  alert_frequency_minutes: 30,
-  anomaly_immediate_alert: true,
-  severity_overrides: {
-    CRITICAL: 1,
-    HIGH: 5,
-    MEDIUM: 15,
-    LOW: 60
-  }
-})
-
 export const useSettingsStore = create<SettingsState>((set, get) => ({
-  pipelineSettings: {
-    finnhub: defaultPipelineSettings('finnhub'),
-    fda: defaultPipelineSettings('fda'),
-    github: defaultPipelineSettings('github')
+  pipelineSettings: {},
+  isLoading: false,
+
+  fetchSettings: async () => {
+    set({ isLoading: true })
+    try {
+      const settings = await api.fetchPipelineSettings()
+      set({ pipelineSettings: settings })
+    } catch (err: any) {
+      toast.error(err.message || 'Failed to load pipeline configurations.')
+    } finally {
+      set({ isLoading: false })
+    }
   },
   
   setPipelineRunFrequency: (pipeline, minutes) => set((state) => ({
@@ -62,8 +62,18 @@ export const useSettingsStore = create<SettingsState>((set, get) => ({
     }
   })),
 
+  setSensitivity: (pipeline, sensitivity) => set((state) => ({
+    pipelineSettings: {
+      ...state.pipelineSettings,
+      [pipeline]: {
+        ...state.pipelineSettings[pipeline],
+        sensitivity: sensitivity
+      }
+    }
+  })),
+
   setSeverityOverride: (pipeline, severity, minutes) => set((state) => {
-    const currentOverrides = state.pipelineSettings[pipeline].severity_overrides || {}
+    const currentOverrides = state.pipelineSettings[pipeline]?.severity_overrides || {}
     const newOverrides = { ...currentOverrides }
     if (minutes === undefined) {
       delete newOverrides[severity]
@@ -103,9 +113,17 @@ export const useSettingsStore = create<SettingsState>((set, get) => ({
       return false
     }
     
-    // Simulate API call to save settings
-    await new Promise((resolve) => setTimeout(resolve, 1000))
-    toast.success('Settings saved locally (backend integration coming in Phase 8.5)')
-    return true
+    set({ isLoading: true })
+    try {
+      const updated = await api.updatePipelineSettings(get().pipelineSettings)
+      set({ pipelineSettings: updated })
+      toast.success('Pipeline configurations successfully saved.')
+      return true
+    } catch (err: any) {
+      toast.error(err.message || 'Failed to save pipeline settings.')
+      return false
+    } finally {
+      set({ isLoading: false })
+    }
   }
 }))

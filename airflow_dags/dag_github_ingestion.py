@@ -4,6 +4,7 @@ import uuid
 from typing import Any
 from airflow import DAG
 from airflow.operators.python import PythonOperator
+from airflow_utils import check_pipeline_cooldown
 
 logger = logging.getLogger("airflow.dag.qolyx_github_ingestion")
 
@@ -113,6 +114,12 @@ with DAG(
     tags=["qolyx", "ingestion", "github"]
 ) as dag:
 
+    task_check = PythonOperator(
+        task_id="check_schedule_cooldown",
+        python_callable=check_pipeline_cooldown,
+        op_kwargs={"pipeline_name": "github"},
+    )
+
     task_ingest = PythonOperator(
         task_id="ingest_github_events",
         python_callable=execute_github_ingestion,
@@ -131,4 +138,4 @@ with DAG(
         provide_context=True,
     )
 
-    task_ingest >> task_dbt >> task_anomaly
+    task_check >> task_ingest >> task_dbt >> task_anomaly

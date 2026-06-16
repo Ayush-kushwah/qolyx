@@ -274,3 +274,81 @@ def test_integrations_workflow():
 
     resp_del = client.delete(f"/api/settings/integrations/{conn_id}")
     assert resp_del.status_code == 200
+
+
+def test_freshness_sla_monitoring():
+    """Test that check_pipeline_freshness_sla triggers an incident when runs are late."""
+    from backend.modules.lineage.silent_failure_detection import check_pipeline_freshness_sla
+    from backend.modules.incidents.models import SystemSettings, Incident
+    from backend.modules.trust_score.models import TrustScore
+    from datetime import datetime, timezone, timedelta
+    import json
+    
+    db = TestingSessionLocal()
+    try:
+        # Seed settings in DB: finnhub run frequency = 15m (SLA = 30m)
+        settings_payload = {
+            "finnhub": {
+                "pipeline_name": "finnhub",
+                "run_frequency_minutes": 15,
+                "alert_frequency_minutes": 30,
+                "anomaly_immediate_alert": True,
+                "sensitivity": "MEDIUM"
+            }
+        }
+        rec = SystemSettings(
+            id=uuid.uuid4(),
+            key="pipeline_frequency_settings",
+            value=json.dumps(settings_payload),
+            updated_at=datetime.now(timezone.utc)
+        )
+        db.add(rec)
+        db.commit()
+
+        # Case 1: Fresh run (10 minutes ago) -> should not trigger incident
+        run1 = TrustScore(
+            id=uuid.uuid4(),
+            pipeline_run_id=uuid.uuid4(),
+            table_name="bronze_financial_candles",
+            total_penalty=0,
+            trust_score=100,
+            trust_score_status="HEALTHY",
+            created_at=datetime.now(timezone.utc) - timedelta(minutes=10)
+        )
+        db.add(run1)
+        db.commit()
+        
+        incidents_count = check_pipeline_freshness_sla(db)
+        assert incidents_count == 0
+        assert db.query(Incident).filter(Incident.table_name == "bronze_financial_candles").count() == 0
+
+        # Case 2: Late run (45 minutes ago, SLA is 30m) -> should trigger incident
+        db.query(TrustScore).delete()
+        run2 = TrustScore(
+            id=uuid.uuid4(),
+            pipeline_run_id=uuid.uuid4(),
+            table_name="bronze_financial_candles",
+            total_penalty=0,
+            trust_score=100,
+            trust_score_status="HEALTHY",
+            created_at=datetime.now(timezone.utc) - timedelta(minutes=45)
+        )
+        db.add(run2)
+        db.commit()
+        
+        incidents_count = check_pipeline_freshness_sla(db)
+        assert incidents_count == 1
+        
+        incident = db.query(Incident).filter(Incident.table_name == "bronze_financial_candles").first()
+        assert incident is not None
+        assert "Silent Failure: Freshness Sla Violation" in incident.title
+        assert incident.state == "OPEN"
+
+        # Case 3: Duplicate execution -> should not duplicate open incident
+        incidents_count_dup = check_pipeline_freshness_sla(db)
+        assert incidents_count_dup == 0
+        assert db.query(Incident).filter(Incident.table_name == "bronze_financial_candles").count() == 1
+        
+    finally:
+        db.close()
+

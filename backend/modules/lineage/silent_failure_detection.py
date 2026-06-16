@@ -281,3 +281,84 @@ def detect_duplicate_propagation(db: Session, node_id: str) -> Optional[Dict[str
         return result
 
     return None
+
+
+def check_pipeline_freshness_sla(db: Session) -> int:
+    """Scan active ingestion pipelines and raise incidents for runs exceeding their freshness SLA.
+    
+    Returns the number of new silent failure incidents created.
+    """
+    logger.info("Executing periodic pipeline freshness SLA checks...")
+    from backend.modules.incidents.models import SystemSettings
+    from backend.modules.trust_score.models import TrustScore
+    import json
+
+    # 1. Fetch settings from DB
+    rec = db.query(SystemSettings).filter(SystemSettings.key == "pipeline_frequency_settings").first()
+    if not rec or not rec.value:
+        logger.info("No pipeline frequency settings configurations found in database; using defaults.")
+        pipeline_configs = {
+            "finnhub": {"run_frequency_minutes": 15},
+            "fda": {"run_frequency_minutes": 15},
+            "github": {"run_frequency_minutes": 15}
+        }
+    else:
+        try:
+            pipeline_configs = json.loads(rec.value)
+        except Exception as e:
+            logger.error(f"Failed to parse pipeline frequency settings: {e}")
+            return 0
+
+    TABLE_NAME_MAP = {
+        "finnhub": "bronze_financial_candles",
+        "fda": "bronze_fda_events",
+        "github": "bronze_github_events",
+    }
+
+    incidents_created = 0
+    now = datetime.now(timezone.utc)
+
+    for pipeline, config in pipeline_configs.items():
+        table_name = TABLE_NAME_MAP.get(pipeline, pipeline)
+        run_freq = int(config.get("run_frequency_minutes", 15))
+        sla_threshold_minutes = run_freq * 2
+
+        # Query the latest TrustScore run timestamp for this table
+        latest_run = db.query(TrustScore).filter(
+            TrustScore.table_name == table_name
+        ).order_by(TrustScore.created_at.desc()).first()
+
+        if latest_run:
+            last_run_time = latest_run.created_at.replace(tzinfo=timezone.utc)
+            elapsed_minutes = (now - last_run_time).total_seconds() / 60.0
+
+            logger.info(f"Pipeline {pipeline} elapsed freshness: {elapsed_minutes:.1f}m. SLA: {sla_threshold_minutes}m.")
+            if elapsed_minutes > sla_threshold_minutes:
+                node_id = f"source.{pipeline}.{table_name}"
+                details = {
+                    "minutes_since_last_run": round(elapsed_minutes, 1),
+                    "sla_threshold_minutes": sla_threshold_minutes,
+                    "last_reported_run": last_run_time.isoformat()
+                }
+                
+                # Check if a similar open incident already exists to avoid duplication
+                existing = db.query(Incident).filter(
+                    Incident.table_name == table_name,
+                    Incident.title.like("%Silent Failure: Freshness Sla Violation%"),
+                    Incident.state == "OPEN"
+                ).first()
+
+                if not existing:
+                    logger.warning(f"Pipeline {pipeline} has exceeded its Freshness SLA. Creating silent failure incident...")
+                    create_silent_failure_incident(
+                        db=db,
+                        node_id=node_id,
+                        failure_type="freshness_sla_violation",
+                        details=details
+                    )
+                    incidents_created += 1
+        else:
+            logger.info(f"No previous runs found for pipeline {pipeline}; skipping SLA validation.")
+
+    return incidents_created
+

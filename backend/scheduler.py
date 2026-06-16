@@ -5,6 +5,7 @@ from apscheduler.schedulers.background import BackgroundScheduler
 from backend.core.database import SessionLocal
 from backend.modules.incidents.escalation_service import EscalationService
 from backend.modules.incidents.rotation_service import RotationService
+from backend.modules.lineage.silent_failure_detection import check_pipeline_freshness_sla
 
 logger = logging.getLogger("qolyx.scheduler")
 
@@ -39,6 +40,20 @@ def check_rotation_job() -> None:
         db.close()
 
 
+def check_freshness_job() -> None:
+    """Scheduled job to check pipeline freshness SLAs and report delayed runs."""
+    logger.info("Running scheduled pipeline freshness SLA checks...")
+    db = SessionLocal()
+    try:
+        count = check_pipeline_freshness_sla(db)
+        if count > 0:
+            logger.info(f"Created {count} freshness SLA violation incident(s) during scheduled run.")
+    except Exception as exc:
+        logger.error("Error occurred during scheduled freshness checks", exc_info=True)
+    finally:
+        db.close()
+
+
 def start_scheduler() -> None:
     """Initializes and starts the BackgroundScheduler for periodic tasks."""
     global _scheduler
@@ -54,6 +69,9 @@ def start_scheduler() -> None:
 
     # Run check_and_rotate every 3600 seconds (1 hour)
     _scheduler.add_job(check_rotation_job, "interval", seconds=3600, id="rotation_check_job")
+
+    # Run check_pipeline_freshness_sla every 600 seconds (10 minutes)
+    _scheduler.add_job(check_freshness_job, "interval", seconds=600, id="freshness_check_job")
 
     _scheduler.start()
     logger.info("Background scheduler successfully started.")
@@ -81,4 +99,5 @@ def run_once_for_testing() -> None:
     logger.info("Running diagnostic jobs synchronously...")
     check_escalation_job()
     check_rotation_job()
+    check_freshness_job()
     logger.info("Diagnostic jobs execution completed.")

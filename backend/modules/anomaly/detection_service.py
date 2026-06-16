@@ -40,6 +40,54 @@ def _get_pipeline_sensitivity(db: Session, table_name: str) -> str:
     return "MEDIUM"
 
 
+def detect_volumetric_anomaly(
+    db: Session,
+    table_name: str,
+    current_row_count: int,
+    sensitivity: str = "MEDIUM"
+) -> Optional[str]:
+    """Calculates the rolling Z-Score for a run's row count and flags statistical anomalies.
+    
+    Returns the type of anomaly ("volume_spike" or "volume_drop") or None if normal.
+    """
+    Z_THRESHOLD_MAP = {
+        "HIGH": 2.0,    # Most sensitive
+        "MEDIUM": 3.0,  # Default
+        "LOW": 4.0      # Least sensitive
+    }
+    z_threshold = Z_THRESHOLD_MAP.get(sensitivity, 3.0)
+
+    # Query the last 30 runs of this table in SilverAnomalyFeature
+    historical_runs = db.query(SilverAnomalyFeature).filter(
+        SilverAnomalyFeature.source_name == table_name
+    ).order_by(SilverAnomalyFeature.run_timestamp.desc()).limit(30).all()
+
+    # Need at least 5 runs to compute a meaningful mean and stddev
+    if len(historical_runs) < 5:
+        logger.info(f"Insufficient history ({len(historical_runs)}/5 runs) to calculate Z-score for table {table_name}.")
+        return None
+
+    row_counts = [run.row_count for run in historical_runs]
+    mean = sum(row_counts) / len(row_counts)
+    
+    variance = sum((x - mean) ** 2 for x in row_counts) / len(row_counts)
+    std_dev = variance ** 0.5
+
+    if std_dev == 0.0:
+        # If std_dev is 0, any deviation from the historical constant volume is flagged
+        if current_row_count != mean:
+            return "volume_spike" if current_row_count > mean else "volume_drop"
+        return None
+
+    z_score = abs(current_row_count - mean) / std_dev
+    logger.info(f"Volumetric check for {table_name}: current={current_row_count}, mean={mean:.1f}, std_dev={std_dev:.1f}, Z-score={z_score:.2f} (threshold={z_threshold})")
+
+    if z_score > z_threshold:
+        return "volume_spike" if current_row_count > mean else "volume_drop"
+
+    return None
+
+
 def _classify_anomaly_type(
     db: Session,
     table_name: str,
@@ -153,27 +201,45 @@ def detect_anomalies(
     decision_score = float(model.decision_function(X)[0])
     sensitivity = _get_pipeline_sensitivity(db, table_name)
     
-    SENSITIVITY_OFFSETS = {
-        "HIGH": 0.05,    # More sensitive: triggers if decision_score < 0.05 (even minor outliers)
-        "MEDIUM": 0.0,   # Default: triggers if decision_score < 0.0
-        "LOW": -0.05     # Less sensitive: triggers only if decision_score < -0.05 (extreme outliers only)
-    }
-    
-    threshold = SENSITIVITY_OFFSETS.get(sensitivity, 0.0)
-    is_anomaly = decision_score < threshold
-    
-    if not is_anomaly:
-        logger.info(
-            "No anomalies detected by Isolation Forest model under current sensitivity parameters",
+    # Fast-Path Volume Check
+    current_row_count = feature_values.get("row_count")
+    volumetric_anomaly = None
+    if current_row_count is not None:
+        volumetric_anomaly = detect_volumetric_anomaly(db, table_name, int(current_row_count), sensitivity)
+        
+    if volumetric_anomaly:
+        is_anomaly = True
+        logger.warning(
+            f"Volumetric statistical anomaly '{volumetric_anomaly}' detected. Fast-pathing alert.",
             extra={
-                "table_name": table_name, 
+                "table_name": table_name,
                 "pipeline_run_id": str(pipeline_run_id),
-                "decision_score": decision_score,
-                "sensitivity": sensitivity,
-                "threshold": threshold
+                "current_row_count": current_row_count,
+                "sensitivity": sensitivity
             }
         )
-        return None
+    else:
+        SENSITIVITY_OFFSETS = {
+            "HIGH": 0.05,    # More sensitive: triggers if decision_score < 0.05 (even minor outliers)
+            "MEDIUM": 0.0,   # Default: triggers if decision_score < 0.0
+            "LOW": -0.05     # Less sensitive: triggers only if decision_score < -0.05 (extreme outliers only)
+        }
+        
+        threshold = SENSITIVITY_OFFSETS.get(sensitivity, 0.0)
+        is_anomaly = decision_score < threshold
+        
+        if not is_anomaly:
+            logger.info(
+                "No anomalies detected by Isolation Forest model under current sensitivity parameters",
+                extra={
+                    "table_name": table_name, 
+                    "pipeline_run_id": str(pipeline_run_id),
+                    "decision_score": decision_score,
+                    "sensitivity": sensitivity,
+                    "threshold": threshold
+                }
+            )
+            return None
 
     # 5. Calculate normalized score
     anomaly_score = IsolationForestService.get_anomaly_score(db, table_name, feature_values)
@@ -184,13 +250,15 @@ def detect_anomalies(
     # 7. Generate SHAP explainability
     feature_importance = SHAPService.explain_anomaly(model, feature_values, feature_names)
 
-    # 8. Classify anomaly type using highest importance feature
-    if feature_importance:
-        primary_feature = max(feature_importance.keys(), key=lambda k: abs(feature_importance[k]))
+    # 8. Classify anomaly type using highest importance feature or use pre-determined fast-path type
+    if volumetric_anomaly:
+        anomaly_type = volumetric_anomaly
     else:
-        primary_feature = "unknown"
-
-    anomaly_type = _classify_anomaly_type(db, table_name, feature_values, primary_feature)
+        if feature_importance:
+            primary_feature = max(feature_importance.keys(), key=lambda k: abs(feature_importance[k]))
+        else:
+            primary_feature = "unknown"
+        anomaly_type = _classify_anomaly_type(db, table_name, feature_values, primary_feature)
 
     # 9. Generate human-readable explanation
     explanation = SHAPService.generate_explanation(feature_importance, anomaly_score, anomaly_type)

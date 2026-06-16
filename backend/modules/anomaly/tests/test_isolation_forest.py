@@ -304,3 +304,46 @@ def test_exponential_decay_weights():
     
     weights = IsolationForestService._get_exponential_decay_weights(3)
     assert weights == [1.0, 0.95, 0.9025]
+
+
+def test_volumetric_anomaly_detection(db_session):
+    """Test detect_volumetric_anomaly flags volumetric spikes and drops based on Z-Score and sensitivity."""
+    from backend.modules.anomaly.detection_service import detect_volumetric_anomaly
+
+    table_name = "bronze_financial_candles"
+
+    # Case 1: Insufficient history (< 5 runs) -> returns None
+    insert_mock_runs(db_session, table_name, count=3)
+    res = detect_volumetric_anomaly(db_session, table_name, current_row_count=150, sensitivity="MEDIUM")
+    assert res is None
+
+    # Add more runs to satisfy the minimum history of 5 (total count = 10)
+    # The inserted row_count will be: 100, 101, 102, 103, 104, 105, 106, 107, 108, 109
+    # Mean is ~104.5, stddev is ~2.87
+    db_session.query(SilverAnomalyFeature).delete()
+    insert_mock_runs(db_session, table_name, count=10)
+
+    # Case 2: Normal run (within 3 standard deviations) -> returns None
+    # Z-score of 110: (110 - 104.5) / 2.87 = ~1.91 (normal under MEDIUM threshold=3.0)
+    res_normal = detect_volumetric_anomaly(db_session, table_name, current_row_count=110, sensitivity="MEDIUM")
+    assert res_normal is None
+
+    # Case 3: Volumetric Spike anomaly (Z-score > threshold)
+    # Z-score of 120: (120 - 104.5) / 2.87 = ~5.4 (should trigger under LOW=4.0, MEDIUM=3.0, HIGH=2.0)
+    res_spike = detect_volumetric_anomaly(db_session, table_name, current_row_count=120, sensitivity="MEDIUM")
+    assert res_spike == "volume_spike"
+
+    # Case 4: Volumetric Drop anomaly
+    # Z-score of 80: (104.5 - 80) / 2.87 = ~8.5 (should trigger drop)
+    res_drop = detect_volumetric_anomaly(db_session, table_name, current_row_count=80, sensitivity="MEDIUM")
+    assert res_drop == "volume_drop"
+
+    # Case 5: Verify sensitivity mapping
+    # Z-score of 112: (112 - 104.5) / 2.87 = ~2.6
+    # Triggers on HIGH (threshold 2.0), but normal on MEDIUM (threshold 3.0)
+    res_high_sens = detect_volumetric_anomaly(db_session, table_name, current_row_count=112, sensitivity="HIGH")
+    assert res_high_sens == "volume_spike"
+
+    res_med_sens = detect_volumetric_anomaly(db_session, table_name, current_row_count=112, sensitivity="MEDIUM")
+    assert res_med_sens is None
+

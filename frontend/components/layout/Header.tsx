@@ -2,7 +2,7 @@
 
 import React from 'react'
 import Link from 'next/link'
-import { usePathname } from 'next/navigation'
+import { usePathname, useRouter } from 'next/navigation'
 import { useTheme } from 'next-themes'
 import { useUiStore } from '@/store/uiStore'
 import { 
@@ -18,6 +18,7 @@ import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet'
 import MobileNav from './MobileNav'
 import { Sun, Moon, Menu, User, LogOut } from 'lucide-react'
+import { logoutUser } from '@/lib/api'
 
 // Page titles mapping based on path
 const getPageTitle = (pathname: string) => {
@@ -35,7 +36,18 @@ const getPageTitle = (pathname: string) => {
 
 export default function Header() {
   const pathname = usePathname()
+  const router = useRouter()
   const { theme, setTheme } = useTheme()
+
+  const handleSignOut = async () => {
+    try {
+      await logoutUser()
+      router.push('/login')
+      router.refresh()
+    } catch (err) {
+      console.error('Failed to log out:', err)
+    }
+  }
 
   return (
     <header className="flex h-16 items-center justify-between border-b border-slate-200 dark:border-slate-800 px-6 bg-white dark:bg-slate-950 z-30 select-none">
@@ -103,7 +115,7 @@ export default function Header() {
                 <span>Profile Settings</span>
               </DropdownMenuItem>
             </Link>
-            <DropdownMenuItem className="hover:bg-slate-100 dark:hover:bg-white/5 cursor-pointer flex items-center gap-2 text-rose-500 hover:text-rose-400">
+            <DropdownMenuItem onClick={handleSignOut} className="hover:bg-slate-100 dark:hover:bg-white/5 cursor-pointer flex items-center gap-2 text-rose-500 hover:text-rose-400">
               <LogOut className="h-4 w-4" />
               <span>Sign out</span>
             </DropdownMenuItem>

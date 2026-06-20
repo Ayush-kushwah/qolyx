@@ -65,3 +65,13 @@ class LoginHistoryResponse(BaseModel):
 
     class Config:
         from_attributes = True
+
+class UserRegisterRequest(BaseModel):
+    name: str
+    email: EmailStr
+    username: str
+    password: str = Field(..., min_length=8)
+
+class UserLoginRequest(BaseModel):
+    email: EmailStr
+    password: str

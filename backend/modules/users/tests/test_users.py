@@ -59,7 +59,23 @@ def override_get_db():
     finally:
         db.close()
 
-app.dependency_overrides[get_db] = override_get_db
+from fastapi import Depends
+from sqlalchemy.orm import Session
+from backend.api.routes.users import get_current_user
+from backend.modules.users.models import User
+
+def override_get_current_user(db: Session = Depends(get_db)):
+    user = db.query(User).filter(User.email == "admin@qolyx.io").first()
+    return user
+
+@pytest.fixture(scope="module", autouse=True)
+def setup_overrides():
+    app.dependency_overrides.clear()
+    app.dependency_overrides[get_db] = override_get_db
+    app.dependency_overrides[get_current_user] = override_get_current_user
+    yield
+    app.dependency_overrides.clear()
+
 client = TestClient(app)
 
 

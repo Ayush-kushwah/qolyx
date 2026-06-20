@@ -6,7 +6,7 @@ from fastapi.middleware.cors import CORSMiddleware
 # Ensure structured logging is configured
 from backend.core import logging as _logging
 from backend.core.config import settings
-from backend.api.routes import health, contracts, anomaly, trust_score, incidents, users, settings as settings_route, lineage
+from backend.api.routes import health, contracts, anomaly, trust_score, incidents, users, settings as settings_route, lineage, auth, llm
 from backend.scheduler import start_scheduler, shutdown_scheduler
 
 logger = logging.getLogger("qolyx.main")
@@ -268,6 +268,7 @@ app.add_middleware(
 
 # Register endpoints under canonical prefix /api
 app.include_router(health.router, prefix="/api")
+app.include_router(auth.router, prefix="/api")
 app.include_router(contracts.router, prefix="/api")
 app.include_router(anomaly.router, prefix="/api")
 app.include_router(trust_score.router, prefix="/api")
@@ -275,6 +276,7 @@ app.include_router(incidents.router, prefix="/api")
 app.include_router(users.router, prefix="/api")
 app.include_router(settings_route.router, prefix="/api")
 app.include_router(lineage.router, prefix="/api")
+app.include_router(llm.router, prefix="/api")
 
 
 @app.get("/")

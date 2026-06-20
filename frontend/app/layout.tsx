@@ -2,9 +2,7 @@ import type { Metadata } from 'next'
 import { Inter } from 'next/font/google'
 import '@/styles/globals.css'
 import { Providers } from '@/components/Providers'
-
-import Sidebar from '@/components/layout/Sidebar'
-import Header from '@/components/layout/Header'
+import LayoutContent from '@/components/layout/LayoutContent'
 
 const inter = Inter({ subsets: ['latin'], variable: '--font-sans' })
 
@@ -22,23 +20,12 @@ export default function RootLayout({
     <html lang="en" suppressHydrationWarning>
       <body className={`${inter.className} min-h-screen antialiased bg-background text-foreground`}>
         <Providers>
-          <div className="flex min-h-screen overflow-hidden">
-            {/* Sidebar Component */}
-            <Sidebar />
-
-            {/* Main Area */}
-            <div className="flex flex-1 flex-col overflow-hidden">
-              {/* Header Component */}
-              <Header />
-
-              {/* Viewport */}
-              <main className="flex-1 overflow-y-auto p-6 md:p-8 bg-slate-950/20">
-                {children}
-              </main>
-            </div>
-          </div>
+          <LayoutContent>
+            {children}
+          </LayoutContent>
         </Providers>
       </body>
     </html>
   )
 }
+

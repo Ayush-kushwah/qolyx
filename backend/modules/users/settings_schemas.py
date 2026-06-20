@@ -83,3 +83,32 @@ class PipelineFrequencySettings(BaseModel):
         "LOW": 60
     })
 
+class LLMProviderRequest(BaseModel):
+    name: str
+    provider_type: str
+    base_url: str
+    model_name: str
+    api_key: Optional[str] = None
+    is_active: bool = True
+    priority: int = 0
+
+class LLMProviderResponse(BaseModel):
+    id: UUID
+    name: str
+    provider_type: str
+    base_url: str
+    model_name: str
+    is_active: bool
+    priority: int
+    created_at: datetime
+
+    class Config:
+        from_attributes = True
+
+class LLMProviderTestRequest(BaseModel):
+    provider_type: str
+    base_url: str
+    model_name: str
+    api_key: Optional[str] = None
+
+

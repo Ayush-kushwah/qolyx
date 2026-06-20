@@ -9,6 +9,7 @@ from sqlalchemy import (
     ForeignKey,
     Text,
     JSON,
+    Integer,
 )
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
@@ -43,6 +44,7 @@ class User(Base):
     sessions = relationship("UserSession", back_populates="user", cascade="all, delete-orphan")
     login_history = relationship("LoginHistory", back_populates="user", cascade="all, delete-orphan")
     api_keys = relationship("ApiKey", back_populates="user", cascade="all, delete-orphan")
+    llm_providers = relationship("LLMProvider", back_populates="user", cascade="all, delete-orphan")
 
 
 class UserSession(Base):
@@ -117,3 +119,24 @@ class IntegrationConnection(Base):
         default=lambda: datetime.now(timezone.utc),
         onupdate=lambda: datetime.now(timezone.utc)
     )
+
+
+class LLMProvider(Base):
+    """Database model representing custom/dynamic LLM providers configured by the user."""
+    __tablename__ = "user_llm_providers"
+    __allow_unmapped__ = True
+
+    id: Any = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    user_id: Any = Column(UUID(as_uuid=True), ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
+    name: Any = Column(String(255), nullable=False)
+    provider_type: Any = Column(String(100), nullable=False)  # OPENAI, ANTHROPIC, OLLAMA, CUSTOM
+    base_url: Any = Column(String(500), nullable=False)
+    model_name: Any = Column(String(255), nullable=False)
+    encrypted_api_key: Any = Column(Text, nullable=True)  # Symmetrically encrypted API key
+    is_active: Any = Column(Boolean, default=True, nullable=False)
+    priority: Any = Column(Integer, default=0, nullable=False)
+    created_at: Any = Column(DateTime, nullable=False, default=lambda: datetime.now(timezone.utc))
+
+    # Relationships
+    user = relationship("User", back_populates="llm_providers")
+

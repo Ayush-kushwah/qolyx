@@ -129,3 +129,57 @@ export function useSyncIntegration() {
     }
   })
 }
+
+export const llmKeys = {
+  providers: ['settings', 'llmProviders'] as const,
+}
+
+export function useLlmProviders() {
+  return useQuery({
+    queryKey: llmKeys.providers,
+    queryFn: () => api.fetchLlmProviders(),
+  })
+}
+
+export function useCreateLlmProvider() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: (data: any) => api.createLlmProvider(data),
+    onSuccess: () => {
+      toast.success('LLM Provider saved successfully.')
+      queryClient.invalidateQueries({ queryKey: llmKeys.providers })
+    },
+    onError: (err: any) => {
+      toast.error(err.message || 'Failed to save LLM Provider.')
+    }
+  })
+}
+
+export function useUpdateLlmProvider() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: ({ id, data }: { id: string; data: any }) => api.updateLlmProvider(id, data),
+    onSuccess: () => {
+      toast.success('LLM Provider updated successfully.')
+      queryClient.invalidateQueries({ queryKey: llmKeys.providers })
+    },
+    onError: (err: any) => {
+      toast.error(err.message || 'Failed to update LLM Provider.')
+    }
+  })
+}
+
+export function useDeleteLlmProvider() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: (id: string) => api.deleteLlmProvider(id),
+    onSuccess: () => {
+      toast.success('LLM Provider deleted successfully.')
+      queryClient.invalidateQueries({ queryKey: llmKeys.providers })
+    },
+    onError: (err: any) => {
+      toast.error(err.message || 'Failed to delete LLM Provider.')
+    }
+  })
+}
+

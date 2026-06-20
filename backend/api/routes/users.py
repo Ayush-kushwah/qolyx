@@ -4,8 +4,10 @@ import uuid
 import logging
 from typing import List
 from datetime import datetime, timezone
-from fastapi import APIRouter, Depends, HTTPException, status, UploadFile, File
+from fastapi import APIRouter, Depends, HTTPException, status, UploadFile, File, Request
 from fastapi.responses import JSONResponse
+import jwt
+from backend.core.config import settings
 from sqlalchemy.orm import Session
 
 from backend.core.database import get_db
@@ -23,18 +25,80 @@ logger = logging.getLogger("qolyx.api.routes.users")
 
 router = APIRouter(prefix="/user", tags=["User Profile"])
 
-def get_current_user(db: Session = Depends(get_db)) -> User:
+def get_current_user(request: Request, db: Session = Depends(get_db)) -> User:
     """
     Dependency to get the current logged-in user.
-    Since we don't have a formal session auth wrapper, we return the seeded admin user.
+    Extracts the JWT from the 'qolyx_session' cookie or 'Authorization: Bearer <token>' header.
     """
-    user = db.query(User).filter(User.email == "admin@qolyx.io").first()
-    if not user:
+    token = request.cookies.get("qolyx_session")
+    
+    # Fallback to Authorization Header
+    if not token:
+        auth_header = request.headers.get("Authorization")
+        if auth_header and auth_header.startswith("Bearer "):
+            token = auth_header.split(" ")[1]
+            
+    if not token:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Session context missing. Seeding may not have run."
+            detail="Session credentials missing. Please log in."
         )
-    return user
+        
+    try:
+        payload = jwt.decode(
+            token,
+            settings.SECRET_KEY.get_secret_value(),
+            algorithms=[settings.JWT_ALGORITHM or "HS256"]
+        )
+        user_id = payload.get("user_id")
+        session_id = payload.get("session_id")
+        
+        if not user_id or not session_id:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Invalid session token."
+            )
+            
+        try:
+            session_uuid = uuid.UUID(session_id) if isinstance(session_id, str) else session_id
+        except ValueError:
+            session_uuid = session_id
+
+        # Check if the session is still active in the database
+        session_active = db.query(UserSession).filter(
+            UserSession.id == session_uuid,
+            UserSession.is_active == True
+        ).first()
+        
+        if not session_active:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Session has been revoked or expired."
+            )
+            
+        try:
+            user_uuid = uuid.UUID(user_id) if isinstance(user_id, str) else user_id
+        except ValueError:
+            user_uuid = user_id
+
+        user = db.query(User).filter(User.id == user_uuid).first()
+        if not user:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="User not found."
+            )
+            
+        return user
+    except jwt.ExpiredSignatureError:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Session has expired. Please log in again."
+        )
+    except jwt.InvalidTokenError:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid session token credentials."
+        )
 
 @router.get("/profile", response_model=UserProfileResponse)
 def get_profile(current_user: User = Depends(get_current_user)) -> UserProfileResponse:

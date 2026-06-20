@@ -10,7 +10,13 @@ import {
   useIntegrations,
   useDeleteIntegration,
   useSyncIntegration,
+  useLlmProviders,
+  useCreateLlmProvider,
+  useUpdateLlmProvider,
+  useDeleteLlmProvider,
 } from '@/hooks/useSettings'
+import { testLlmProviderConnection } from '@/lib/api'
+
 import { useSettingsStore } from '@/store/settingsStore'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '@/components/ui/card'
@@ -63,6 +69,11 @@ export default function SettingsPage() {
   const { data: integrations = [], isLoading: isIntegrationsLoading } = useIntegrations()
   const deleteIntegrationMutation = useDeleteIntegration()
   const syncIntegrationMutation = useSyncIntegration()
+  const { data: llmProviders = [], isLoading: isLlmLoading } = useLlmProviders()
+  const createLlmMutation = useCreateLlmProvider()
+  const updateLlmMutation = useUpdateLlmProvider()
+  const deleteLlmMutation = useDeleteLlmProvider()
+
 
   // --- Zustand Pipeline Settings ---
   const {
@@ -110,6 +121,124 @@ export default function SettingsPage() {
   const [corsOrigins, setCorsOrigins] = useState<string[]>([])
   const [retentionDays, setRetentionDays] = useState(90)
   const [globalWebhook, setGlobalWebhook] = useState('')
+
+  // LLM states
+  const [isLlmFormOpen, setIsLlmFormOpen] = useState(false)
+  const [editingLlmId, setEditingLlmId] = useState<string | null>(null)
+  const [llmName, setLlmName] = useState('')
+  const [llmProviderType, setLlmProviderType] = useState('OPENAI')
+  const [llmBaseUrl, setLlmBaseUrl] = useState('https://api.openai.com/v1')
+  const [llmModelName, setLlmModelName] = useState('gpt-4o')
+  const [llmApiKey, setLlmApiKey] = useState('')
+  const [llmPriority, setLlmPriority] = useState(0)
+  const [llmIsActive, setLlmIsActive] = useState(true)
+  const [isTestingLlm, setIsTestingLlm] = useState(false)
+
+  // Handle LLM Provider Type Selection pre-fill helper
+  const handleLlmProviderTypeChange = (value: string) => {
+    setLlmProviderType(value)
+    switch (value) {
+      case 'OPENAI':
+        setLlmBaseUrl('https://api.openai.com/v1')
+        setLlmModelName('gpt-4o')
+        break
+      case 'ANTHROPIC':
+        setLlmBaseUrl('https://api.anthropic.com/v1/messages')
+        setLlmModelName('claude-3-5-sonnet-20241022')
+        break
+      case 'OLLAMA':
+        setLlmBaseUrl('http://localhost:11434/v1')
+        setLlmModelName('llama3.2')
+        break
+      case 'CUSTOM':
+      default:
+        setLlmBaseUrl('')
+        setLlmModelName('')
+        break
+    }
+  }
+
+  const handleTestLlmConnection = async () => {
+    setIsTestingLlm(true)
+    try {
+      const result = await testLlmProviderConnection({
+        provider_type: llmProviderType,
+        base_url: llmBaseUrl,
+        model_name: llmModelName,
+        api_key: llmApiKey || undefined,
+      })
+      if (result.success) {
+        toast.success(`Connection successful! Response: ${result.response_preview || ''}`)
+      } else {
+        toast.error(`Connection failed: ${result.message}`)
+      }
+    } catch (err: any) {
+      toast.error(`Connectivity check error: ${err.message || err}`)
+    } finally {
+      setIsTestingLlm(false)
+    }
+  }
+
+  const handleSaveLlmProvider = (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!llmName || !llmProviderType || !llmBaseUrl || !llmModelName) {
+      toast.error('Please fill in all required fields.')
+      return
+    }
+
+    const payload = {
+      name: llmName,
+      provider_type: llmProviderType,
+      base_url: llmBaseUrl,
+      model_name: llmModelName,
+      api_key: llmApiKey || undefined,
+      is_active: llmIsActive,
+      priority: llmPriority,
+    }
+
+    if (editingLlmId) {
+      updateLlmMutation.mutate(
+        { id: editingLlmId, data: payload },
+        {
+          onSuccess: () => {
+            setIsLlmFormOpen(false)
+            setEditingLlmId(null)
+            resetLlmForm()
+          },
+        }
+      )
+    } else {
+      createLlmMutation.mutate(payload, {
+        onSuccess: () => {
+          setIsLlmFormOpen(false)
+          resetLlmForm()
+        },
+      })
+    }
+  }
+
+  const resetLlmForm = () => {
+    setLlmName('')
+    setLlmProviderType('OPENAI')
+    setLlmBaseUrl('https://api.openai.com/v1')
+    setLlmModelName('gpt-4o')
+    setLlmApiKey('')
+    setLlmPriority(0)
+    setLlmIsActive(true)
+  }
+
+  const handleEditLlm = (provider: any) => {
+    setEditingLlmId(provider.id)
+    setLlmName(provider.name)
+    setLlmProviderType(provider.provider_type)
+    setLlmBaseUrl(provider.base_url)
+    setLlmModelName(provider.model_name)
+    setLlmApiKey('') // Kept blank to avoid exposing/changing it unless edited
+    setLlmPriority(provider.priority)
+    setLlmIsActive(provider.is_active)
+    setIsLlmFormOpen(true)
+  }
+
 
   useEffect(() => {
     if (globalSettings) {
@@ -269,7 +398,7 @@ export default function SettingsPage() {
         </div>
 
         <Tabs defaultValue="pipelines" className="w-full space-y-6" onValueChange={setActiveTab}>
-          <TabsList className="flex overflow-x-auto bg-slate-100 dark:bg-slate-800 p-1 w-full max-w-xl rounded-lg">
+          <TabsList className="flex overflow-x-auto bg-slate-100 dark:bg-slate-800 p-1 w-full max-w-2xl rounded-lg">
             <TabsTrigger value="pipelines" className="flex items-center gap-1.5 flex-1 whitespace-nowrap">
               <Sliders className="h-4 w-4" />
               <span>Pipelines</span>
@@ -286,11 +415,16 @@ export default function SettingsPage() {
               <Key className="h-4 w-4" />
               <span>API Keys</span>
             </TabsTrigger>
+            <TabsTrigger value="llm" className="flex items-center gap-1.5 flex-1 whitespace-nowrap">
+              <Activity className="h-4 w-4" />
+              <span>LLM Providers</span>
+            </TabsTrigger>
             <TabsTrigger value="admin" className="flex items-center gap-1.5 flex-1 whitespace-nowrap">
               <Globe className="h-4 w-4" />
               <span>Admin</span>
             </TabsTrigger>
           </TabsList>
+
 
           {/* 1. Pipelines Tab Content */}
           <TabsContent value="pipelines" className="space-y-6">
@@ -927,7 +1061,222 @@ export default function SettingsPage() {
               </CardFooter>
             </Card>
           </TabsContent>
+
+          {/* 6. LLM Providers Tab Content */}
+          <TabsContent value="llm" className="space-y-6">
+            {isLlmFormOpen ? (
+              <form onSubmit={handleSaveLlmProvider}>
+                <Card className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/10 text-slate-900 dark:text-white">
+                  <CardHeader>
+                    <CardTitle className="text-lg font-bold">
+                      {editingLlmId ? 'Edit LLM Provider' : 'Add LLM Provider'}
+                    </CardTitle>
+                    <CardDescription className="text-slate-500 dark:text-slate-400">
+                      Configure connection endpoints and credentials for data summary models.
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="llm-name">Provider Name</Label>
+                        <Input
+                          id="llm-name"
+                          required
+                          placeholder="e.g. My OpenAI"
+                          value={llmName}
+                          onChange={(e) => setLlmName(e.target.value)}
+                          className="bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="llm-provider-type">Provider Type</Label>
+                        <Select value={llmProviderType} onValueChange={handleLlmProviderTypeChange}>
+                          <SelectTrigger className="bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800">
+                            <SelectValue placeholder="Select type" />
+                          </SelectTrigger>
+                          <SelectContent className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/10 text-slate-900 dark:text-white">
+                            <SelectItem value="OPENAI">OpenAI (Cloud)</SelectItem>
+                            <SelectItem value="ANTHROPIC">Anthropic (Cloud)</SelectItem>
+                            <SelectItem value="OLLAMA">Ollama (Local)</SelectItem>
+                            <SelectItem value="CUSTOM">Custom (OpenAI-compatible)</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="llm-base-url">Base URL</Label>
+                        <Input
+                          id="llm-base-url"
+                          required
+                          placeholder="e.g. https://api.openai.com/v1"
+                          value={llmBaseUrl}
+                          onChange={(e) => setLlmBaseUrl(e.target.value)}
+                          className="bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="llm-model-name">Model Name</Label>
+                        <Input
+                          id="llm-model-name"
+                          required
+                          placeholder="e.g. gpt-4o, llama3.2"
+                          value={llmModelName}
+                          onChange={(e) => setLlmModelName(e.target.value)}
+                          className="bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="llm-api-key">API Key (BYOK)</Label>
+                        <Input
+                          id="llm-api-key"
+                          type="password"
+                          placeholder={editingLlmId ? "•••••••• (Leave blank to keep current key)" : "Enter provider API key"}
+                          value={llmApiKey}
+                          onChange={(e) => setLlmApiKey(e.target.value)}
+                          className="bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="llm-priority">Priority (Lower runs first)</Label>
+                        <Input
+                          id="llm-priority"
+                          type="number"
+                          value={llmPriority}
+                          onChange={(e) => setLlmPriority(parseInt(e.target.value, 10) || 0)}
+                          className="bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800"
+                        />
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2 pt-2">
+                      <Switch id="llm-active" checked={llmIsActive} onCheckedChange={setLlmIsActive} />
+                      <Label htmlFor="llm-active">Is Provider Active</Label>
+                    </div>
+                  </CardContent>
+                  <CardFooter className="border-t border-slate-100 dark:border-slate-800 pt-4 flex justify-between">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={handleTestLlmConnection}
+                      disabled={isTestingLlm}
+                      className="border-slate-200 dark:border-slate-800"
+                    >
+                      {isTestingLlm ? 'Testing...' : 'Test Connection'}
+                    </Button>
+                    <div className="flex gap-2">
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        onClick={() => {
+                          setIsLlmFormOpen(false)
+                          setEditingLlmId(null)
+                          resetLlmForm()
+                        }}
+                      >
+                        Cancel
+                      </Button>
+                      <Button
+                        type="submit"
+                        disabled={createLlmMutation.isPending || updateLlmMutation.isPending}
+                        className="bg-primary hover:bg-primary/95 text-white"
+                      >
+                        {createLlmMutation.isPending || updateLlmMutation.isPending ? 'Saving...' : 'Save Provider'}
+                      </Button>
+                    </div>
+                  </CardFooter>
+                </Card>
+              </form>
+            ) : (
+              <div className="space-y-6">
+                <div className="flex justify-between items-center">
+                  <div>
+                    <h3 className="text-lg font-bold">LLM Model Providers</h3>
+                    <p className="text-xs text-slate-500 dark:text-slate-400">
+                      Configure custom models to generate data quality summaries and RCA explanations.
+                    </p>
+                  </div>
+                  <Button onClick={() => setIsLlmFormOpen(true)} className="bg-primary hover:bg-primary/95 text-white flex items-center gap-1">
+                    <Plus className="h-4 w-4" />
+                    <span>Add Provider</span>
+                  </Button>
+                </div>
+
+                <Card className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/10 text-slate-900 dark:text-white">
+                  <CardContent className="p-0">
+                    {isLlmLoading ? (
+                      <div className="flex justify-center py-12">
+                        <LoadingSpinner text="Loading LLM integrations..." />
+                      </div>
+                    ) : llmProviders.length === 0 ? (
+                      <div className="text-center py-12 text-slate-500 dark:text-slate-400 space-y-2">
+                        <p className="text-sm">No LLM providers configured yet.</p>
+                        <p className="text-xs text-slate-400">Bring your own key (BYOK) to unlock conversational troubleshooting.</p>
+                      </div>
+                    ) : (
+                      <div className="overflow-x-auto">
+                        <table className="w-full text-left text-sm border-collapse">
+                          <thead>
+                            <tr className="border-b border-slate-100 dark:border-slate-800 text-slate-500 text-xs">
+                              <th className="py-3.5 px-4 font-semibold">Name</th>
+                              <th className="py-3.5 px-4 font-semibold">Type</th>
+                              <th className="py-3.5 px-4 font-semibold">Base URL</th>
+                              <th className="py-3.5 px-4 font-semibold">Model Name</th>
+                              <th className="py-3.5 px-4 font-semibold text-center">Priority</th>
+                              <th className="py-3.5 px-4 font-semibold text-center">Status</th>
+                              <th className="py-3.5 px-4 font-semibold text-right">Actions</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {llmProviders.map((prov: any) => (
+                              <tr key={prov.id} className="border-b border-slate-50 dark:border-slate-800/40 hover:bg-slate-50/50 dark:hover:bg-slate-800/20">
+                                <td className="py-3.5 px-4 font-medium">{prov.name}</td>
+                                <td className="py-3.5 px-4">
+                                  <Badge variant="outline" className="text-[10px] py-0.5 px-1.5 uppercase font-semibold">
+                                    {prov.provider_type}
+                                  </Badge>
+                                </td>
+                                <td className="py-3.5 px-4 font-mono text-xs text-slate-500 truncate max-w-xs">{prov.base_url}</td>
+                                <td className="py-3.5 px-4 font-mono text-xs text-slate-500">{prov.model_name}</td>
+                                <td className="py-3.5 px-4 text-center">{prov.priority}</td>
+                                <td className="py-3.5 px-4 text-center">
+                                  {prov.is_active ? (
+                                    <Badge className="bg-emerald-500/10 text-emerald-500 border-emerald-500/20 text-[10px] py-0.5 px-1.5 font-bold">
+                                      Active
+                                    </Badge>
+                                  ) : (
+                                    <Badge className="bg-slate-500/10 text-slate-400 border-slate-500/20 text-[10px] py-0.5 px-1.5 font-bold">
+                                      Disabled
+                                    </Badge>
+                                  )}
+                                </td>
+                                <td className="py-3.5 px-4 text-right space-x-2">
+                                  <Button variant="ghost" size="sm" onClick={() => handleEditLlm(prov)} className="h-8 px-2">
+                                    Edit
+                                  </Button>
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={() => {
+                                      if (confirm(`Are you sure you want to delete LLM provider '${prov.name}'?`)) {
+                                        deleteLlmMutation.mutate(prov.id)
+                                      }
+                                    }}
+                                    className="h-8 px-2 text-rose-500 hover:text-rose-400"
+                                  >
+                                    <Trash2 className="h-4 w-4" />
+                                  </Button>
+                                </td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              </div>
+            )}
+          </TabsContent>
         </Tabs>
+
       </div>
     </ErrorBoundary>
   )

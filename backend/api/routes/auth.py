@@ -176,9 +176,10 @@ def login(payload: UserLoginRequest, response: Response, request: Request, db: S
         value=token,
         httponly=True,
         max_age=3600 * 24, # 24 hours
-        expires=int(expiry.timestamp()),
+        expires=expiry,
         samesite="lax", # Lax matches frontend/backend domain dev layouts
-        secure=settings.ENVIRONMENT == "production"
+        secure=settings.ENVIRONMENT == "production",
+        path="/"
     )
 
     logger.info(f"Successful login: {user.email}, session_id: {new_session.id}")
@@ -221,6 +222,7 @@ def logout(response: Response, request: Request, db: Session = Depends(get_db)):
     response.delete_cookie(
         key="qolyx_session",
         samesite="lax",
-        secure=settings.ENVIRONMENT == "production"
+        secure=settings.ENVIRONMENT == "production",
+        path="/"
     )
     return {"message": "Logged out successfully"}

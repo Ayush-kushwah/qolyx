@@ -1,7 +1,9 @@
 import logging
+import time
 from contextlib import asynccontextmanager
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.middleware.gzip import GZipMiddleware
 
 # Ensure structured logging is configured
 from backend.core import logging as _logging
@@ -265,6 +267,18 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+app.add_middleware(GZipMiddleware, minimum_size=1000)
+
+@app.middleware("http")
+async def add_process_time_header(request: Request, call_next):
+    start_time = time.perf_counter()
+    response = await call_next(request)
+    process_time = time.perf_counter() - start_time
+    response.headers["X-Process-Time"] = f"{process_time:.4f}"
+    if process_time > 1.0:
+        logger.warning(f"Slow request: {request.url.path} took {process_time:.4f}s")
+    return response
 
 # Register endpoints under canonical prefix /api
 app.include_router(health.router, prefix="/api")

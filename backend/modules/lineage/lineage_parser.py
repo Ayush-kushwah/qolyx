@@ -39,6 +39,19 @@ _COLUMN_LINEAGE_CACHE = LRUCache(maxsize=1000)
 _PARSER_EXECUTOR = concurrent.futures.ThreadPoolExecutor(max_workers=2)
 
 
+def get_dbt_project_path() -> str:
+    """Helper to dynamically resolve dbt project path for local and container environments."""
+    dbt_path = getattr(settings, "DBT_PROJECT_PATH", "/app/dbt_project")
+    if os.path.exists(dbt_path):
+        return dbt_path
+    # Fallback to local workspace path
+    workspace_root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
+    local_path = os.path.join(workspace_root, "dbt_project")
+    if os.path.exists(local_path):
+        return local_path
+    return dbt_path
+
+
 class PythonETLVisitor(ast.NodeVisitor):
     """AST visitor to discover SQL strings and table dependencies in Python ETL code."""
 
@@ -125,7 +138,7 @@ def build_schema_catalog(db: Session) -> Dict[str, Any]:
         query = text("""
             SELECT table_catalog, table_schema, table_name, column_name, data_type 
             FROM information_schema.columns 
-            WHERE table_schema NOT IN ('pg_catalog', 'information_schema')
+            WHERE table_schema NOT IN ('pg_catalog', 'information_schema', 'public_test_results')
         """)
         result = db.execute(query).fetchall()
         for row in result:
@@ -147,9 +160,9 @@ def build_schema_catalog(db: Session) -> Dict[str, Any]:
     except Exception as e:
         logger.warning(f"Failed to load schemas from PostgreSQL database: {e}")
 
-    # 2. Parse DBT manifest using settings.DBT_PROJECT_PATH
+    # 2. Parse DBT manifest using get_dbt_project_path()
     try:
-        dbt_project_path = getattr(settings, "DBT_PROJECT_PATH", "/app/dbt_project")
+        dbt_project_path = get_dbt_project_path()
         manifest_path = os.path.join(dbt_project_path, "target", "manifest.json")
         if os.path.exists(manifest_path):
             with open(manifest_path) as f:
@@ -256,7 +269,7 @@ def parse_sql_column_lineage(
             try:
                 results = future.result(timeout=timeout_sec)
                 for src_table, src_column, rule in results:
-                    clean_src_table = src_table.split(".")[-1] if src_table else ""
+                    clean_src_table = src_table if src_table else ""
                     column_edges.append((clean_src_table, src_column, clean_target_table, col, rule))
             except concurrent.futures.TimeoutError:
                 logger.warning(f"sqlglot column lineage parsing timed out for target column '{col}'")
@@ -376,6 +389,17 @@ def parse_dbt_manifest(manifest_path: str) -> Tuple[List[LineageNode], List[Line
 
             name = data.get("name")
             schema = data.get("schema")
+            
+            # Filter out any tests/system/public models/seeds/exposures
+            schema_lower = schema.lower() if schema else ""
+            if schema_lower in ("public", "public_test_results", "pg_catalog", "information_schema"):
+                continue
+            if is_system_table(name) or is_system_table(unique_id):
+                continue
+            original_path = data.get("original_file_path", "")
+            if "test" in original_path.lower():
+                continue
+
             database = data.get("database")
             materialized = data.get("config", {}).get("materialized")
             owner = data.get("meta", {}).get("owner") or data.get("config", {}).get("owner")
@@ -417,6 +441,14 @@ def parse_dbt_manifest(manifest_path: str) -> Tuple[List[LineageNode], List[Line
         for unique_id, data in manifest_sources.items():
             name = data.get("name")
             schema = data.get("schema")
+            
+            # Filter out any sources in system schemas
+            schema_lower = schema.lower() if schema else ""
+            if schema_lower in ("public_test_results", "pg_catalog", "information_schema"):
+                continue
+            if is_system_table(name) or is_system_table(unique_id):
+                continue
+
             database = data.get("database")
             description = data.get("description")
             meta = data.get("meta", {})
@@ -457,7 +489,8 @@ def is_system_table(table_name: str) -> bool:
         "anomaly_detections", "anomaly_feedback", "trust_scores", "alert_configs",
         "escalation_policies", "oncall_rotations", "incidents", "incident_comments",
         "incident_rcas", "incident_timeline", "system_settings", "integration_connections",
-        "users", "user_api_keys", "user_login_history", "user_sessions"
+        "users", "user_api_keys", "user_login_history", "user_sessions",
+        "user_llm_providers", "test_results", "alembic_version"
     }
     return any(name_lower.startswith(p) for p in system_prefixes) or name_lower in system_tables
 
@@ -472,7 +505,7 @@ def parse_warehouse_tables(db: Session) -> List[LineageNode]:
         query = text("""
             SELECT table_schema, table_name, table_type 
             FROM information_schema.tables 
-            WHERE table_schema NOT IN ('pg_catalog', 'information_schema')
+            WHERE table_schema NOT IN ('pg_catalog', 'information_schema', 'public', 'public_test_results')
         """)
         result = db.execute(query).fetchall()
         for row in result:
@@ -514,9 +547,9 @@ def sync_all_lineage(db: Session) -> None:
     )
 
     try:
-        # 1. Parse DBT manifest using settings.DBT_PROJECT_PATH
+        # 1. Parse DBT manifest using get_dbt_project_path()
         workspace_root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
-        dbt_project_path = getattr(settings, "DBT_PROJECT_PATH", "/app/dbt_project")
+        dbt_project_path = get_dbt_project_path()
         manifest_path = os.path.join(dbt_project_path, "target", "manifest.json")
         dbt_nodes, dbt_edges = parse_dbt_manifest(manifest_path)
         logger.info(f"Parsed {len(dbt_nodes)} nodes and {len(dbt_edges)} edges from dbt manifest.")
@@ -540,17 +573,40 @@ def sync_all_lineage(db: Session) -> None:
         all_nodes = dbt_nodes + warehouse_nodes
         all_edges = dbt_edges + script_edges
 
-        # Dedup nodes by node_id (preferring DBT models over basic warehouse table metadata)
+        # Dedup nodes by (schema, name) (preferring DBT models/seeds over basic warehouse tables)
         unique_nodes_map: Dict[str, LineageNode] = {}
+        node_by_schema_and_name: Dict[Tuple[str, str], LineageNode] = {}
         for n in all_nodes:
-            if n.node_id not in unique_nodes_map or (n.type != "warehouse_table" and unique_nodes_map[n.node_id].type == "warehouse_table"):
-                unique_nodes_map[n.node_id] = n
+            # Filter out system, test and public schema nodes
+            schema_lower = n.schema.lower() if n.schema else ""
+            if schema_lower in ("public_test_results", "pg_catalog", "information_schema"):
+                continue
+            if schema_lower == "public" and n.type != "source":
+                continue
+            if is_system_table(n.name) or is_system_table(n.node_id):
+                continue
+
+            key = (schema_lower, n.name.lower())
+            if key not in node_by_schema_and_name:
+                node_by_schema_and_name[key] = n
+            else:
+                existing = node_by_schema_and_name[key]
+                # Prefer DBT models/seeds over raw warehouse_table
+                if n.type != "warehouse_table" and existing.type == "warehouse_table":
+                    node_by_schema_and_name[key] = n
+
+        # Populate unique_nodes_map with the deduplicated nodes
+        for n in node_by_schema_and_name.values():
+            unique_nodes_map[n.node_id] = n
 
         # Dedup edges by (source_node_id, target_node_id, edge_type)
         unique_edges_map: Dict[Tuple[str, str, str], LineageEdge] = {}
         for e in all_edges:
             # Prevent self-referential edges
             if e.source_node_id == e.target_node_id:
+                continue
+            # Filter out edges where source or target is not in unique_nodes_map
+            if e.source_node_id not in unique_nodes_map or e.target_node_id not in unique_nodes_map:
                 continue
             key = (e.source_node_id, e.target_node_id, e.edge_type)
             unique_edges_map[key] = e
@@ -573,6 +629,9 @@ def sync_all_lineage(db: Session) -> None:
                 with open(manifest_path) as f:
                     manifest = json.load(f)
                 for unique_id, data in manifest.get("nodes", {}).items():
+                    # Filter out models that are not in our unique_nodes_map
+                    if unique_id not in unique_nodes_map:
+                        continue
                     if data.get("resource_type") == "model":
                         original_path = data.get("original_file_path")
                         package_name = data.get("package_name")
@@ -594,9 +653,13 @@ def sync_all_lineage(db: Session) -> None:
                             for src_t, src_c, tgt_t, tgt_c, rule in col_edges:
                                 src_nid = None
                                 if src_t:
+                                    src_t_parts = src_t.lower().split(".")
                                     src_nid = table_to_node_id.get(src_t.lower())
+                                    if not src_nid and len(src_t_parts) >= 2:
+                                        two_part = f"{src_t_parts[-2]}.{src_t_parts[-1]}"
+                                        src_nid = table_to_node_id.get(two_part)
                                     if not src_nid:
-                                        src_nid = next((nid for t_name, nid in table_to_node_id.items() if t_name.endswith(f".{src_t.lower()}")), None)
+                                        src_nid = table_to_node_id.get(src_t_parts[-1])
                                 
                                 if src_nid:
                                     parsed_col_edges.append(

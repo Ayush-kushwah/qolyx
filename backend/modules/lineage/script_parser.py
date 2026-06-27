@@ -26,7 +26,8 @@ EXCLUDED_FOLDERS = {
     "target",
     "modules",
     "backend",
-    "scratch"
+    "scratch",
+    "dbt_project"
 }
 
 # Heuristic ETL keywords inside Python files to qualify them as data pipelines

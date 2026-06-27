@@ -207,15 +207,15 @@ export default function LineagePage() {
       case 'warehouse_table':
         return <Database className="h-4 w-4 text-emerald-400" />
       default:
-        return <HelpCircle className="h-4 w-4 text-slate-400" />
+        return <HelpCircle className="h-4 w-4 text-muted-foreground" />
     }
   }
 
   const getScoreColor = (score: number) => {
-    if (score >= 80) return 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20'
-    if (score >= 60) return 'text-amber-400 bg-amber-500/10 border-amber-500/20'
-    return 'text-rose-400 bg-rose-500/10 border-rose-500/20'
-  }
+  if (score >= 80) return 'text-healthy bg-healthy/10 border-healthy/20'
+  if (score >= 60) return 'text-warning bg-warning/10 border-warning/20'
+  return 'text-critical bg-critical/10 border-critical/20'
+}
 
   // Main UI skeleton check
   const isInitialLoading = nodesListQuery.isLoading && !nodesListQuery.data
@@ -224,12 +224,12 @@ export default function LineagePage() {
     <ErrorBoundary>
       <div className="space-y-6 select-none">
         {/* Page Header */}
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-800 pb-5">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-border pb-5">
           <div className="space-y-1">
-            <h1 className="text-2xl md:text-3xl font-extrabold tracking-tight bg-gradient-to-r from-white to-slate-400 bg-clip-text text-transparent flex items-center gap-2">
+            <h1 className="text-2xl md:text-3xl font-extrabold tracking-tight bg-gradient-to-r from-foreground to-muted-foreground bg-clip-text text-transparent flex items-center gap-2">
               <GitBranch className="h-6 w-6 text-primary animate-pulse" /> Relational Data Lineage Hub
             </h1>
-            <p className="text-sm text-slate-400">
+            <p className="text-sm text-muted-foreground">
               Deterministic AST pipeline parsing, interactive temporal time travel, and cascading health score decay paths.
             </p>
           </div>
@@ -237,7 +237,7 @@ export default function LineagePage() {
             <Button
               onClick={() => syncMutation.mutate()}
               disabled={syncMutation.isPending}
-              className="flex items-center gap-2 bg-slate-900 border border-slate-800 hover:bg-slate-800 text-white font-medium shadow-lg"
+              className="flex items-center gap-2 bg-background border border-border text-foreground hover:bg-accent hover:text-accent-foreground font-medium shadow-lg"
             >
               <RefreshCw className={`h-4 w-4 ${syncMutation.isPending ? 'animate-spin' : ''}`} />
               Sync Lineage
@@ -252,30 +252,30 @@ export default function LineagePage() {
             
             {/* Column 1: Search and Node List Selection (Col span 3) */}
             <div className="lg:col-span-3 space-y-4">
-              <Card className="glass-panel border-white/5 shadow-xl">
+              <Card className="glass-panel border border-border bg-card shadow-xl">
                 <CardHeader className="pb-3">
-                  <CardTitle className="text-sm font-bold text-slate-200 uppercase tracking-wider flex items-center gap-2">
-                    <Database className="h-4 w-4 text-slate-400" /> Pipeline Entities
+                  <CardTitle className="text-sm font-bold text-foreground uppercase tracking-wider flex items-center gap-2">
+                    <Database className="h-4 w-4 text-muted-foreground" /> Pipeline Entities
                   </CardTitle>
-                  <CardDescription className="text-xs text-slate-400">
+                  <CardDescription className="text-xs text-muted-foreground">
                     Select a node to trace upstream and downstream paths
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-3">
                   <div className="relative">
-                    <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-slate-500" />
+                    <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
                     <Input
                       type="text"
                       placeholder="Search entities..."
                       value={searchQuery}
                       onChange={(e) => setSearchQuery(e.target.value)}
-                      className="pl-9 bg-slate-900/50 border-white/5 focus:border-primary/50 text-xs text-slate-200"
+                      className="pl-9 bg-background border-border text-xs text-foreground"
                     />
                   </div>
 
                   <div className="space-y-2 max-h-[500px] overflow-y-auto pr-1">
                     {nodesListQuery.data?.items?.length === 0 ? (
-                      <div className="text-center py-6 text-xs text-slate-500">
+                      <div className="text-center py-6 text-xs text-muted-foreground">
                         No pipeline nodes found matching query.
                       </div>
                     ) : (
@@ -288,8 +288,8 @@ export default function LineagePage() {
                             onClick={() => handleSelectNode(node.node_id)}
                             className={`flex items-center justify-between p-3 rounded-lg border cursor-pointer transition-all duration-200 ${
                               isSelected
-                                ? 'bg-primary/10 border-primary text-white shadow-md'
-                                : 'bg-slate-900/30 border-white/5 text-slate-300 hover:bg-slate-900/60 hover:text-white'
+                                ? 'bg-primary/10 border-primary text-primary font-bold shadow-md'
+                                : 'bg-muted/30 border-border text-foreground hover:bg-muted'
                             }`}
                           >
                             <div className="flex items-center space-x-2 w-[70%] overflow-hidden">
@@ -315,15 +315,15 @@ export default function LineagePage() {
 
             {/* Column 2: Main Workstation - Graph and Time Travel (Col span 6) */}
             <div className="lg:col-span-6 space-y-4">
-              <Card className="glass-panel border-white/5 overflow-hidden flex flex-col min-h-[550px] shadow-2xl">
+              <Card className="glass-panel border border-border bg-card overflow-hidden flex flex-col min-h-[550px] shadow-2xl">
                 {/* Workstation Header */}
-                <div className="p-4 border-b border-slate-800 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 bg-slate-950/40">
+                <div className="p-4 border-b border-border flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 bg-muted/20">
                   <div>
-                    <h3 className="text-sm font-bold text-slate-200 flex items-center gap-2">
-                      <Layers className="h-4 w-4 text-slate-400" /> 
+                    <h3 className="text-sm font-bold text-foreground flex items-center gap-2">
+                      <Layers className="h-4 w-4 text-muted-foreground" /> 
                       {nodeDetailsQuery.data?.name || 'Tracing lineage...'}
                     </h3>
-                    <p className="text-[11px] text-slate-400 mt-0.5 max-w-sm truncate" title={selectedNodeId || ''}>
+                    <p className="text-[11px] text-muted-foreground mt-0.5 max-w-sm truncate" title={selectedNodeId || ''}>
                       {selectedNodeId || 'No node selected'}
                     </p>
                   </div>
@@ -342,7 +342,7 @@ export default function LineagePage() {
                 </div>
 
                 {/* Graph Viewport */}
-                <div className="flex-1 relative min-h-[420px] bg-slate-950/20">
+                <div className="flex-1 relative min-h-[420px] bg-muted/10">
                   {graphQuery.isLoading ? (
                     <div className="absolute inset-0 flex items-center justify-center">
                       <LoadingSpinner text="Querying lineage bounds..." />
@@ -350,8 +350,8 @@ export default function LineagePage() {
                   ) : graphQuery.data?.nodes?.length === 0 ? (
                     <div className="absolute inset-0 flex flex-col items-center justify-center p-6 text-center">
                       <AlertTriangle className="h-10 w-10 text-amber-500 mb-2" />
-                      <span className="text-xs font-semibold text-slate-300">No Lineage graph edges mapped.</span>
-                      <p className="text-[10px] text-slate-500 max-w-xs mt-1">
+                      <span className="text-xs font-semibold text-foreground">No Lineage graph edges mapped.</span>
+                      <p className="text-[10px] text-muted-foreground max-w-xs mt-1">
                         Try running "Sync Lineage" to trigger parser scanning for database references.
                       </p>
                     </div>
@@ -369,12 +369,12 @@ export default function LineagePage() {
                 </div>
 
                 {/* Time Travel Slider Control Panel */}
-                <div className="p-4 border-t border-slate-800 bg-slate-950/40 space-y-3">
+                <div className="p-4 border-t border-border bg-muted/20 space-y-3">
                   <div className="flex items-center justify-between text-xs">
-                    <span className="font-bold text-slate-300 flex items-center gap-1.5">
-                      <Clock className="h-4 w-4 text-slate-400" /> Temporal Snapshot Time Travel
+                    <span className="font-bold text-foreground flex items-center gap-1.5">
+                      <Clock className="h-4 w-4 text-muted-foreground" /> Temporal Snapshot Time Travel
                     </span>
-                    <span className="text-slate-400 font-mono text-[11px] bg-slate-900 px-2.5 py-0.5 rounded border border-white/5">
+                    <span className="text-muted-foreground font-mono text-[11px] bg-background px-2.5 py-0.5 rounded border border-border">
                       {displayTimeLabel}
                     </span>
                   </div>
@@ -386,15 +386,15 @@ export default function LineagePage() {
                       max={OFFSETS.length - 1}
                       value={timeOffset}
                       onChange={(e) => setTimeOffset(parseInt(e.target.value))}
-                      className="w-full h-1.5 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-primary"
+                      className="w-full h-1.5 bg-muted rounded-lg appearance-none cursor-pointer accent-primary"
                     />
-                    <div className="flex justify-between text-[9px] text-slate-500 mt-2 px-1">
+                    <div className="flex justify-between text-[9px] text-muted-foreground mt-2 px-1">
                       {OFFSETS.map((o, idx) => (
                         <span 
                           key={idx} 
                           onClick={() => setTimeOffset(idx)}
                           className={`cursor-pointer transition-all ${
-                            timeOffset === idx ? 'font-bold text-primary scale-110' : 'hover:text-slate-300'
+                            timeOffset === idx ? 'font-bold text-primary scale-110' : 'hover:text-foreground'
                           }`}
                         >
                           {o.label}
@@ -417,22 +417,22 @@ export default function LineagePage() {
 
             {/* Column 3: Right Side Inspection Panel (Col span 3) */}
             <div className="lg:col-span-3 space-y-4">
-              <Card className="glass-panel border-white/5 shadow-xl">
+              <Card className="glass-panel border border-border bg-card shadow-xl">
                 <CardHeader className="pb-2">
-                  <CardTitle className="text-sm font-bold text-slate-200 uppercase tracking-wider flex items-center gap-2">
-                    <Activity className="h-4 w-4 text-slate-400" /> Node Inspection
+                  <CardTitle className="text-sm font-bold text-foreground uppercase tracking-wider flex items-center gap-2">
+                    <Activity className="h-4 w-4 text-muted-foreground" /> Node Inspection
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="p-0">
                   <Tabs defaultValue="metadata" className="w-full">
-                    <TabsList className="grid grid-cols-3 bg-slate-950/60 rounded-none border-b border-slate-800 p-0 h-10">
-                      <TabsTrigger value="metadata" className="text-xs py-2 rounded-none data-[state=active]:bg-slate-900 data-[state=active]:border-b-2 data-[state=active]:border-primary">
+                    <TabsList className="grid grid-cols-3 bg-muted/40 rounded-none border-b border-border p-0 h-10">
+                      <TabsTrigger value="metadata" className="text-xs py-2 rounded-none data-[state=active]:bg-background data-[state=active]:border-b-2 data-[state=active]:border-primary">
                         Properties
                       </TabsTrigger>
-                      <TabsTrigger value="propagation" className="text-xs py-2 rounded-none data-[state=active]:bg-slate-900 data-[state=active]:border-b-2 data-[state=active]:border-primary">
+                      <TabsTrigger value="propagation" className="text-xs py-2 rounded-none data-[state=active]:bg-background data-[state=active]:border-b-2 data-[state=active]:border-primary">
                         Health Decay
                       </TabsTrigger>
-                      <TabsTrigger value="impact" className="text-xs py-2 rounded-none data-[state=active]:bg-slate-900 data-[state=active]:border-b-2 data-[state=active]:border-primary">
+                      <TabsTrigger value="impact" className="text-xs py-2 rounded-none data-[state=active]:bg-background data-[state=active]:border-b-2 data-[state=active]:border-primary">
                         Impact & Critical
                       </TabsTrigger>
                     </TabsList>
@@ -440,17 +440,17 @@ export default function LineagePage() {
                     {/* TAB 1: NODE METADATA */}
                     <TabsContent value="metadata" className="p-4 m-0 space-y-4">
                       {nodeDetailsQuery.isLoading ? (
-                        <div className="text-center py-6 text-xs text-slate-500">Loading node metadata...</div>
+                        <div className="text-center py-6 text-xs text-muted-foreground">Loading node metadata...</div>
                       ) : !nodeDetailsQuery.data ? (
-                        <div className="text-center py-6 text-xs text-slate-500">No node selected.</div>
+                        <div className="text-center py-6 text-xs text-muted-foreground">No node selected.</div>
                       ) : (
                         <div className="space-y-4">
                           {/* Trust Score Visualizer */}
-                          <div className="flex items-center space-x-4 bg-slate-950/40 p-3 rounded-lg border border-white/5">
+                          <div className="flex items-center space-x-4 bg-muted/20 p-3 rounded-lg border border-border">
                             <TrustScoreGauge score={nodeDetailsQuery.data.trust_score ?? 100} size="sm" />
                             <div className="space-y-1">
-                              <span className="text-xs font-semibold text-slate-300">Trust Score Breakdown</span>
-                              <div className="text-[10px] text-slate-400 space-y-0.5">
+                              <span className="text-xs font-semibold text-foreground">Trust Score Breakdown</span>
+                              <div className="text-[10px] text-muted-foreground space-y-0.5">
                                 <div>Base Score: {Math.round(nodeDetailsQuery.data.meta?.base_score ?? 100)}%</div>
                                 {nodeDetailsQuery.data.meta?.lineage_penalty > 0 && (
                                   <div className="text-rose-400 font-medium">
@@ -463,31 +463,31 @@ export default function LineagePage() {
 
                           {/* Node details attributes */}
                           <div className="space-y-2 text-xs">
-                            <div className="flex justify-between py-1 border-b border-slate-800/40">
-                              <span className="text-slate-400">Schema</span>
-                              <span className="text-slate-200 font-mono">{nodeDetailsQuery.data.schema}</span>
+                            <div className="flex justify-between py-1 border-b border-border">
+                              <span className="text-muted-foreground">Schema</span>
+                              <span className="text-foreground font-mono">{nodeDetailsQuery.data.schema}</span>
                             </div>
                             {nodeDetailsQuery.data.database && (
-                              <div className="flex justify-between py-1 border-b border-slate-800/40">
-                                <span className="text-slate-400">Database</span>
-                                <span className="text-slate-200 font-mono">{nodeDetailsQuery.data.database}</span>
+                              <div className="flex justify-between py-1 border-b border-border">
+                                <span className="text-muted-foreground">Database</span>
+                                <span className="text-foreground font-mono">{nodeDetailsQuery.data.database}</span>
                               </div>
                             )}
                             {nodeDetailsQuery.data.materialized_type && (
-                              <div className="flex justify-between py-1 border-b border-slate-800/40">
-                                <span className="text-slate-400">Materialized</span>
-                                <span className="text-slate-200 capitalize font-mono">{nodeDetailsQuery.data.materialized_type}</span>
+                              <div className="flex justify-between py-1 border-b border-border">
+                                <span className="text-muted-foreground">Materialized</span>
+                                <span className="text-foreground capitalize font-mono">{nodeDetailsQuery.data.materialized_type}</span>
                               </div>
                             )}
                             {nodeDetailsQuery.data.owner && (
-                              <div className="flex justify-between py-1 border-b border-slate-800/40">
-                                <span className="text-slate-400">Owner</span>
-                                <span className="text-slate-200">{nodeDetailsQuery.data.owner}</span>
+                              <div className="flex justify-between py-1 border-b border-border">
+                                <span className="text-muted-foreground">Owner</span>
+                                <span className="text-foreground">{nodeDetailsQuery.data.owner}</span>
                               </div>
                             )}
-                            <div className="flex justify-between py-1 border-b border-slate-800/40">
-                              <span className="text-slate-400">Last Updated</span>
-                              <span className="text-slate-300 font-mono text-[10px]">
+                            <div className="flex justify-between py-1 border-b border-border">
+                              <span className="text-muted-foreground">Last Updated</span>
+                              <span className="text-foreground font-mono text-[10px]">
                                 {nodeDetailsQuery.data.last_updated_at 
                                   ? new Date(nodeDetailsQuery.data.last_updated_at).toLocaleString()
                                   : 'Never'}
@@ -498,30 +498,30 @@ export default function LineagePage() {
                           {/* Description */}
                           {nodeDetailsQuery.data.description && (
                             <div className="space-y-1 text-xs">
-                              <span className="text-slate-400 font-semibold">Description</span>
-                              <p className="p-2 bg-slate-900/30 border border-white/5 rounded text-slate-300 leading-relaxed text-[11px]">
+                              <span className="text-muted-foreground font-semibold">Description</span>
+                              <p className="p-2 bg-muted/30 border border-border rounded text-foreground leading-relaxed text-[11px]">
                                 {nodeDetailsQuery.data.description}
                               </p>
                             </div>
                           )}
 
                           {/* Schema comparison drift checker */}
-                          <div className="pt-2 border-t border-slate-800 space-y-3">
+                          <div className="pt-2 border-t border-border space-y-3">
                             <div className="flex items-center justify-between">
-                              <span className="text-xs font-bold text-slate-300">Schema Drift Analysis</span>
+                              <span className="text-xs font-bold text-foreground">Schema Drift Analysis</span>
                               <Button
                                 size="sm"
                                 variant="outline"
                                 onClick={handleCompareSchema}
                                 disabled={isComparingSchema}
-                                className="h-7 text-[10px] bg-slate-900 hover:bg-slate-800 text-white"
+                                className="h-7 text-[10px] bg-background border border-border text-foreground hover:bg-accent hover:text-accent-foreground"
                               >
                                 {isComparingSchema ? 'Checking...' : 'Run Schema Check'}
                               </Button>
                             </div>
 
                             {schemaCompareResult && (
-                              <div className="rounded-lg border border-white/5 bg-slate-950/60 p-3 text-xs space-y-2 animate-fadeIn">
+                              <div className="rounded-lg border border-border bg-muted/20 p-3 text-xs space-y-2 animate-fadeIn">
                                 <div className="flex items-center justify-between">
                                   <span>Drift Status:</span>
                                   {schemaCompareResult.drift_detected ? (
@@ -571,33 +571,33 @@ export default function LineagePage() {
                     {/* TAB 2: HEALTH SCORE PROPAGATION */}
                     <TabsContent value="propagation" className="p-4 m-0 space-y-3">
                       {healthPropagationQuery.isLoading ? (
-                        <div className="text-center py-6 text-xs text-slate-500">Loading propagation path...</div>
+                        <div className="text-center py-6 text-xs text-muted-foreground">Loading propagation path...</div>
                       ) : !healthPropagationQuery.data?.propagation?.length ? (
-                        <div className="text-center py-6 text-xs text-slate-500">
+                        <div className="text-center py-6 text-xs text-muted-foreground">
                           No downstream nodes affected by score decay.
                         </div>
                       ) : (
                         <div className="space-y-3">
-                          <div className="text-[11px] text-slate-400 leading-relaxed bg-slate-900/30 p-2 border border-white/5 rounded">
+                          <div className="text-[11px] text-muted-foreground leading-relaxed bg-muted/20 p-2 border border-border rounded">
                             Any quality degradation propagates downstream with a <span className="font-semibold text-primary">0.9 decay multiplier</span> per hop.
                           </div>
 
                           <div className="space-y-2 max-h-[350px] overflow-y-auto pr-1">
                             {healthPropagationQuery.data.propagation.map((propNode: any) => (
-                              <div key={propNode.node_id} className="p-2.5 rounded-lg border border-white/5 bg-slate-950/40 text-xs space-y-1.5">
+                              <div key={propNode.node_id} className="p-2.5 rounded-lg border border-border bg-muted/20 text-xs space-y-1.5">
                                 <div className="flex items-center justify-between">
-                                  <span className="font-bold text-slate-200 truncate max-w-[120px]">{propNode.name}</span>
-                                  <Badge className="text-[9px] px-1 py-0 bg-slate-900 border-white/5 text-slate-400 font-mono">
+                                  <span className="font-bold text-foreground truncate max-w-[120px]">{propNode.name}</span>
+                                  <Badge className="text-[9px] px-1 py-0 bg-background border-border text-muted-foreground font-mono">
                                     {propNode.hops} {propNode.hops === 1 ? 'hop' : 'hops'}
                                   </Badge>
                                 </div>
                                 
-                                <div className="grid grid-cols-2 text-[10px] text-slate-400 gap-y-1 font-mono">
+                                <div className="grid grid-cols-2 text-[10px] text-muted-foreground gap-y-1 font-mono">
                                   <div>Base Score:</div>
-                                  <div className="text-right text-slate-300">{Math.round(propNode.base_score)}%</div>
+                                  <div className="text-right text-foreground">{Math.round(propNode.base_score)}%</div>
                                   
-                                  <div className="text-rose-400/80">Propagation Penalty:</div>
-                                  <div className="text-right text-rose-400 font-semibold">-{Math.round(propNode.propagated_penalty)}%</div>
+                                  <div className="text-rose-500 dark:text-rose-400">Propagation Penalty:</div>
+                                  <div className="text-right text-rose-500 dark:text-rose-400 font-semibold">-{Math.round(propNode.propagated_penalty)}%</div>
                                   
                                   <div className="font-semibold">Resulting score:</div>
                                   <div className="text-right text-primary font-extrabold">{Math.round(propNode.resulting_score)}%</div>
@@ -621,12 +621,12 @@ export default function LineagePage() {
                     {/* TAB 3: IMPACT & CRITICAL PATH */}
                     <TabsContent value="impact" className="p-4 m-0 space-y-4">
                       {/* Critical Path Highlighting Toggle */}
-                      <div className="p-3 rounded-lg border border-white/5 bg-slate-950/40 flex items-center justify-between text-xs">
+                      <div className="p-3 rounded-lg border border-border bg-muted/20 flex items-center justify-between text-xs">
                         <div className="space-y-0.5">
-                          <span className="font-bold text-slate-200 flex items-center gap-1">
+                          <span className="font-bold text-foreground flex items-center gap-1">
                             <Zap className="h-3.5 w-3.5 text-rose-500 animate-pulse" /> Critical Path Tracing
                           </span>
-                          <p className="text-[10px] text-slate-400">Highlight worst upstream penalty route</p>
+                          <p className="text-[10px] text-muted-foreground">Highlight worst upstream penalty route</p>
                         </div>
                         <Button
                           size="sm"
@@ -641,21 +641,21 @@ export default function LineagePage() {
                       {/* Critical Path List */}
                       {highlightCriticalPath && (
                         <div className="space-y-2 animate-fadeIn">
-                          <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                          <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
                             Upstream Path Route
                           </span>
                           {criticalPathQuery.isLoading ? (
-                            <div className="text-center py-2 text-xs text-slate-500">Tracing critical path...</div>
+                            <div className="text-center py-2 text-xs text-muted-foreground">Tracing critical path...</div>
                           ) : !criticalPathQuery.data || (criticalPathQuery.data as any[]).length === 0 ? (
-                            <div className="text-center py-2 text-xs text-slate-500">No upstream path to trace.</div>
+                            <div className="text-center py-2 text-xs text-muted-foreground">No upstream path to trace.</div>
                           ) : (
                             <div className="space-y-1">
                               {(criticalPathQuery.data as any[]).map((pNode: any, idx: number) => (
-                                <div key={pNode.node_id} className="flex items-center space-x-1.5 text-xs text-slate-300">
+                                <div key={pNode.node_id} className="flex items-center space-x-1.5 text-xs text-foreground">
                                   {idx > 0 && <ArrowRight className="h-3 w-3 text-rose-500 shrink-0" />}
                                   <span 
                                     className={`truncate cursor-pointer hover:underline ${
-                                      pNode.node_id === selectedNodeId ? 'text-rose-400 font-bold' : 'text-slate-300 font-medium'
+                                      pNode.node_id === selectedNodeId ? 'text-rose-500 dark:text-rose-400 font-bold' : 'text-muted-foreground font-medium'
                                     }`}
                                     onClick={() => handleSelectNode(pNode.node_id)}
                                   >
@@ -669,22 +669,22 @@ export default function LineagePage() {
                       )}
 
                       {/* Impact Analysis list */}
-                      <div className="space-y-2 border-t border-slate-800 pt-3">
+                      <div className="space-y-2 border-t border-border pt-3">
                         <div className="flex items-center justify-between">
-                          <span className="text-xs font-bold text-slate-300">Downstream Impact Analysis</span>
-                          <Badge className="text-[10px] bg-slate-900 border-white/5 text-slate-400">
+                          <span className="text-xs font-bold text-foreground">Downstream Impact Analysis</span>
+                          <Badge className="text-[10px] bg-background border-border text-muted-foreground">
                             {impactQuery.data?.length || 0} Affected
                           </Badge>
                         </div>
-                        <p className="text-[10px] text-slate-400">
+                        <p className="text-[10px] text-muted-foreground">
                           Changes to this table recursively cascade downstream to these tables.
                         </p>
 
                         <div className="space-y-1.5 max-h-[200px] overflow-y-auto pr-1">
                           {impactQuery.isLoading ? (
-                            <div className="text-center py-4 text-xs text-slate-500">Calculating impact tree...</div>
+                            <div className="text-center py-4 text-xs text-muted-foreground">Calculating impact tree...</div>
                           ) : !impactQuery.data || impactQuery.data.length === 0 ? (
-                            <div className="text-center py-4 text-xs text-slate-500">No downstream dependents.</div>
+                            <div className="text-center py-4 text-xs text-muted-foreground">No downstream dependents.</div>
                           ) : (
                             impactQuery.data.map((impactNodeId: string) => {
                               const shortName = impactNodeId.split('.').pop() || impactNodeId
@@ -692,12 +692,12 @@ export default function LineagePage() {
                                 <div
                                   key={impactNodeId}
                                   onClick={() => handleSelectNode(impactNodeId)}
-                                  className="flex items-center justify-between p-2 rounded bg-slate-900/30 hover:bg-slate-900/60 border border-white/5 cursor-pointer text-xs group"
+                                  className="flex items-center justify-between p-2 rounded bg-muted/10 hover:bg-muted/20 border border-border cursor-pointer text-xs group"
                                 >
-                                  <span className="text-slate-300 font-mono text-[10px] truncate max-w-[150px]">
+                                  <span className="text-foreground font-mono text-[10px] truncate max-w-[150px]">
                                     {shortName}
                                   </span>
-                                  <ArrowUpRight className="h-3.5 w-3.5 text-slate-500 group-hover:text-primary transition-colors" />
+                                  <ArrowUpRight className="h-3.5 w-3.5 text-muted-foreground group-hover:text-primary transition-colors" />
                                 </div>
                               )
                             })
@@ -711,37 +711,37 @@ export default function LineagePage() {
 
               {/* Time Travel Difference Info Card */}
               {timeOffset > 0 && diffQuery.data && (
-                <Card className="glass-panel border-amber-500/10 shadow-lg">
+                <Card className="glass-panel border border-amber-500/20 bg-amber-500/5 shadow-lg">
                   <CardHeader className="pb-1.5 p-3">
-                    <CardTitle className="text-xs font-bold text-amber-400 uppercase tracking-wider flex items-center gap-1.5">
+                    <CardTitle className="text-xs font-bold text-amber-600 dark:text-amber-400 uppercase tracking-wider flex items-center gap-1.5">
                       <Clock className="h-3.5 w-3.5" /> Graph Mutations (Diff)
                     </CardTitle>
-                    <CardDescription className="text-[10px] text-slate-400">
+                    <CardDescription className="text-[10px] text-muted-foreground">
                       Comparing snapshot {OFFSETS[timeOffset].label} vs active
                     </CardDescription>
                   </CardHeader>
-                  <CardContent className="p-3 pt-0 text-[10px] space-y-1.5 text-slate-300 font-mono">
+                  <CardContent className="p-3 pt-0 text-[10px] space-y-1.5 text-muted-foreground font-mono">
                     <div className="flex justify-between">
                       <span>Added Nodes:</span>
-                      <span className={diffQuery.data.nodes?.added?.length > 0 ? 'text-emerald-400 font-bold' : ''}>
+                      <span className={diffQuery.data.nodes?.added?.length > 0 ? 'text-emerald-500 dark:text-emerald-400 font-bold' : ''}>
                         {diffQuery.data.nodes?.added?.length || 0}
                       </span>
                     </div>
                     <div className="flex justify-between">
                       <span>Removed Nodes:</span>
-                      <span className={diffQuery.data.nodes?.removed?.length > 0 ? 'text-rose-400 font-bold' : ''}>
+                      <span className={diffQuery.data.nodes?.removed?.length > 0 ? 'text-rose-500 dark:text-rose-400 font-bold' : ''}>
                         {diffQuery.data.nodes?.removed?.length || 0}
                       </span>
                     </div>
                     <div className="flex justify-between">
                       <span>Added Edges:</span>
-                      <span className={diffQuery.data.edges?.added?.length > 0 ? 'text-emerald-400 font-bold' : ''}>
+                      <span className={diffQuery.data.edges?.added?.length > 0 ? 'text-emerald-500 dark:text-emerald-400 font-bold' : ''}>
                         {diffQuery.data.edges?.added?.length || 0}
                       </span>
                     </div>
                     <div className="flex justify-between">
                       <span>Removed Edges:</span>
-                      <span className={diffQuery.data.edges?.removed?.length > 0 ? 'text-rose-400 font-bold' : ''}>
+                      <span className={diffQuery.data.edges?.removed?.length > 0 ? 'text-rose-500 dark:text-rose-400 font-bold' : ''}>
                         {diffQuery.data.edges?.removed?.length || 0}
                       </span>
                     </div>

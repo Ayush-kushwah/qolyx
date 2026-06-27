@@ -92,19 +92,19 @@ const CustomLineageNode = memo(({ data }: { data: any }) => {
   }, [data.meta]);
 
   return (
-    <div className={`px-4 py-3 shadow-md rounded-xl border-2 bg-white dark:bg-slate-900 ${borderColor} transition-all duration-200 w-72`}>
+    <div className={`px-4 py-3 shadow-md rounded-xl border-2 bg-card text-foreground ${borderColor} transition-all duration-200 w-72`}>
       <HandleComponent type="target" position={Position.Left} />
       
       <div className="flex items-center justify-between space-x-3">
         <div className="flex items-center space-x-2.5 w-48 overflow-hidden">
-          <div className="p-2 bg-slate-50 dark:bg-slate-800 rounded-lg">
+          <div className="p-2 bg-muted rounded-lg">
             {getIcon()}
           </div>
           <div className="flex flex-col">
-            <span className="text-xs font-semibold text-slate-800 dark:text-slate-100 truncate w-36" title={name}>
+            <span className="text-xs font-semibold text-foreground truncate w-36" title={name}>
               {name}
             </span>
-            <span className="text-[10px] text-slate-400 uppercase tracking-wider font-semibold">
+            <span className="text-[10px] text-muted-foreground uppercase tracking-wider font-semibold">
               {type.replace('_', ' ')}
             </span>
           </div>
@@ -117,20 +117,20 @@ const CustomLineageNode = memo(({ data }: { data: any }) => {
       </div>
 
       {score < 80 && (
-        <div className="mt-1.5 pt-1.5 border-t border-slate-100 dark:border-slate-800/60 flex items-center text-[10px] text-amber-600 dark:text-amber-400">
+        <div className="mt-1.5 pt-1.5 border-t border-border flex items-center text-[10px] text-amber-600 dark:text-amber-400">
           <AlertTriangle className="h-3 w-3 mr-1" />
           <span>Lineage Propagation Penalty Applied</span>
         </div>
       )}
 
       {columns.length > 0 && (
-        <div className="mt-2.5 pt-2 border-t border-slate-100 dark:border-slate-800/60 nodrag">
+        <div className="mt-2.5 pt-2 border-t border-border nodrag">
           <button
             onClick={(e) => {
               e.stopPropagation();
               toggleExpand();
             }}
-            className="w-full flex items-center justify-between text-[11px] font-semibold text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 transition-colors"
+            className="w-full flex items-center justify-between text-[11px] font-semibold text-muted-foreground hover:text-foreground transition-colors"
           >
             <span>Columns ({columns.length})</span>
             {isExpanded ? (
@@ -139,16 +139,16 @@ const CustomLineageNode = memo(({ data }: { data: any }) => {
               <ChevronDown className="h-3.5 w-3.5" />
             )}
           </button>
-
-          {isExpanded && (
-            <div className="mt-2 space-y-1 max-h-60 overflow-y-auto pr-1">
+        </div>
+      )}{isExpanded && (
+            <div className="mt-2 space-y-1 max-h-60 overflow-y-auto pr-1 nodrag nowheel">
               {(showAll ? columns : columns.slice(0, 10)).map((col) => (
                 <div
                   key={col.name}
                   className={`flex items-center justify-between p-1 rounded text-[10px] ${
                     col.penalty > 0
                       ? 'bg-rose-50/50 dark:bg-rose-950/20 border border-rose-100/50 dark:border-rose-900/30'
-                      : 'hover:bg-slate-55 dark:hover:bg-slate-800/40'
+                      : 'hover:bg-muted'
                   }`}
                 >
                   <div className="flex flex-col truncate pr-1">
@@ -156,13 +156,13 @@ const CustomLineageNode = memo(({ data }: { data: any }) => {
                       className={`font-mono font-medium truncate ${
                         col.penalty > 0
                           ? 'text-rose-700 dark:text-rose-400'
-                          : 'text-slate-700 dark:text-slate-300'
+                          : 'text-foreground'
                       }`}
                       title={col.name}
                     >
                       {col.name}
                     </span>
-                    <span className="text-[8px] text-slate-400 font-sans tracking-wide uppercase">
+                    <span className="text-[8px] text-muted-foreground font-sans tracking-wide uppercase">
                       {col.type}
                     </span>
                   </div>
@@ -189,13 +189,11 @@ const CustomLineageNode = memo(({ data }: { data: any }) => {
               )}
             </div>
           )}
+          
+          <HandleComponent type="source" position={Position.Right} />
         </div>
-      )}
-      
-      <HandleComponent type="source" position={Position.Right} />
-    </div>
-  );
-});
+      );
+    });
 CustomLineageNode.displayName = 'CustomLineageNode';
 
 // Wrapper handles to satisfy React Flow layout requirements
@@ -204,7 +202,7 @@ const HandleComponent = ({ type, position }: { type: 'source' | 'target', positi
   <Handle
     type={type}
     position={position}
-    className="w-2 h-2 bg-slate-400 border-2 border-white dark:border-slate-900 !top-1/2"
+    className="w-2 h-2 bg-muted-foreground border-2 border-background !top-1/2"
   />
 );
 
@@ -345,12 +343,12 @@ export default function LineageGraph({
         target: edge.target_node_id,
         animated: isCritical || edge.edge_type === 'depends_on',
         style: {
-          stroke: isCritical ? '#f43f5e' : '#cbd5e1',
+          stroke: isCritical ? '#f43f5e' : 'rgba(156, 163, 175, 0.4)',
           strokeWidth: isCritical ? 3 : 2
         },
         markerEnd: {
           type: MarkerType.ArrowClosed,
-          color: isCritical ? '#f43f5e' : '#cbd5e1'
+          color: isCritical ? '#f43f5e' : 'rgba(156, 163, 175, 0.4)'
         }
       };
     });
@@ -370,7 +368,7 @@ export default function LineageGraph({
   }, [onSelectNode]);
 
   return (
-    <div className="w-full h-full border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden bg-slate-50 dark:bg-slate-950 relative min-h-[500px]">
+    <div className="w-full h-full border border-border rounded-2xl overflow-hidden bg-muted/10 relative min-h-[500px]">
       <ReactFlow
         nodes={nodes}
         edges={edges}
@@ -380,9 +378,9 @@ export default function LineageGraph({
         onNodeClick={onNodeClick}
         onNodeDoubleClick={onNodeDoubleClick}
         fitView
-        className="text-slate-900 dark:text-slate-100"
+        className="text-foreground"
       >
-        <Controls className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow rounded" />
+        <Controls className="bg-popover border border-border shadow rounded" />
         <MiniMap
           nodeColor={(n) => {
             const score = n.data?.trust_score ?? 100;
@@ -390,10 +388,10 @@ export default function LineageGraph({
             if (score < 80) return '#f59e0b';
             return '#10b981';
           }}
-          className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow rounded"
-          maskColor="rgba(241, 245, 249, 0.2)"
+          className="bg-popover border border-border shadow rounded"
+          maskColor="rgba(128, 128, 128, 0.1)"
         />
-        <Background gap={16} size={1} color="#94a3b8" style={{ opacity: 0.3 }} />
+        <Background gap={16} size={1} color="#94a3b8" style={{ opacity: 0.15 }} />
       </ReactFlow>
     </div>
   );

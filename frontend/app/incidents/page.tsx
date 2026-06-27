@@ -84,13 +84,13 @@ export default function IncidentsPage() {
   const getSeverityBadge = (sev: string) => {
     switch (sev.toUpperCase()) {
       case 'CRITICAL':
-        return <Badge variant="outline" className="bg-critical/10 text-critical border-critical/20 uppercase text-[10px] font-bold">Critical</Badge>
+        return <Badge variant="outline" className="bg-critical/10 text-critical border-critical/20 uppercase text-[10px] font-bold tracking-wider">Critical</Badge>
       case 'HIGH':
-        return <Badge variant="outline" className="bg-degraded/10 text-degraded border-degraded/20 uppercase text-[10px] font-bold">High</Badge>
+        return <Badge variant="outline" className="bg-degraded/10 text-degraded border-degraded/20 uppercase text-[10px] font-bold tracking-wider">High</Badge>
       case 'MEDIUM':
-        return <Badge variant="outline" className="bg-warning/10 text-warning border-warning/20 uppercase text-[10px] font-bold">Medium</Badge>
+        return <Badge variant="outline" className="bg-warning/10 text-warning border-warning/20 uppercase text-[10px] font-bold tracking-wider">Medium</Badge>
       default:
-        return <Badge variant="outline" className="bg-slate-800 text-slate-400 border-white/5 uppercase text-[10px] font-bold">Low</Badge>
+        return <Badge variant="outline" className="bg-muted text-muted-foreground border-border uppercase text-[10px] font-bold tracking-wider">Low</Badge>
     }
   }
 
@@ -119,13 +119,13 @@ export default function IncidentsPage() {
         )
       case 'CLOSED':
         return (
-          <span className="flex items-center gap-1.5 text-xs text-slate-500 font-bold">
+          <span className="flex items-center gap-1.5 text-xs text-muted-foreground font-bold">
             <span className="h-1.5 w-1.5 rounded-full bg-slate-500" />
             Closed
           </span>
         )
       default:
-        return <span className="text-xs text-slate-400 font-bold">{state}</span>
+        return <span className="text-xs text-muted-foreground font-bold">{state}</span>
     }
   }
 
@@ -162,16 +162,16 @@ export default function IncidentsPage() {
 
   return (
     <ErrorBoundary>
-      <div className="space-y-8 select-none">
+      <div className="space-y-4 select-none font-sans text-foreground">
         
         {/* Title / Action Header */}
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-          <div className="space-y-1">
-            <h1 className="text-2xl md:text-3xl font-extrabold tracking-tight bg-gradient-to-r from-slate-900 to-slate-600 dark:from-white dark:to-slate-400 bg-clip-text text-transparent flex items-center gap-2">
-              <ShieldAlert className="h-7 w-7 text-critical animate-pulse" />
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-2">
+          <div className="space-y-0.5">
+            <h1 className="text-xl md:text-2xl font-bold tracking-tight bg-gradient-to-r from-slate-900 to-slate-600 dark:from-white dark:to-slate-400 bg-clip-text text-transparent flex items-center gap-2">
+              <ShieldAlert className="h-6 w-6 text-critical" />
               Incident Command Center
             </h1>
-            <p className="text-sm text-slate-600 dark:text-slate-400">
+            <p className="text-xs text-muted-foreground">
               Acknowledge, resolve, and audit pipeline data reliability breaches and SLA alerts.
             </p>
           </div>
@@ -180,62 +180,62 @@ export default function IncidentsPage() {
         {/* Stats Row */}
         <div className="grid gap-4 grid-cols-2 lg:grid-cols-4">
           {/* Card 1: Open */}
-          <div className="glass-panel p-4 rounded-xl flex items-center justify-between relative overflow-hidden group">
+          <div className="glass-panel p-4 rounded-xl flex items-center justify-between bg-card border border-border relative overflow-hidden group">
             <div className="space-y-1">
-              <div className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Open Incidents</div>
-              <div className="text-2xl font-black text-slate-100">{statsQuery.data?.total_open ?? 0}</div>
+              <div className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Open Incidents</div>
+              <div className="text-xl font-bold text-foreground">{statsQuery.data?.total_open ?? 0}</div>
             </div>
-            <div className="p-2.5 rounded-lg bg-critical/10 border border-critical/20">
-              <AlertCircle className="h-5 w-5 text-critical" />
+            <div className="p-2 rounded-lg bg-critical/10 border border-critical/20">
+              <AlertCircle className="h-4 w-4 text-critical" />
             </div>
           </div>
 
           {/* Card 2: Acknowledged */}
-          <div className="glass-panel p-4 rounded-xl flex items-center justify-between relative overflow-hidden group">
+          <div className="glass-panel p-4 rounded-xl flex items-center justify-between bg-card border border-border relative overflow-hidden group">
             <div className="space-y-1">
-              <div className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Acknowledged</div>
-              <div className="text-2xl font-black text-slate-100">{statsQuery.data?.total_acknowledged ?? 0}</div>
+              <div className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Acknowledged</div>
+              <div className="text-xl font-bold text-foreground">{statsQuery.data?.total_acknowledged ?? 0}</div>
             </div>
-            <div className="p-2.5 rounded-lg bg-warning/10 border border-warning/20">
-              <Clock className="h-5 w-5 text-warning" />
+            <div className="p-2 rounded-lg bg-warning/10 border border-warning/20">
+              <Clock className="h-4 w-4 text-warning" />
             </div>
           </div>
 
           {/* Card 3: Resolved */}
-          <div className="glass-panel p-4 rounded-xl flex items-center justify-between relative overflow-hidden group">
+          <div className="glass-panel p-4 rounded-xl flex items-center justify-between bg-card border border-border relative overflow-hidden group">
             <div className="space-y-1">
-              <div className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Resolved (Live)</div>
-              <div className="text-2xl font-black text-slate-100">{statsQuery.data?.total_resolved ?? 0}</div>
+              <div className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Resolved (Live)</div>
+              <div className="text-xl font-bold text-foreground">{statsQuery.data?.total_resolved ?? 0}</div>
             </div>
-            <div className="p-2.5 rounded-lg bg-healthy/10 border border-healthy/20">
-              <CheckCircle2 className="h-5 w-5 text-healthy" />
+            <div className="p-2 rounded-lg bg-healthy/10 border border-healthy/20">
+              <CheckCircle2 className="h-4 w-4 text-healthy" />
             </div>
           </div>
 
           {/* Card 4: Closed */}
-          <div className="glass-panel p-4 rounded-xl flex items-center justify-between relative overflow-hidden group">
+          <div className="glass-panel p-4 rounded-xl flex items-center justify-between bg-card border border-border relative overflow-hidden group">
             <div className="space-y-1">
-              <div className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Closed Archive</div>
-              <div className="text-2xl font-black text-slate-100">{statsQuery.data?.total_closed ?? 0}</div>
+              <div className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Closed Archive</div>
+              <div className="text-xl font-bold text-foreground">{statsQuery.data?.total_closed ?? 0}</div>
             </div>
-            <div className="p-2.5 rounded-lg bg-slate-800/80 border border-white/5">
-              <Check className="h-5 w-5 text-slate-400" />
+            <div className="p-2 rounded-lg bg-slate-100 dark:bg-slate-800 border border-border">
+              <Check className="h-4 w-4 text-muted-foreground" />
             </div>
           </div>
         </div>
 
         {/* Filter Bar */}
-        <div className="glass-panel p-4 rounded-xl space-y-4">
+        <div className="glass-panel p-4 rounded-xl bg-card border border-border space-y-4">
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-            <div className="flex items-center gap-2 text-xs font-bold text-slate-400 uppercase tracking-wider">
-              <Filter className="h-4 w-4 text-primary" />
+            <div className="flex items-center gap-2 text-xs font-bold text-muted-foreground uppercase tracking-wider">
+              <Filter className="h-3.5 w-3.5 text-primary" />
               Filter Feed
             </div>
             <Button
               variant="outline"
               size="sm"
               onClick={resetFilters}
-              className="text-slate-400 border-white/5 hover:bg-white/5 hover:text-white text-xs font-bold gap-1 self-end sm:self-center h-8"
+              className="text-muted-foreground border-border hover:bg-muted hover:text-foreground text-xs font-semibold gap-1 self-end sm:self-center h-8 bg-card"
             >
               <RotateCcw className="h-3.5 w-3.5" />
               Reset Filters
@@ -244,15 +244,15 @@ export default function IncidentsPage() {
 
           <div className="grid gap-4 sm:grid-cols-3">
             {/* Table Selector */}
-            <div className="space-y-1">
-              <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Data Table</label>
+            <div className="space-y-1.5">
+              <label className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Data Table</label>
               <Select value={tableNameFilter || 'all'} onValueChange={handleTableChange}>
-                <SelectTrigger className="bg-slate-950/40 border-white/5 text-slate-200 h-9 font-medium text-xs">
+                <SelectTrigger className="bg-background border-border text-foreground h-9 font-medium text-xs">
                   <SelectValue placeholder="Select Data Table" />
                 </SelectTrigger>
-                <SelectContent className="bg-slate-900 border-white/10 text-slate-200">
+                <SelectContent className="bg-card border-border text-foreground">
                   {TABLES.map((t) => (
-                    <SelectItem key={t.id} value={t.id} className="text-xs hover:bg-slate-800">
+                    <SelectItem key={t.id} value={t.id} className="text-xs">
                       {t.label}
                     </SelectItem>
                   ))}
@@ -261,13 +261,13 @@ export default function IncidentsPage() {
             </div>
 
             {/* Severity Selector */}
-            <div className="space-y-1">
-              <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Severity Level</label>
+            <div className="space-y-1.5">
+              <label className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Severity Level</label>
               <Select value={severityFilter?.[0] || 'all'} onValueChange={handleSeverityChange}>
-                <SelectTrigger className="bg-slate-950/40 border-white/5 text-slate-200 h-9 font-medium text-xs">
+                <SelectTrigger className="bg-background border-border text-foreground h-9 font-medium text-xs">
                   <SelectValue placeholder="Select Severity" />
                 </SelectTrigger>
-                <SelectContent className="bg-slate-900 border-white/10 text-slate-200">
+                <SelectContent className="bg-card border-border text-foreground">
                   <SelectItem value="all" className="text-xs">All Severities</SelectItem>
                   <SelectItem value="CRITICAL" className="text-xs">Critical</SelectItem>
                   <SelectItem value="HIGH" className="text-xs">High</SelectItem>
@@ -278,13 +278,13 @@ export default function IncidentsPage() {
             </div>
 
             {/* State Selector */}
-            <div className="space-y-1">
-              <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Incident State</label>
+            <div className="space-y-1.5">
+              <label className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Incident State</label>
               <Select value={stateFilter?.[0] || 'all'} onValueChange={handleStateChange}>
-                <SelectTrigger className="bg-slate-950/40 border-white/5 text-slate-200 h-9 font-medium text-xs">
+                <SelectTrigger className="bg-background border-border text-foreground h-9 font-medium text-xs">
                   <SelectValue placeholder="Select State" />
                 </SelectTrigger>
-                <SelectContent className="bg-slate-900 border-white/10 text-slate-200">
+                <SelectContent className="bg-card border-border text-foreground">
                   <SelectItem value="all" className="text-xs">All States</SelectItem>
                   <SelectItem value="OPEN" className="text-xs">Open</SelectItem>
                   <SelectItem value="ACKNOWLEDGED" className="text-xs">Acknowledged</SelectItem>
@@ -298,21 +298,21 @@ export default function IncidentsPage() {
         </div>
 
         {/* Content Area */}
-        <div className="glass-panel rounded-xl overflow-hidden">
+        <div className="glass-panel rounded-xl border border-border bg-card overflow-hidden">
           {isLoading ? (
-            <div className="py-24">
+            <div className="py-16">
               <LoadingSpinner text="Retrieving Active Incident Feed..." />
             </div>
           ) : incidentsQuery.isError ? (
             <div className="py-12 px-6">
               <EmptyState
-                title="Error Loading Incidents"
-                description={incidentsQuery.error instanceof Error ? incidentsQuery.error.message : 'Failed to retrieve incident logs.'}
-                icon={AlertTriangle}
-                action={{
-                  label: "Retry",
-                  onClick: () => incidentsQuery.refetch()
-                }}
+                 title="Error Loading Incidents"
+                 description={incidentsQuery.error instanceof Error ? incidentsQuery.error.message : 'Failed to retrieve incident logs.'}
+                 icon={AlertTriangle}
+                 action={{
+                   label: "Retry",
+                   onClick: () => incidentsQuery.refetch()
+                 }}
               />
             </div>
           ) : !incidentsQuery.data?.items || incidentsQuery.data.items.length === 0 ? (
@@ -332,57 +332,57 @@ export default function IncidentsPage() {
               {/* Desktop view */}
               <div className="hidden md:block">
                 <Table>
-                  <TableHeader className="bg-slate-900/40 border-b border-white/5">
-                    <TableRow className="border-b border-white/5 hover:bg-transparent">
-                      <TableHead className="text-slate-400 font-bold text-[10px] uppercase py-3.5 pl-6">Title</TableHead>
-                      <TableHead className="text-slate-400 font-bold text-[10px] uppercase py-3.5">Severity</TableHead>
-                      <TableHead className="text-slate-400 font-bold text-[10px] uppercase py-3.5">Target Table</TableHead>
-                      <TableHead className="text-slate-400 font-bold text-[10px] uppercase py-3.5">State</TableHead>
-                      <TableHead className="text-slate-400 font-bold text-[10px] uppercase py-3.5">Owner</TableHead>
-                      <TableHead className="text-slate-400 font-bold text-[10px] uppercase py-3.5">Logged Time</TableHead>
-                      <TableHead className="text-slate-400 font-bold text-[10px] uppercase py-3.5 text-right pr-6">Actions</TableHead>
+                  <TableHeader className="bg-muted/50 border-b border-border">
+                    <TableRow className="border-b border-border hover:bg-transparent">
+                      <TableHead className="text-muted-foreground font-semibold text-[10px] uppercase py-3 pl-6">Title</TableHead>
+                      <TableHead className="text-muted-foreground font-semibold text-[10px] uppercase py-3">Severity</TableHead>
+                      <TableHead className="text-muted-foreground font-semibold text-[10px] uppercase py-3">Target Table</TableHead>
+                      <TableHead className="text-muted-foreground font-semibold text-[10px] uppercase py-3">State</TableHead>
+                      <TableHead className="text-muted-foreground font-semibold text-[10px] uppercase py-3">Owner</TableHead>
+                      <TableHead className="text-muted-foreground font-semibold text-[10px] uppercase py-3">Logged Time</TableHead>
+                      <TableHead className="text-muted-foreground font-semibold text-[10px] uppercase py-3 text-right pr-6">Actions</TableHead>
                     </TableRow>
                   </TableHeader>
-                  <TableBody className="divide-y divide-white/5 text-xs text-slate-300">
+                  <TableBody className="divide-y divide-border text-xs text-foreground">
                     {incidentsQuery.data.items.map((incident) => (
                       <TableRow 
                         key={incident.id}
-                        className="border-b border-white/5 hover:bg-white/5 transition-colors cursor-pointer group"
+                        className="border-b border-border hover:bg-muted/50 transition-colors cursor-pointer group"
                       >
-                        <TableCell className="py-3.5 pl-6 font-semibold text-slate-100 group-hover:text-primary transition-colors max-w-[280px] truncate">
+                        <TableCell className="py-3 pl-6 font-semibold text-foreground group-hover:text-primary transition-colors max-w-[280px] truncate">
                           <Link href={`/incidents/${incident.id}`} className="block">
                             {incident.title}
                           </Link>
                         </TableCell>
-                        <TableCell className="py-3.5">
+                        <TableCell className="py-3">
                           <Link href={`/incidents/${incident.id}`} className="block">
                             {getSeverityBadge(incident.severity)}
                           </Link>
                         </TableCell>
-                        <TableCell className="py-3.5 font-mono text-[10px]">
+                        <TableCell className="py-3 font-mono text-[10px] text-muted-foreground">
                           <Link href={`/incidents/${incident.id}`} className="block">
                             {incident.table_name}
                           </Link>
                         </TableCell>
-                        <TableCell className="py-3.5">
+                        <TableCell className="py-3">
                           <Link href={`/incidents/${incident.id}`} className="block">
                             {getStateBadge(incident.state)}
                           </Link>
                         </TableCell>
-                        <TableCell className="py-3.5 font-medium text-slate-400">
+                        <TableCell className="py-3 font-medium text-muted-foreground">
                           <Link href={`/incidents/${incident.id}`} className="block">
                             <span className="flex items-center gap-1.5">
-                              <User className="h-3.5 w-3.5 text-slate-500" />
+                              <User className="h-3.5 w-3.5 text-muted-foreground/80" />
                               {incident.assigned_to || 'Unassigned'}
                             </span>
                           </Link>
                         </TableCell>
-                        <TableCell className="py-3.5 font-mono text-[10px] text-slate-400">
+                        <TableCell className="py-3 font-mono text-[10px] text-muted-foreground">
                           <Link href={`/incidents/${incident.id}`} className="block">
                             {format(new Date(incident.created_at), 'yyyy-MM-dd HH:mm')}
                           </Link>
                         </TableCell>
-                        <TableCell className="py-3.5 pr-6 text-right" onClick={(e) => e.stopPropagation()}>
+                        <TableCell className="py-3 pr-6 text-right" onClick={(e) => e.stopPropagation()}>
                           <div className="flex items-center justify-end gap-2">
                             {incident.state.toUpperCase() === 'OPEN' && (
                               <Button
@@ -399,7 +399,7 @@ export default function IncidentsPage() {
                               <Button
                                 size="sm"
                                 variant="outline"
-                                className="h-7 w-7 p-0 border-white/5 text-slate-400 hover:text-white hover:bg-white/5"
+                                className="h-7 w-7 p-0 border-border text-muted-foreground hover:text-foreground hover:bg-muted bg-card"
                               >
                                 <Eye className="h-3.5 w-3.5" />
                               </Button>
@@ -413,18 +413,18 @@ export default function IncidentsPage() {
               </div>
 
               {/* Mobile View */}
-              <div className="md:hidden divide-y divide-white/5">
+              <div className="md:hidden divide-y divide-border">
                 {incidentsQuery.data.items.map((incident) => (
                   <div 
                     key={incident.id} 
-                    className="p-4 space-y-3 hover:bg-white/5 transition-colors"
+                    className="p-4 space-y-3 hover:bg-muted/50 transition-colors"
                   >
                     <div className="flex items-start justify-between gap-4">
                       <Link href={`/incidents/${incident.id}`} className="block space-y-1 flex-1">
-                        <div className="font-semibold text-slate-100 hover:text-primary transition-colors text-sm">
+                        <div className="font-semibold text-foreground hover:text-primary transition-colors text-sm">
                           {incident.title}
                         </div>
-                        <div className="text-[10px] font-mono text-slate-500">
+                        <div className="text-[10px] font-mono text-muted-foreground">
                           {incident.table_name}
                         </div>
                       </Link>
@@ -433,12 +433,12 @@ export default function IncidentsPage() {
                       </div>
                     </div>
 
-                    <div className="flex items-center justify-between text-[11px] text-slate-400">
+                    <div className="flex items-center justify-between text-[11px] text-muted-foreground">
                       <div className="flex items-center gap-1.5">
                         {getStateBadge(incident.state)}
-                        <span className="text-slate-600">•</span>
+                        <span className="text-muted-foreground/60">•</span>
                         <span className="flex items-center gap-1">
-                          <User className="h-3 w-3 text-slate-500" />
+                          <User className="h-3 w-3 text-muted-foreground/75" />
                           {incident.assigned_to || 'Unassigned'}
                         </span>
                       </div>
@@ -463,7 +463,7 @@ export default function IncidentsPage() {
                         <Button
                           size="sm"
                           variant="outline"
-                          className="h-7 w-full border-white/5 text-slate-400 hover:text-white text-[10px] uppercase font-bold"
+                          className="h-7 w-full border-border text-muted-foreground hover:text-foreground text-[10px] uppercase font-bold bg-card"
                         >
                           View Details
                         </Button>
@@ -474,25 +474,25 @@ export default function IncidentsPage() {
               </div>
 
               {/* Pagination bar */}
-              <div className="flex flex-col sm:flex-row items-center justify-between border-t border-white/5 p-4 md:p-6 gap-4">
-                <div className="text-xs text-slate-500 font-medium">
-                  Showing <span className="text-slate-300 font-bold">{currentStart}</span> to{' '}
-                  <span className="text-slate-300 font-bold">{currentEnd}</span> of{' '}
-                  <span className="text-slate-300 font-bold">{totalItems}</span> incidents
+              <div className="flex flex-col sm:flex-row items-center justify-between border-t border-border p-4 md:p-6 gap-4">
+                <div className="text-xs text-muted-foreground font-medium">
+                  Showing <span className="text-foreground font-bold">{currentStart}</span> to{' '}
+                  <span className="text-foreground font-bold">{currentEnd}</span> of{' '}
+                  <span className="text-foreground font-bold">{totalItems}</span> incidents
                 </div>
 
                 <div className="flex items-center gap-4">
                   {/* Page size selector */}
                   <div className="flex items-center gap-2">
-                    <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Page size</span>
+                    <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider font-sans">Page size</span>
                     <Select
                       value={String(pageSize)}
                       onValueChange={(val) => setPageSize(Number(val))}
                     >
-                      <SelectTrigger className="w-16 bg-slate-950/40 border-white/5 text-slate-200 h-8 font-bold text-xs">
+                      <SelectTrigger className="w-16 bg-background border-border text-foreground h-8 font-bold text-xs">
                         <SelectValue />
                       </SelectTrigger>
-                      <SelectContent className="bg-slate-900 border-white/10 text-slate-200 min-w-[64px]">
+                      <SelectContent className="bg-card border-border text-foreground min-w-[64px]">
                         <SelectItem value="10" className="text-xs font-semibold">10</SelectItem>
                         <SelectItem value="20" className="text-xs font-semibold">20</SelectItem>
                         <SelectItem value="50" className="text-xs font-semibold">50</SelectItem>
@@ -507,11 +507,11 @@ export default function IncidentsPage() {
                       size="icon"
                       onClick={() => handlePageChange(page - 1)}
                       disabled={page === 1}
-                      className="h-8 w-8 border-white/5 text-slate-400 hover:text-white hover:bg-white/5 disabled:opacity-30"
+                      className="h-8 w-8 border-border text-muted-foreground hover:text-foreground hover:bg-muted bg-card disabled:opacity-30"
                     >
                       <ChevronLeft className="h-4 w-4" />
                     </Button>
-                    <div className="text-xs font-bold text-slate-300 px-2 select-none">
+                    <div className="text-xs font-bold text-foreground px-2 select-none">
                       Page {page} of {totalPages}
                     </div>
                     <Button
@@ -519,7 +519,7 @@ export default function IncidentsPage() {
                       size="icon"
                       onClick={() => handlePageChange(page + 1)}
                       disabled={page === totalPages}
-                      className="h-8 w-8 border-white/5 text-slate-400 hover:text-white hover:bg-white/5 disabled:opacity-30"
+                      className="h-8 w-8 border-border text-muted-foreground hover:text-foreground hover:bg-muted bg-card disabled:opacity-30"
                     >
                       <ChevronRight className="h-4 w-4" />
                     </Button>

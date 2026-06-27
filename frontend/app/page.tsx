@@ -96,7 +96,7 @@ export default function DashboardPage() {
       case 'MEDIUM':
         return <Badge variant="outline" className="bg-warning/10 text-warning border-warning/20 uppercase text-[10px]">Medium</Badge>
       default:
-        return <Badge variant="outline" className="bg-slate-800 text-slate-400 border-white/5 uppercase text-[10px]">Low</Badge>
+        return <Badge variant="outline" className="bg-muted text-muted-foreground border-border uppercase text-[10px]">Low</Badge>
     }
   }
 
@@ -109,13 +109,13 @@ export default function DashboardPage() {
       case 'RESOLVED':
         return <span className="text-xs text-healthy font-bold">● Resolved</span>
       default:
-        return <span className="text-xs text-slate-500 font-bold">● {state}</span>
+        return <span className="text-xs text-muted-foreground font-bold">● {state}</span>
     }
   }
 
   return (
     <ErrorBoundary>
-      <div className="space-y-8 select-none">
+      <div className="space-y-4 select-none">
         
         {/* Welcome Section */}
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
@@ -123,33 +123,33 @@ export default function DashboardPage() {
             <h1 className="text-2xl md:text-3xl font-extrabold tracking-tight bg-gradient-to-r from-slate-900 to-slate-600 dark:from-white dark:to-slate-400 bg-clip-text text-transparent flex items-center gap-2">
               Welcome back, Operator <Sparkles className="h-5 w-5 text-primary animate-pulse" />
             </h1>
-            <p className="text-sm text-slate-600 dark:text-slate-400">Monitoring real-time database ingest reliability metrics and anomaly bounds.</p>
+            <p className="text-sm text-muted-foreground">Monitoring real-time database ingest reliability metrics and anomaly bounds.</p>
           </div>
-          <div className="flex items-center gap-2 px-4 py-2 rounded-lg bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-white/5 text-xs text-slate-600 dark:text-slate-400 font-medium self-start">
-            <Calendar className="h-4 w-4 text-slate-500" />
+          <div className="flex items-center gap-2 px-4 py-2 rounded-lg bg-muted border border-border text-xs text-muted-foreground font-medium self-start">
+            <Calendar className="h-4 w-4 text-muted-foreground" />
             {format(new Date(), 'PPPP')}
           </div>
         </div>
 
         {/* Top Summary Row */}
-        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {/* Card 1: Average Trust Score */}
-          <div className="glass-panel p-6 rounded-xl flex flex-col gap-2 relative overflow-hidden group">
-            <div className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Average System health</div>
+          <div className="glass-panel p-6 rounded-xl flex flex-col gap-2 relative overflow-hidden group bg-card border border-border">
+            <div className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Average System health</div>
             <div className="flex items-baseline gap-2 mt-1">
-              <span className="text-4xl font-black text-slate-900 dark:text-slate-100">{overallAverageScore}%</span>
+              <span className="text-4xl font-black text-foreground">{overallAverageScore}%</span>
               <span className={`text-xs px-2 py-0.5 rounded-full font-bold border ${getStatusClass(overallAverageScore)}`}>
                 {overallAverageScore >= 80 ? 'HEALTHY' : 'WARNING'}
               </span>
             </div>
-            <p className="text-[11px] text-slate-600 dark:text-slate-400 mt-2">Calculated across all active source tables</p>
+            <p className="text-[11px] text-muted-foreground mt-2">Calculated across all active source tables</p>
           </div>
 
           {/* Card 2: Active Incidents */}
-          <div className="glass-panel p-6 rounded-xl flex flex-col gap-2 relative overflow-hidden group">
-            <div className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Active incident logs</div>
+          <div className="glass-panel p-6 rounded-xl flex flex-col gap-2 relative overflow-hidden group bg-card border border-border">
+            <div className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Active incident logs</div>
             <div className="flex items-baseline gap-2 mt-1">
-              <span className="text-4xl font-black text-slate-900 dark:text-slate-100">
+              <span className="text-4xl font-black text-foreground">
                 {statsQuery.data?.total_open ?? 0}
               </span>
               {(statsQuery.data?.total_open ?? 0) > 0 ? (
@@ -162,55 +162,55 @@ export default function DashboardPage() {
                 </span>
               )}
             </div>
-            <p className="text-[11px] text-slate-600 dark:text-slate-400 mt-2">Requires developer review and RCA inputs</p>
+            <p className="text-[11px] text-muted-foreground mt-2">Requires developer review and RCA inputs</p>
           </div>
 
           {/* Card 3: Trained ML Baselines */}
-          <div className="glass-panel p-6 rounded-xl flex flex-col gap-2 relative overflow-hidden group">
-            <div className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Trained ML Baselines</div>
+          <div className="glass-panel p-6 rounded-xl flex flex-col gap-2 relative overflow-hidden group bg-card border border-border">
+            <div className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Trained ML Baselines</div>
             <div className="flex items-baseline gap-2 mt-1">
-              <span className="text-4xl font-black text-slate-900 dark:text-slate-100">
+              <span className="text-4xl font-black text-foreground">
                 {Object.values(anomalyHealthQuery.data || {}).filter(Boolean).length} / 3
               </span>
               <span className="text-xs px-2 py-0.5 rounded-full bg-primary/10 text-primary border border-primary/20 font-bold">
                 ISOLATION FOREST
               </span>
             </div>
-            <p className="text-[11px] text-slate-600 dark:text-slate-400 mt-2">Tables qualified with active ML detection bounds</p>
+            <p className="text-[11px] text-muted-foreground mt-2">Tables qualified with active ML detection bounds</p>
           </div>
         </div>
 
         {/* Second Row: Gauge & Trend Chart */}
         <div className="grid gap-6 lg:grid-cols-3">
           {/* Gauge Widget */}
-          <div className="glass-panel p-6 rounded-xl flex flex-col items-center justify-between min-h-[350px]">
-            <div className="w-full flex items-center justify-between border-b border-slate-200 dark:border-white/5 pb-4">
-              <span className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Table scoring profile</span>
-              <span className="text-[10px] text-slate-600 dark:text-slate-500">Run Ingress</span>
+          <div className="glass-panel p-6 rounded-xl flex flex-col items-center justify-between min-h-[350px] bg-card border border-border">
+            <div className="w-full flex items-center justify-between border-b border-border pb-4">
+              <span className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Table scoring profile</span>
+              <span className="text-[10px] text-muted-foreground">Run Ingress</span>
             </div>
             <div className="flex-1 flex items-center justify-center py-6">
               <TrustScoreGauge score={currentScore} size="lg" />
             </div>
             <div className="text-center space-y-1">
-              <h4 className="font-bold text-slate-800 dark:text-slate-200 text-sm">
+              <h4 className="font-bold text-foreground text-sm">
                 {TABLES.find(t => t.id === selectedTable)?.label}
               </h4>
-              <p className="text-[11px] text-slate-600 dark:text-slate-500 max-w-xs">
+              <p className="text-[11px] text-muted-foreground max-w-xs">
                 {(currentHistoryItem as any)?.explanation || 'No active penalties applied to the latest execution run.'}
               </p>
             </div>
           </div>
 
           {/* Trend Chart */}
-          <div className="glass-panel p-6 rounded-xl lg:col-span-2 flex flex-col justify-between min-h-[350px]">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between border-b border-slate-200 dark:border-white/5 pb-4 gap-4">
+          <div className="glass-panel p-6 rounded-xl lg:col-span-2 flex flex-col justify-between min-h-[350px] bg-card border border-border">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between border-b border-border pb-4 gap-4">
               <div className="space-y-1">
-                <span className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Trust Score History</span>
-                <p className="text-[11px] text-slate-600 dark:text-slate-500">Tracking score changes across the last 30 execution pipelines</p>
+                <span className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Trust Score History</span>
+                <p className="text-[11px] text-muted-foreground">Tracking score changes across the last 30 execution pipelines</p>
               </div>
               
               {/* Tab Selector */}
-              <div className="flex p-1 rounded-lg bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-white/5 self-start sm:self-center">
+              <div className="flex p-1 rounded-lg bg-muted border border-border self-start sm:self-center">
                 {TABLES.map((t) => (
                   <button
                     key={t.id}
@@ -218,7 +218,7 @@ export default function DashboardPage() {
                     className={`px-3 py-1.5 rounded-md text-xs font-bold transition-all ${
                       selectedTable === t.id 
                         ? 'bg-primary text-white shadow-md' 
-                        : 'text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+                        : 'text-muted-foreground hover:text-foreground'
                     }`}
                   >
                     {t.label.split(' ')[0]}
@@ -236,10 +236,10 @@ export default function DashboardPage() {
         {/* Third Row: Penalty Breakdown & Pipelines */}
         <div className="grid gap-6 md:grid-cols-2">
           {/* Penalty Chart */}
-          <div className="glass-panel p-6 rounded-xl flex flex-col justify-between">
-            <div className="border-b border-slate-200 dark:border-white/5 pb-4">
-              <span className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Score penalty allocation</span>
-              <p className="text-[11px] text-slate-600 dark:text-slate-500 mt-0.5">Deduction breakdown details for the current table run</p>
+          <div className="glass-panel p-6 rounded-xl flex flex-col justify-between bg-card border border-border">
+            <div className="border-b border-border pb-4">
+              <span className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Score penalty allocation</span>
+              <p className="text-[11px] text-muted-foreground mt-0.5">Deduction breakdown details for the current table run</p>
             </div>
             <div className="flex-1 py-4 flex items-center justify-center">
               <PenaltyBreakdown 
@@ -253,26 +253,26 @@ export default function DashboardPage() {
           </div>
 
           {/* Pipelines Health */}
-          <div className="glass-panel p-6 rounded-xl flex flex-col justify-between">
-            <div className="border-b border-slate-200 dark:border-white/5 pb-4">
-              <span className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Pipeline integrations</span>
-              <p className="text-[11px] text-slate-600 dark:text-slate-500 mt-0.5">Status of raw data collection schedulers</p>
+          <div className="glass-panel p-6 rounded-xl flex flex-col justify-between bg-card border border-border">
+            <div className="border-b border-border pb-4">
+              <span className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Pipeline integrations</span>
+              <p className="text-[11px] text-muted-foreground mt-0.5">Status of raw data collection schedulers</p>
             </div>
             
             <div className="flex-1 py-6 space-y-4">
               {/* Finnhub */}
-              <div className="flex items-center justify-between p-3 rounded-lg bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-white/5">
+              <div className="flex items-center justify-between p-3 rounded-lg bg-muted/50 border border-border">
                 <div className="space-y-1">
-                  <span className="text-sm font-bold text-slate-800 dark:text-slate-200">Finnhub Ingest (candles)</span>
-                  <div className="flex items-center gap-2 text-[10px] text-slate-600 dark:text-slate-500">
+                  <span className="text-sm font-bold text-foreground">Finnhub Ingest (candles)</span>
+                  <div className="flex items-center gap-2 text-[10px] text-muted-foreground">
                     <span>ML Baseline:</span>
-                    <span className={anomalyHealthQuery.data?.['bronze_financial_candles'] ? 'text-healthy font-semibold' : 'text-slate-500 dark:text-slate-400'}>
+                    <span className={anomalyHealthQuery.data?.['bronze_financial_candles'] ? 'text-healthy font-semibold' : 'text-muted-foreground'}>
                       {anomalyHealthQuery.data?.['bronze_financial_candles'] ? 'Ready' : 'Tuning (7 runs req.)'}
                     </span>
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
-                  <span className="text-xs text-slate-800 dark:text-slate-400 font-bold">{scoreCandles}%</span>
+                  <span className="text-xs text-foreground font-bold">{scoreCandles}%</span>
                   {scoreCandles >= 85 ? (
                     <CheckCircle2 className="h-5 w-5 text-healthy" />
                   ) : scoreCandles >= 70 ? (
@@ -284,18 +284,18 @@ export default function DashboardPage() {
               </div>
 
               {/* FDA */}
-              <div className="flex items-center justify-between p-3 rounded-lg bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-white/5">
+              <div className="flex items-center justify-between p-3 rounded-lg bg-muted/50 border border-border">
                 <div className="space-y-1">
-                  <span className="text-sm font-bold text-slate-800 dark:text-slate-200">FDA Scraping (events)</span>
-                  <div className="flex items-center gap-2 text-[10px] text-slate-600 dark:text-slate-500">
+                  <span className="text-sm font-bold text-foreground">FDA Scraping (events)</span>
+                  <div className="flex items-center gap-2 text-[10px] text-muted-foreground">
                     <span>ML Baseline:</span>
-                    <span className={anomalyHealthQuery.data?.['bronze_fda_events'] ? 'text-healthy font-semibold' : 'text-slate-500 dark:text-slate-400'}>
+                    <span className={anomalyHealthQuery.data?.['bronze_fda_events'] ? 'text-healthy font-semibold' : 'text-muted-foreground'}>
                       {anomalyHealthQuery.data?.['bronze_fda_events'] ? 'Ready' : 'Tuning (7 runs req.)'}
                     </span>
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
-                  <span className="text-xs text-slate-800 dark:text-slate-400 font-bold">{scoreFda}%</span>
+                  <span className="text-xs text-foreground font-bold">{scoreFda}%</span>
                   {scoreFda >= 85 ? (
                     <CheckCircle2 className="h-5 w-5 text-healthy" />
                   ) : scoreFda >= 70 ? (
@@ -307,18 +307,18 @@ export default function DashboardPage() {
               </div>
 
               {/* Github */}
-              <div className="flex items-center justify-between p-3 rounded-lg bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-white/5">
+              <div className="flex items-center justify-between p-3 rounded-lg bg-muted/50 border border-border">
                 <div className="space-y-1">
-                  <span className="text-sm font-bold text-slate-800 dark:text-slate-200">GitHub Webhook (events)</span>
-                  <div className="flex items-center gap-2 text-[10px] text-slate-600 dark:text-slate-500">
+                  <span className="text-sm font-bold text-foreground">GitHub Webhook (events)</span>
+                  <div className="flex items-center gap-2 text-[10px] text-muted-foreground">
                     <span>ML Baseline:</span>
-                    <span className={anomalyHealthQuery.data?.['bronze_github_events'] ? 'text-healthy font-semibold' : 'text-slate-500 dark:text-slate-400'}>
+                    <span className={anomalyHealthQuery.data?.['bronze_github_events'] ? 'text-healthy font-semibold' : 'text-muted-foreground'}>
                       {anomalyHealthQuery.data?.['bronze_github_events'] ? 'Ready' : 'Tuning (7 runs req.)'}
                     </span>
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
-                  <span className="text-xs text-slate-800 dark:text-slate-400 font-bold">{scoreGithub}%</span>
+                  <span className="text-xs text-foreground font-bold">{scoreGithub}%</span>
                   {scoreGithub >= 85 ? (
                     <CheckCircle2 className="h-5 w-5 text-healthy" />
                   ) : scoreGithub >= 70 ? (
@@ -333,14 +333,14 @@ export default function DashboardPage() {
         </div>
 
         {/* Fourth Row: Recent Incidents */}
-        <div className="glass-panel p-6 rounded-xl flex flex-col justify-between">
-          <div className="flex items-center justify-between border-b border-slate-200 dark:border-white/5 pb-4">
+        <div className="glass-panel p-6 rounded-xl flex flex-col justify-between bg-card border border-border">
+          <div className="flex items-center justify-between border-b border-border pb-4">
             <div className="space-y-0.5">
-              <span className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider flex items-center gap-2">
+              <span className="text-xs font-bold text-muted-foreground uppercase tracking-wider flex items-center gap-2">
                 <ShieldAlert className="h-4 w-4 text-critical" />
                 Active incident command feed
               </span>
-              <p className="text-[11px] text-slate-600 dark:text-slate-500">Timeline events mapping trust score breaches below 70</p>
+              <p className="text-[11px] text-muted-foreground">Timeline events mapping trust score breaches below 70</p>
             </div>
             <Link href="/incidents" className="text-xs text-primary hover:text-emerald-500 font-bold flex items-center gap-1 group">
               View all
@@ -352,7 +352,7 @@ export default function DashboardPage() {
             {incidentsQuery.data?.items && incidentsQuery.data.items.length > 0 ? (
               <table className="w-full text-left border-collapse">
                 <thead>
-                  <tr className="border-b border-slate-200 dark:border-white/5 text-slate-600 dark:text-slate-500 text-[10px] uppercase font-bold tracking-wider">
+                  <tr className="border-b border-border text-muted-foreground text-[10px] uppercase font-bold tracking-wider">
                     <th className="py-2.5">Title</th>
                     <th className="py-2.5">Severity</th>
                     <th className="py-2.5">Target Table</th>
@@ -360,13 +360,13 @@ export default function DashboardPage() {
                     <th className="py-2.5 text-right">Logged At</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-200 dark:divide-white/5 text-xs text-slate-700 dark:text-slate-300">
+                <tbody className="divide-y divide-border text-xs text-foreground">
                   {incidentsQuery.data.items.map((incident) => (
                     <tr 
                       key={incident.id} 
-                      className="hover:bg-slate-100 dark:hover:bg-white/5 transition-colors cursor-pointer group"
+                      className="hover:bg-muted/50 transition-colors cursor-pointer group"
                     >
-                      <td className="py-3 font-semibold text-slate-900 dark:text-slate-100 group-hover:text-primary transition-colors">
+                      <td className="py-3 font-semibold text-foreground group-hover:text-primary transition-colors">
                         <Link href={`/incidents/${incident.id}`} className="block">
                           {incident.title}
                         </Link>
@@ -386,7 +386,7 @@ export default function DashboardPage() {
                           {getStateBadge(incident.state)}
                         </Link>
                       </td>
-                      <td className="py-3 text-right text-slate-600 dark:text-slate-400 font-mono text-[10px]">
+                      <td className="py-3 text-right text-muted-foreground font-mono text-[10px]">
                         <Link href={`/incidents/${incident.id}`} className="block">
                           {format(new Date(incident.created_at), 'MMM dd, HH:mm')}
                         </Link>
@@ -396,7 +396,7 @@ export default function DashboardPage() {
                 </tbody>
               </table>
             ) : (
-              <div className="flex flex-col items-center justify-center py-8 text-center text-slate-600 dark:text-slate-500 text-xs">
+              <div className="flex flex-col items-center justify-center py-8 text-center text-muted-foreground text-xs">
                 <CheckCircle2 className="h-8 w-8 text-healthy mb-2 opacity-80" />
                 <span>No incidents logged. All datasets operating cleanly.</span>
               </div>

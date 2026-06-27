@@ -27,7 +27,7 @@
   }
 
   .light {
-    --background: 0 0% 100%;
+    --background: 210 40% 98%;
     --foreground: 224 71% 4%;
     --card: 0 0% 100%;
     --card-foreground: 224 71% 4%;
@@ -62,18 +62,23 @@
 
 /* Custom premium scrollbar style */
 ::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
+  width: 8px;
+  height: 8px;
 }
 ::-webkit-scrollbar-track {
-  background: rgba(15, 23, 42, 0.3);
+  background: hsl(var(--muted));
+  border-radius: 9999px;
 }
 ::-webkit-scrollbar-thumb {
-  background: rgba(148, 163, 184, 0.3);
-  border-radius: 3px;
+  background: hsl(var(--muted-foreground) / 0.4);
+  border-radius: 9999px;
+  border: 2px solid transparent;
+  background-clip: padding-box;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(148, 163, 184, 0.5);
+  background: hsl(var(--primary));
+  border: 2px solid transparent;
+  background-clip: padding-box;
 }
 
 /* Glassmorphic elements utility styles */

@@ -173,12 +173,12 @@ export default function AnomaliesPage() {
         </div>
 
         {/* Baseline Training Progress Section */}
-        <div className="glass-panel p-6 rounded-xl border border-slate-200 dark:border-white/5 bg-slate-50 dark:bg-slate-900/20 space-y-4">
+        <div className="glass-panel p-6 rounded-xl border border-border bg-card space-y-4">
           <div className="flex items-start gap-3">
             <Info className="h-5 w-5 text-primary mt-0.5 flex-shrink-0" />
             <div className="space-y-1">
-              <h3 className="text-sm font-bold text-slate-200">Baseline Training Progress</h3>
-              <p className="text-[11px] text-slate-400 max-w-3xl leading-relaxed">
+              <h3 className="text-sm font-bold text-foreground">Baseline Training Progress</h3>
+              <p className="text-[11px] text-muted-foreground max-w-3xl leading-relaxed">
                 Isolation Forest models require 7 historical pipeline execution runs to establish baseline parameters.
                 Once 100% complete, active anomaly detection and enforcement is automatically enabled.
               </p>
@@ -216,10 +216,10 @@ export default function AnomaliesPage() {
                 return (
                   <div
                     key={table.id}
-                    className="bg-white dark:bg-slate-950/40 p-4 rounded-lg border border-slate-200 dark:border-white/5 space-y-3 flex flex-col justify-between hover:border-slate-300 dark:hover:border-slate-800/80 transition-colors"
+                    className="bg-background p-4 rounded-lg border border-border space-y-3 flex flex-col justify-between hover:border-muted-foreground/30 transition-colors"
                   >
                     <div className="flex items-center justify-between">
-                      <span className="font-bold text-xs text-slate-350">{table.label}</span>
+                      <span className="font-bold text-xs text-foreground">{table.label}</span>
                       {progress.is_ready ? (
                         <Badge
                           variant="outline"
@@ -257,7 +257,7 @@ export default function AnomaliesPage() {
         {/* Filter bar */}
         <div className="glass-panel p-4 rounded-xl space-y-4">
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-            <div className="flex items-center gap-2 text-xs font-bold text-slate-400 uppercase tracking-wider">
+            <div className="flex items-center gap-2 text-xs font-bold text-muted-foreground uppercase tracking-wider">
               <Filter className="h-4 w-4 text-primary" />
               Filter Telemetry
             </div>
@@ -265,7 +265,7 @@ export default function AnomaliesPage() {
               variant="outline"
               size="sm"
               onClick={resetFilters}
-              className="text-slate-400 border-white/5 hover:bg-white/5 hover:text-white text-xs font-bold gap-1 self-end sm:self-center h-8"
+              className="text-muted-foreground border-border hover:bg-accent hover:text-accent-foreground text-xs font-bold gap-1 self-end sm:self-center h-8"
             >
               <RotateCcw className="h-3.5 w-3.5" />
               Reset Filters
@@ -275,14 +275,14 @@ export default function AnomaliesPage() {
           <div className="grid gap-4 sm:grid-cols-2">
             {/* Table Name */}
             <div className="space-y-1">
-              <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Target Table</label>
+              <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Target Table</label>
               <Select value={selectedTable} onValueChange={handleTableChange}>
-                <SelectTrigger className="bg-slate-950/40 border-white/5 text-slate-200 h-9 font-medium text-xs">
+                <SelectTrigger className="bg-background border-border text-foreground h-9 font-medium text-xs">
                   <SelectValue />
                 </SelectTrigger>
-                <SelectContent className="bg-slate-900 border-white/10 text-slate-200">
+                <SelectContent className="bg-popover border-border text-popover-foreground">
                   {TABLES.map(t => (
-                    <SelectItem key={t.id} value={t.id} className="text-xs">
+                    <SelectItem key={t.id} value={t.id} className="text-xs cursor-pointer focus:bg-accent focus:text-accent-foreground">
                       {t.label}
                     </SelectItem>
                   ))}
@@ -292,14 +292,14 @@ export default function AnomaliesPage() {
 
             {/* Anomaly Type */}
             <div className="space-y-1">
-              <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Anomaly Type</label>
+              <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Anomaly Type</label>
               <Select value={selectedType} onValueChange={handleTypeChange}>
-                <SelectTrigger className="bg-slate-950/40 border-white/5 text-slate-200 h-9 font-medium text-xs">
+                <SelectTrigger className="bg-background border-border text-foreground h-9 font-medium text-xs">
                   <SelectValue />
                 </SelectTrigger>
-                <SelectContent className="bg-slate-900 border-white/10 text-slate-200">
+                <SelectContent className="bg-popover border-border text-popover-foreground">
                   {ANOMALY_TYPES.map(t => (
-                    <SelectItem key={t.id} value={t.id} className="text-xs">
+                    <SelectItem key={t.id} value={t.id} className="text-xs cursor-pointer focus:bg-accent focus:text-accent-foreground">
                       {t.label}
                     </SelectItem>
                   ))}
@@ -310,7 +310,7 @@ export default function AnomaliesPage() {
         </div>
 
         {/* Content list */}
-        <div className="glass-panel rounded-xl overflow-hidden">
+        <div className="glass-panel rounded-xl overflow-hidden bg-card border border-border">
           {isLoading ? (
             <div className="py-24">
               <LoadingSpinner text="Retrieving Anomaly Logs..." />
@@ -342,19 +342,19 @@ export default function AnomaliesPage() {
           ) : (
             <div>
               <Table>
-                <TableHeader className="bg-slate-50 dark:bg-slate-900/40 border-b border-slate-200 dark:border-white/5">
-                  <TableRow className="border-b border-slate-200 dark:border-white/5 hover:bg-transparent">
+                <TableHeader className="bg-muted/40 border-b border-border">
+                  <TableRow className="border-b border-border hover:bg-transparent">
                     <TableHead className="w-10 py-3.5 pl-6"></TableHead>
-                    <TableHead className="text-slate-600 dark:text-slate-400 font-bold text-[10px] uppercase py-3.5">Detected At</TableHead>
-                    <TableHead className="text-slate-600 dark:text-slate-400 font-bold text-[10px] uppercase py-3.5">Data Table</TableHead>
-                    <TableHead className="text-slate-600 dark:text-slate-400 font-bold text-[10px] uppercase py-3.5">Type</TableHead>
-                    <TableHead className="text-slate-600 dark:text-slate-400 font-bold text-[10px] uppercase py-3.5">Score</TableHead>
-                    <TableHead className="text-slate-600 dark:text-slate-400 font-bold text-[10px] uppercase py-3.5">Penalty</TableHead>
-                    <TableHead className="text-slate-600 dark:text-slate-400 font-bold text-[10px] uppercase py-3.5">State</TableHead>
-                    <TableHead className="text-slate-600 dark:text-slate-400 font-bold text-[10px] uppercase py-3.5 text-right pr-6">Quick Feedback</TableHead>
+                    <TableHead className="text-muted-foreground font-bold text-[10px] uppercase py-3.5">Detected At</TableHead>
+                    <TableHead className="text-muted-foreground font-bold text-[10px] uppercase py-3.5">Data Table</TableHead>
+                    <TableHead className="text-muted-foreground font-bold text-[10px] uppercase py-3.5">Type</TableHead>
+                    <TableHead className="text-muted-foreground font-bold text-[10px] uppercase py-3.5">Score</TableHead>
+                    <TableHead className="text-muted-foreground font-bold text-[10px] uppercase py-3.5">Penalty</TableHead>
+                    <TableHead className="text-muted-foreground font-bold text-[10px] uppercase py-3.5">State</TableHead>
+                    <TableHead className="text-muted-foreground font-bold text-[10px] uppercase py-3.5 text-right pr-6">Quick Feedback</TableHead>
                   </TableRow>
                 </TableHeader>
-                <TableBody className="divide-y divide-slate-200 dark:divide-white/5 text-xs text-slate-700 dark:text-slate-300">
+                <TableBody className="divide-y divide-border text-xs text-foreground">
                   {filteredDetections.map((anomaly) => {
                     const isExpanded = !!expandedRows[anomaly.id]
                     
@@ -373,15 +373,15 @@ export default function AnomaliesPage() {
                         {/* Summary Row */}
                         <TableRow 
                           onClick={() => toggleRow(anomaly.id)}
-                          className="border-b border-slate-200 dark:border-white/5 hover:bg-slate-50 dark:hover:bg-white/5 transition-colors cursor-pointer group"
+                          className="border-b border-border hover:bg-muted/50 transition-colors cursor-pointer group"
                         >
-                          <TableCell className="py-3.5 pl-6 text-slate-500 group-hover:text-primary transition-colors">
+                          <TableCell className="py-3.5 pl-6 text-muted-foreground group-hover:text-primary transition-colors">
                             {isExpanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
                           </TableCell>
-                          <TableCell className="py-3.5 font-mono text-[10px] text-slate-550 dark:text-slate-400">
+                          <TableCell className="py-3.5 font-mono text-[10px] text-muted-foreground">
                             {format(new Date(anomaly.created_at), 'yyyy-MM-dd HH:mm')}
                           </TableCell>
-                          <TableCell className="py-3.5 font-mono text-[10px] font-semibold text-slate-800 dark:text-slate-200">
+                          <TableCell className="py-3.5 font-mono text-[10px] font-semibold text-foreground">
                             {anomaly.table_name}
                           </TableCell>
                           <TableCell className="py-3.5">
@@ -389,21 +389,21 @@ export default function AnomaliesPage() {
                           </TableCell>
                           <TableCell className="py-3.5">
                             <div className="flex items-center gap-2">
-                              <span className="font-bold text-slate-800 dark:text-slate-200">{(anomaly.anomaly_score * 100).toFixed(0)}%</span>
-                              <div className="w-16 h-1.5 rounded-full bg-slate-900 overflow-hidden border border-white/5">
+                              <span className="font-bold text-foreground">{(anomaly.anomaly_score * 100).toFixed(0)}%</span>
+                              <div className="w-16 h-1.5 rounded-full bg-muted overflow-hidden border border-border">
                                 <div 
                                   className="h-full bg-gradient-to-r from-emerald-500 to-rose-500" 
                                   style={{ width: `${(anomaly.anomaly_score * 100).toFixed(0)}%` }}
-                                />
+                               />
                               </div>
                             </div>
                           </TableCell>
-                          <TableCell className="py-3.5 font-bold text-rose-400">
+                          <TableCell className="py-3.5 font-bold text-rose-500 dark:text-rose-400">
                             -{anomaly.anomaly_penalty} pts
                           </TableCell>
                           <TableCell className="py-3.5">
                             {anomaly.is_false_positive ? (
-                              <Badge variant="outline" className="bg-slate-800 text-slate-500 border-white/5 uppercase text-[9px] font-bold">False Positive</Badge>
+                              <Badge variant="outline" className="bg-muted text-muted-foreground border-border uppercase text-[9px] font-bold">False Positive</Badge>
                             ) : anomaly.is_acknowledged ? (
                               <Badge variant="outline" className="bg-warning/10 text-warning border-warning/20 uppercase text-[9px] font-bold">Acknowledged</Badge>
                             ) : (
@@ -430,7 +430,7 @@ export default function AnomaliesPage() {
                                   variant="outline"
                                   onClick={(e) => handleFeedback(anomaly.id, 'false_positive', e)}
                                   disabled={feedbackMutation.isPending}
-                                  className="h-7 px-2.5 border-white/5 text-slate-400 hover:text-white hover:bg-white/5 text-[10px] font-bold uppercase gap-1"
+                                  className="h-7 px-2.5 border-border text-muted-foreground hover:bg-accent hover:text-accent-foreground text-[10px] font-bold uppercase gap-1"
                                 >
                                   False Positive
                                 </Button>
@@ -440,25 +440,25 @@ export default function AnomaliesPage() {
                         </TableRow>
 
                         {isExpanded && (
-                          <TableRow className="bg-slate-50 dark:bg-slate-950/30 hover:bg-slate-50 dark:hover:bg-slate-950/30">
+                          <TableRow className="bg-muted/20 hover:bg-muted/20">
                             <TableCell colSpan={8} className="p-6">
                               <div className="grid gap-6 md:grid-cols-2">
                                 
                                 {/* Text Explanation */}
                                 <div className="space-y-4">
                                   <div className="space-y-1">
-                                    <h4 className="text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider flex items-center gap-1.5">
+                                    <h4 className="text-xs font-bold text-foreground uppercase tracking-wider flex items-center gap-1.5">
                                       <Sparkles className="h-4 w-4 text-primary" />
                                       AI Drift Explanation
                                     </h4>
-                                    <p className="bg-slate-100/35 dark:bg-slate-950/50 p-4 rounded-lg border border-slate-200 dark:border-white/5 leading-relaxed text-xs text-slate-700 dark:text-slate-400">
+                                    <p className="bg-muted/30 p-4 rounded-lg border border-border leading-relaxed text-xs text-foreground">
                                       {anomaly.explanation || 'Anomaly score indicates deviation from baseline variance.'}
                                     </p>
                                   </div>
 
                                   <div className="space-y-1.5">
-                                    <h4 className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest">Metadata Context</h4>
-                                    <div className="grid grid-cols-2 gap-2 text-[11px] font-mono text-slate-600 dark:text-slate-400 bg-slate-100/35 dark:bg-slate-950/40 p-3 rounded-lg border border-slate-200 dark:border-white/5">
+                                    <h4 className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Metadata Context</h4>
+                                    <div className="grid grid-cols-2 gap-2 text-[11px] font-mono text-muted-foreground bg-muted/20 p-3 rounded-lg border border-border">
                                       <div>ID: {anomaly.id.slice(0, 18)}...</div>
                                       <div>Run ID: {anomaly.pipeline_run_id.slice(0, 18)}...</div>
                                       <div>Row count: {featureValues?.row_count !== undefined ? String(featureValues.row_count) : 'N/A'}</div>
@@ -469,12 +469,12 @@ export default function AnomaliesPage() {
 
                                 {/* SHAP Recharts Chart */}
                                 <div className="space-y-2">
-                                  <h4 className="text-xs font-bold text-slate-300 uppercase tracking-wider flex items-center gap-1.5">
+                                  <h4 className="text-xs font-bold text-foreground uppercase tracking-wider flex items-center gap-1.5">
                                     <BarChart4 className="h-4 w-4 text-primary" />
                                     SHAP Feature Importance
                                   </h4>
                                   
-                                  <div className="bg-slate-950/40 p-4 rounded-lg border border-white/5 h-[200px]">
+                                  <div className="bg-muted/20 p-4 rounded-lg border border-border h-[200px]">
                                     <ResponsiveContainer width="100%" height="100%">
                                       <BarChart
                                         data={shapData}
@@ -502,12 +502,12 @@ export default function AnomaliesPage() {
                                             if (active && payload && payload.length) {
                                               const data = payload[0].payload
                                               return (
-                                                <div className="bg-slate-900 border border-white/10 p-2 rounded text-[10px] space-y-0.5 shadow-xl">
-                                                  <p className="font-bold text-slate-200 capitalize">{data.name}</p>
-                                                  <p className="text-slate-400">
-                                                    SHAP Contribution: <span className={data.value < 0 ? 'text-rose-400 font-bold' : 'text-emerald-400 font-bold'}>{data.value.toFixed(4)}</span>
+                                                <div className="bg-popover border border-border p-2 rounded text-[10px] space-y-0.5 shadow-xl text-popover-foreground">
+                                                  <p className="font-bold text-popover-foreground capitalize">{data.name}</p>
+                                                  <p className="text-muted-foreground">
+                                                    SHAP Contribution: <span className={data.value < 0 ? 'text-rose-500 font-bold' : 'text-emerald-500 font-bold'}>{data.value.toFixed(4)}</span>
                                                   </p>
-                                                  <p className="text-[8px] text-slate-500 leading-normal">
+                                                  <p className="text-[8px] text-muted-foreground leading-normal">
                                                     {data.value < 0 ? 'Negative SHAP drives run toward anomaly' : 'Positive SHAP supports baseline stability'}
                                                   </p>
                                                 </div>
@@ -516,7 +516,7 @@ export default function AnomaliesPage() {
                                             return null
                                           }}
                                         />
-                                        <ReferenceLine x={0} stroke="rgba(255,255,255,0.1)" />
+                                        <ReferenceLine x={0} stroke="rgba(128,128,128,0.2)" />
                                         <Bar dataKey="value" barSize={8} radius={4}>
                                           {shapData.map((entry, index) => (
                                             <Cell 
@@ -554,17 +554,17 @@ export default function AnomaliesPage() {
               </Table>
 
               {/* Pagination controls */}
-              <div className="flex flex-col sm:flex-row items-center justify-between border-t border-slate-200 dark:border-white/5 p-4 md:p-6 gap-4 bg-slate-50 dark:bg-slate-900/10">
-                <div className="text-xs text-slate-500 font-medium">
-                  Showing <span className="text-slate-800 dark:text-slate-300 font-bold">{currentStart}</span> to{' '}
-                  <span className="text-slate-800 dark:text-slate-300 font-bold">{currentEnd}</span> of{' '}
-                  <span className="text-slate-800 dark:text-slate-300 font-bold">{totalItems}</span> anomalies
+              <div className="flex flex-col sm:flex-row items-center justify-between border-t border-border p-4 md:p-6 gap-4 bg-muted/20">
+                <div className="text-xs text-muted-foreground font-medium">
+                  Showing <span className="text-foreground font-bold">{currentStart}</span> to{' '}
+                  <span className="text-foreground font-bold">{currentEnd}</span> of{' '}
+                  <span className="text-foreground font-bold">{totalItems}</span> anomalies
                 </div>
 
                 <div className="flex items-center gap-4">
                   {/* Page size select */}
                   <div className="flex items-center gap-2">
-                    <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Page size</span>
+                    <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Page size</span>
                     <Select
                       value={String(pageSize)}
                       onValueChange={(val) => {
@@ -572,13 +572,13 @@ export default function AnomaliesPage() {
                         setPage(1)
                       }}
                     >
-                      <SelectTrigger className="w-16 bg-slate-950/40 border-white/5 text-slate-200 h-8 font-bold text-xs">
+                      <SelectTrigger className="w-16 bg-background border-border text-foreground h-8 font-bold text-xs">
                         <SelectValue />
                       </SelectTrigger>
-                      <SelectContent className="bg-slate-900 border-white/10 text-slate-200 min-w-[64px]">
-                        <SelectItem value="10" className="text-xs font-semibold">10</SelectItem>
-                        <SelectItem value="20" className="text-xs font-semibold">20</SelectItem>
-                        <SelectItem value="50" className="text-xs font-semibold">50</SelectItem>
+                      <SelectContent className="bg-popover border-border text-popover-foreground min-w-[64px]">
+                        <SelectItem value="10" className="text-xs font-semibold cursor-pointer">10</SelectItem>
+                        <SelectItem value="20" className="text-xs font-semibold cursor-pointer">20</SelectItem>
+                        <SelectItem value="50" className="text-xs font-semibold cursor-pointer">50</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
@@ -590,11 +590,11 @@ export default function AnomaliesPage() {
                       size="icon"
                       onClick={() => handlePageChange(page - 1)}
                       disabled={page === 1}
-                      className="h-8 w-8 border-white/5 text-slate-400 hover:text-white hover:bg-white/5 disabled:opacity-30"
+                      className="h-8 w-8 border-border text-muted-foreground hover:bg-accent hover:text-accent-foreground disabled:opacity-30"
                     >
                       <ChevronLeft className="h-4 w-4" />
                     </Button>
-                    <div className="text-xs font-bold text-slate-300 px-2 select-none">
+                    <div className="text-xs font-bold text-foreground px-2 select-none">
                       Page {page} of {totalPages}
                     </div>
                     <Button
@@ -602,7 +602,7 @@ export default function AnomaliesPage() {
                       size="icon"
                       onClick={() => handlePageChange(page + 1)}
                       disabled={page === totalPages}
-                      className="h-8 w-8 border-white/5 text-slate-400 hover:text-white hover:bg-white/5 disabled:opacity-30"
+                      className="h-8 w-8 border-border text-muted-foreground hover:bg-accent hover:text-accent-foreground disabled:opacity-30"
                     >
                       <ChevronRight className="h-4 w-4" />
                     </Button>

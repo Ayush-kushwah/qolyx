@@ -236,27 +236,27 @@ export default function AlertsPage() {
             MANUAL TEST ALERT DIALOG
             ========================================== */}
         <Dialog open={isTestDialogOpen} onOpenChange={setIsTestDialogOpen}>
-          <DialogContent className="bg-slate-900 border border-white/10 text-slate-200 select-none max-w-sm p-5 rounded-xl shadow-2xl backdrop-blur-xl">
+          <DialogContent className="bg-popover border border-border text-popover-foreground select-none max-w-sm p-5 rounded-xl shadow-2xl backdrop-blur-xl">
             <DialogHeader className="space-y-1">
-              <DialogTitle className="text-white text-base font-extrabold flex items-center gap-1.5">
+              <DialogTitle className="text-foreground text-base font-extrabold flex items-center gap-1.5">
                 <Play className="h-4 w-4 text-primary fill-current" />
                 Dispatch Test Notification
               </DialogTitle>
-              <DialogDescription className="text-slate-400 text-xs">
+              <DialogDescription className="text-muted-foreground text-xs">
                 Send a manual verification payload to verify the `{testChannelType}` channel endpoint.
               </DialogDescription>
             </DialogHeader>
 
             <form onSubmit={handleSendTest} className="space-y-4 pt-3">
               <div className="space-y-1">
-                <Label htmlFor="t-msg" className="text-xs font-bold text-slate-400">Test Alert Content</Label>
+                <Label htmlFor="t-msg" className="text-xs font-bold text-muted-foreground">Test Alert Content</Label>
                 <Textarea
                   id="t-msg"
                   value={testMessage}
                   onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setTestMessage(e.target.value)}
                   placeholder="Enter custom validation message..."
                   rows={3}
-                  className="bg-slate-950/40 border-white/5 text-slate-200 text-xs resize-none"
+                  className="bg-background border-border text-foreground text-xs resize-none"
                   required
                 />
               </div>
@@ -266,7 +266,7 @@ export default function AlertsPage() {
                   <Button
                     type="button"
                     variant="outline"
-                    className="border-white/5 text-slate-400 hover:text-white hover:bg-white/5 text-xs font-bold h-9"
+                    className="border-border text-muted-foreground hover:bg-accent hover:text-accent-foreground text-xs font-bold h-9"
                     onClick={() => setTestingConfigId(null)}
                   >
                     Cancel
@@ -291,13 +291,13 @@ export default function AlertsPage() {
             DELETE INTEGRATION CONFIRMATION DIALOG
             ========================================== */}
         <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
-          <DialogContent className="bg-slate-900 border border-white/10 text-slate-200 select-none max-w-sm p-5 rounded-xl shadow-2xl backdrop-blur-xl">
+          <DialogContent className="bg-popover border border-border text-popover-foreground select-none max-w-sm p-5 rounded-xl shadow-2xl backdrop-blur-xl">
             <DialogHeader className="space-y-2">
-              <DialogTitle className="text-white text-base font-extrabold flex items-center gap-1.5">
+              <DialogTitle className="text-foreground text-base font-extrabold flex items-center gap-1.5">
                 <AlertTriangle className="h-5 w-5 text-rose-500" />
                 Delete Integration?
               </DialogTitle>
-              <DialogDescription className="text-slate-400 text-xs leading-relaxed">
+              <DialogDescription className="text-muted-foreground text-xs leading-relaxed">
                 This action is irreversible. Operation notices and telemetry alert warnings will no longer route to this channel endpoint.
               </DialogDescription>
             </DialogHeader>
@@ -306,7 +306,7 @@ export default function AlertsPage() {
               <DialogClose asChild>
                 <Button
                   variant="outline"
-                  className="border-white/5 text-slate-400 hover:text-white hover:bg-white/5 text-xs font-bold h-9"
+                  className="border-border text-muted-foreground hover:bg-accent hover:text-accent-foreground text-xs font-bold h-9"
                 >
                   Keep Channel
                 </Button>

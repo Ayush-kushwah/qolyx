@@ -256,12 +256,12 @@ export default function AlertConfigForm({ open, onOpenChange, config }: AlertCon
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/10 text-slate-900 dark:text-white rounded-xl shadow-2xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-lg bg-popover border border-border text-popover-foreground rounded-xl shadow-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="text-xl font-bold tracking-tight bg-gradient-to-r from-primary to-emerald-400 bg-clip-text text-transparent">
             {isEdit ? 'Edit Alert Integration' : 'Add Alert Integration'}
           </DialogTitle>
-          <DialogDescription className="text-slate-600 dark:text-slate-400 text-sm">
+          <DialogDescription className="text-muted-foreground text-sm">
             Route anomaly notifications and schema violations to your preferred operations channel.
           </DialogDescription>
         </DialogHeader>
@@ -269,13 +269,13 @@ export default function AlertConfigForm({ open, onOpenChange, config }: AlertCon
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 py-2">
           {/* Name Field */}
           <div className="space-y-1">
-            <Label htmlFor="name" className="text-xs font-semibold uppercase tracking-wider text-slate-550 dark:text-slate-400">
+            <Label htmlFor="name" className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
               Configuration Name
             </Label>
             <Input
               id="name"
               placeholder="e.g. Ops Telegram Alerts"
-              className="bg-slate-50 dark:bg-slate-950/50 border-slate-200 dark:border-white/10 focus:border-primary/50 text-slate-800 dark:text-white text-xs h-9"
+              className="bg-background border-border text-foreground text-xs h-9"
               {...register('name')}
             />
             {errors.name && (
@@ -286,30 +286,30 @@ export default function AlertConfigForm({ open, onOpenChange, config }: AlertCon
           {/* Grid: Channel Type & Severity */}
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-1">
-              <Label className="text-xs font-semibold uppercase tracking-wider text-slate-550 dark:text-slate-400">
+              <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                 Channel Type
               </Label>
               <Select
                 value={channelType}
                 onValueChange={(val) => setValue('channel_type', val as any)}
               >
-                <SelectTrigger className="bg-slate-50 dark:bg-slate-950/50 border-slate-200 dark:border-white/10 text-slate-800 dark:text-white text-xs h-9">
+                <SelectTrigger className="bg-background border-border text-foreground text-xs h-9">
                   <SelectValue />
                 </SelectTrigger>
-                <SelectContent className="bg-white dark:bg-slate-900 border-slate-200 dark:border-white/10 text-slate-800 dark:text-white text-xs">
-                  <SelectItem value="slack">Slack Webhook</SelectItem>
-                  <SelectItem value="discord">Discord Webhook</SelectItem>
-                  <SelectItem value="teams">MS Teams Webhook</SelectItem>
-                  <SelectItem value="telegram">Telegram Bot</SelectItem>
-                  <SelectItem value="email">Email SMTP</SelectItem>
-                  <SelectItem value="ntfy">Ntfy Service</SelectItem>
-                  <SelectItem value="webhook">Custom Webhook</SelectItem>
+                <SelectContent className="bg-popover border-border text-popover-foreground text-xs">
+                  <SelectItem value="slack" className="cursor-pointer focus:bg-accent focus:text-accent-foreground">Slack Webhook</SelectItem>
+                  <SelectItem value="discord" className="cursor-pointer focus:bg-accent focus:text-accent-foreground">Discord Webhook</SelectItem>
+                  <SelectItem value="teams" className="cursor-pointer focus:bg-accent focus:text-accent-foreground">MS Teams Webhook</SelectItem>
+                  <SelectItem value="telegram" className="cursor-pointer focus:bg-accent focus:text-accent-foreground">Telegram Bot</SelectItem>
+                  <SelectItem value="email" className="cursor-pointer focus:bg-accent focus:text-accent-foreground">Email SMTP</SelectItem>
+                  <SelectItem value="ntfy" className="cursor-pointer focus:bg-accent focus:text-accent-foreground">Ntfy Service</SelectItem>
+                  <SelectItem value="webhook" className="cursor-pointer focus:bg-accent focus:text-accent-foreground">Custom Webhook</SelectItem>
                 </SelectContent>
               </Select>
             </div>
 
             <div className="space-y-1">
-              <Label className="text-xs font-semibold uppercase tracking-wider text-slate-550 dark:text-slate-400">
+              <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                 Min Severity Threshold
               </Label>
               <Select
@@ -317,24 +317,24 @@ export default function AlertConfigForm({ open, onOpenChange, config }: AlertCon
                 value={watch('severity_threshold')}
                 onValueChange={(val) => setValue('severity_threshold', val as any)}
               >
-                <SelectTrigger className="bg-slate-50 dark:bg-slate-950/50 border-slate-200 dark:border-white/10 text-slate-800 dark:text-white text-xs h-9">
+                <SelectTrigger className="bg-background border-border text-foreground text-xs h-9">
                   <SelectValue />
                 </SelectTrigger>
-                <SelectContent className="bg-white dark:bg-slate-900 border-slate-200 dark:border-white/10 text-slate-800 dark:text-white text-xs">
-                  <SelectItem value="LOW">LOW</SelectItem>
-                  <SelectItem value="MEDIUM">MEDIUM</SelectItem>
-                  <SelectItem value="HIGH">HIGH</SelectItem>
-                  <SelectItem value="CRITICAL">CRITICAL</SelectItem>
+                <SelectContent className="bg-popover border-border text-popover-foreground text-xs">
+                  <SelectItem value="LOW" className="cursor-pointer focus:bg-accent focus:text-accent-foreground">LOW</SelectItem>
+                  <SelectItem value="MEDIUM" className="cursor-pointer focus:bg-accent focus:text-accent-foreground">MEDIUM</SelectItem>
+                  <SelectItem value="HIGH" className="cursor-pointer focus:bg-accent focus:text-accent-foreground">HIGH</SelectItem>
+                  <SelectItem value="CRITICAL" className="cursor-pointer focus:bg-accent focus:text-accent-foreground">CRITICAL</SelectItem>
                 </SelectContent>
               </Select>
             </div>
           </div>
 
           {/* Active Status Switch */}
-          <div className="flex items-center justify-between p-3 rounded-lg bg-slate-50 dark:bg-slate-950/30 border border-slate-200 dark:border-white/5">
+          <div className="flex items-center justify-between p-3 rounded-lg bg-muted/30 border border-border">
             <div className="space-y-0.5">
-              <Label className="text-xs font-semibold text-slate-700 dark:text-slate-300">Active status</Label>
-              <p className="text-[10px] text-slate-500 dark:text-slate-400">
+              <Label className="text-xs font-semibold text-foreground">Active status</Label>
+              <p className="text-[10px] text-muted-foreground">
                 Toggle whether alerts should be dispatched to this channel.
               </p>
             </div>
@@ -347,15 +347,15 @@ export default function AlertConfigForm({ open, onOpenChange, config }: AlertCon
 
           {/* Webhook URLs (Slack, Discord, Teams, Custom Webhook) */}
           {['slack', 'discord', 'teams', 'webhook'].includes(channelType) && (
-            <div className="space-y-1 border-t border-slate-100 dark:border-white/5 pt-3">
-              <Label htmlFor="webhook_url" className="text-xs font-semibold uppercase tracking-wider text-slate-550 dark:text-slate-400">
+            <div className="space-y-1 border-t border-border pt-3">
+              <Label htmlFor="webhook_url" className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                 {channelType === 'webhook' ? 'Webhook Endpoint URL' : `${channelType.toUpperCase()} Webhook URL`}
               </Label>
               <Input
                 id="webhook_url"
                 type="url"
                 placeholder="https://..."
-                className="bg-slate-50 dark:bg-slate-950/50 border-slate-200 dark:border-white/10 focus:border-primary/50 text-slate-800 dark:text-white text-xs h-9 font-mono"
+                className="bg-background border-border text-foreground text-xs h-9 font-mono"
                 {...register('webhook_url')}
               />
               {errors.webhook_url && (
@@ -366,15 +366,15 @@ export default function AlertConfigForm({ open, onOpenChange, config }: AlertCon
 
           {/* Telegram bot configurations */}
           {channelType === 'telegram' && (
-            <div className="space-y-3 border-t border-slate-100 dark:border-white/5 pt-3">
+            <div className="space-y-3 border-t border-border pt-3">
               <div className="space-y-1">
-                <Label htmlFor="telegram_bot_token" className="text-xs font-semibold uppercase tracking-wider text-slate-550 dark:text-slate-400">
+                <Label htmlFor="telegram_bot_token" className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                   Telegram Bot Token
                 </Label>
                 <Input
                   id="telegram_bot_token"
                   placeholder="e.g. 123456789:ABCdefGhIJKlmNoPQRsTUVwxyZ"
-                  className="bg-slate-50 dark:bg-slate-950/50 border-slate-200 dark:border-white/10 focus:border-primary/50 text-slate-800 dark:text-white text-xs h-9 font-mono"
+                  className="bg-background border-border text-foreground text-xs h-9 font-mono"
                   {...register('telegram_bot_token')}
                 />
                 {errors.telegram_bot_token && (
@@ -382,13 +382,13 @@ export default function AlertConfigForm({ open, onOpenChange, config }: AlertCon
                 )}
               </div>
               <div className="space-y-1">
-                <Label htmlFor="telegram_chat_id" className="text-xs font-semibold uppercase tracking-wider text-slate-550 dark:text-slate-400">
+                <Label htmlFor="telegram_chat_id" className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                   Telegram Chat ID
                 </Label>
                 <Input
                   id="telegram_chat_id"
                   placeholder="e.g. -100123456789"
-                  className="bg-slate-50 dark:bg-slate-950/50 border-slate-200 dark:border-white/10 focus:border-primary/50 text-slate-800 dark:text-white text-xs h-9 font-mono"
+                  className="bg-background border-border text-foreground text-xs h-9 font-mono"
                   {...register('telegram_chat_id')}
                 />
                 {errors.telegram_chat_id && (
@@ -400,16 +400,16 @@ export default function AlertConfigForm({ open, onOpenChange, config }: AlertCon
 
           {/* Email SMTP configurations */}
           {channelType === 'email' && (
-            <div className="space-y-3 border-t border-slate-100 dark:border-white/5 pt-3">
+            <div className="space-y-3 border-t border-border pt-3">
               <div className="grid grid-cols-3 gap-3">
                 <div className="col-span-2 space-y-1">
-                  <Label htmlFor="smtp_server" className="text-xs font-semibold uppercase tracking-wider text-slate-550 dark:text-slate-400">
+                  <Label htmlFor="smtp_server" className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                     SMTP Host
                   </Label>
                   <Input
                     id="smtp_server"
                     placeholder="e.g. smtp.gmail.com"
-                    className="bg-slate-50 dark:bg-slate-950/50 border-slate-200 dark:border-white/10 focus:border-primary/50 text-slate-800 dark:text-white text-xs h-9"
+                    className="bg-background border-border text-foreground text-xs h-9"
                     {...register('smtp_server')}
                   />
                   {errors.smtp_server && (
@@ -417,13 +417,13 @@ export default function AlertConfigForm({ open, onOpenChange, config }: AlertCon
                   )}
                 </div>
                 <div className="space-y-1">
-                  <Label htmlFor="smtp_port" className="text-xs font-semibold uppercase tracking-wider text-slate-550 dark:text-slate-400">
+                  <Label htmlFor="smtp_port" className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                     SMTP Port
                   </Label>
                   <Input
                     id="smtp_port"
                     placeholder="e.g. 587"
-                    className="bg-slate-50 dark:bg-slate-950/50 border-slate-200 dark:border-white/10 focus:border-primary/50 text-slate-800 dark:text-white text-xs h-9"
+                    className="bg-background border-border text-foreground text-xs h-9"
                     {...register('smtp_port')}
                   />
                   {errors.smtp_port && (
@@ -434,39 +434,39 @@ export default function AlertConfigForm({ open, onOpenChange, config }: AlertCon
 
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1">
-                  <Label htmlFor="smtp_user" className="text-xs font-semibold uppercase tracking-wider text-slate-550 dark:text-slate-400">
+                  <Label htmlFor="smtp_user" className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                     SMTP User (Optional)
                   </Label>
                   <Input
                     id="smtp_user"
                     placeholder="User/Email"
-                    className="bg-slate-50 dark:bg-slate-950/50 border-slate-200 dark:border-white/10 focus:border-primary/50 text-slate-800 dark:text-white text-xs h-9"
+                    className="bg-background border-border text-foreground text-xs h-9"
                     {...register('smtp_user')}
                   />
                 </div>
                 <div className="space-y-1">
-                  <Label htmlFor="smtp_password" className="text-xs font-semibold uppercase tracking-wider text-slate-550 dark:text-slate-400">
+                  <Label htmlFor="smtp_password" className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                     SMTP Password (Optional)
                   </Label>
                   <Input
                     id="smtp_password"
                     type="password"
                     placeholder="••••••••"
-                    className="bg-slate-50 dark:bg-slate-950/50 border-slate-200 dark:border-white/10 focus:border-primary/50 text-slate-800 dark:text-white text-xs h-9"
+                    className="bg-background border-border text-foreground text-xs h-9"
                     {...register('smtp_password')}
                   />
                 </div>
               </div>
 
               <div className="space-y-1">
-                <Label htmlFor="from_address" className="text-xs font-semibold uppercase tracking-wider text-slate-550 dark:text-slate-400">
+                <Label htmlFor="from_address" className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                   Sender (From Email Address)
                 </Label>
                 <Input
                   id="from_address"
                   type="email"
                   placeholder="alerts@yourdomain.com"
-                  className="bg-slate-50 dark:bg-slate-950/50 border-slate-200 dark:border-white/10 focus:border-primary/50 text-slate-800 dark:text-white text-xs h-9"
+                  className="bg-background border-border text-foreground text-xs h-9"
                   {...register('from_address')}
                 />
                 {errors.from_address && (
@@ -475,14 +475,14 @@ export default function AlertConfigForm({ open, onOpenChange, config }: AlertCon
               </div>
 
               <div className="space-y-1">
-                <Label htmlFor="to_addresses_str" className="text-xs font-semibold uppercase tracking-wider text-slate-550 dark:text-slate-400">
+                <Label htmlFor="to_addresses_str" className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                   Recipients (Comma separated)
                 </Label>
                 <Textarea
                   id="to_addresses_str"
                   placeholder="operator1@org.com, devops@org.com"
                   rows={2}
-                  className="bg-slate-50 dark:bg-slate-950/50 border-slate-200 dark:border-white/10 focus:border-primary/50 text-slate-800 dark:text-white text-xs p-2.5 resize-none"
+                  className="bg-background border-border text-foreground text-xs p-2.5 resize-none"
                   {...register('to_addresses_str')}
                 />
                 {errors.to_addresses_str && (
@@ -493,20 +493,20 @@ export default function AlertConfigForm({ open, onOpenChange, config }: AlertCon
           )}
 
           {channelType === 'ntfy' && (
-            <div className="p-3 bg-slate-50 dark:bg-slate-950/40 border border-slate-200 dark:border-white/5 rounded-lg text-xs text-slate-600 dark:text-slate-400 leading-relaxed space-y-1 mt-3">
-              <span className="font-bold text-slate-800 dark:text-slate-300">Ntfy Service Alert:</span>
+            <div className="p-3 bg-muted/30 border border-border rounded-lg text-xs text-muted-foreground leading-relaxed space-y-1 mt-3">
+              <span className="font-bold text-foreground">Ntfy Service Alert:</span>
               <p>
                 Using ntfy does not require custom credentials. When triggered, the system publishes notifications to the global Ntfy topic configured on this Qolyx deployment.
               </p>
             </div>
           )}
 
-          <DialogFooter className="gap-2 sm:gap-0 pt-4 border-t border-slate-100 dark:border-white/5">
+          <DialogFooter className="gap-2 sm:gap-0 pt-4 border-t border-border">
             <Button
               type="button"
               variant="ghost"
               onClick={() => onOpenChange(false)}
-              className="hover:bg-slate-100 dark:hover:bg-white/5 text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-white"
+              className="hover:bg-accent text-muted-foreground hover:text-accent-foreground"
             >
               Cancel
             </Button>

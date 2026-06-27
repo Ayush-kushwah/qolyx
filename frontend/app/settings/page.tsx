@@ -382,23 +382,23 @@ export default function SettingsPage() {
 
   return (
     <ErrorBoundary>
-      <div className="space-y-6 max-w-5xl mx-auto p-4 md:p-6 pb-28 text-slate-900 dark:text-white">
+      <div className="space-y-6 max-w-5xl mx-auto p-4 md:p-6 pb-28 text-foreground">
         
         {/* Header Title Row */}
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-200 dark:border-slate-800 pb-5">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-border pb-5">
           <div className="space-y-1">
             <h1 className="text-2xl font-extrabold tracking-tight bg-gradient-to-r from-slate-900 via-slate-800 to-slate-600 dark:from-white dark:via-slate-100 dark:to-slate-400 bg-clip-text text-transparent flex items-center gap-2">
               <SettingsIcon className="h-6 w-6 text-primary" />
               Settings Hub
             </h1>
-            <p className="text-xs text-slate-500 dark:text-slate-400 max-w-xl leading-relaxed">
+            <p className="text-xs text-muted-foreground max-w-xl leading-relaxed">
               Configure ingestion schedules, setup multi-source databases, manage access credentials, and adjust log retention rules.
             </p>
           </div>
         </div>
 
         <Tabs defaultValue="pipelines" className="w-full space-y-6" onValueChange={setActiveTab}>
-          <TabsList className="flex overflow-x-auto bg-slate-100 dark:bg-slate-800 p-1 w-full max-w-2xl rounded-lg">
+          <TabsList className="flex overflow-x-auto bg-muted p-1 w-full max-w-2xl rounded-lg">
             <TabsTrigger value="pipelines" className="flex items-center gap-1.5 flex-1 whitespace-nowrap">
               <Sliders className="h-4 w-4" />
               <span>Pipelines</span>
@@ -477,9 +477,9 @@ export default function SettingsPage() {
                                   max="1440"
                                   value={config.run_frequency_minutes}
                                   onChange={(e) => setPipelineRunFrequency(pipelineKey, parseInt(e.target.value, 10) || 1)}
-                                  className="w-16 h-7 text-center bg-white dark:bg-slate-950/50 border-slate-200 dark:border-slate-800 text-xs font-mono font-black text-slate-800 dark:text-slate-200 p-0"
+                                  className="w-16 h-7 text-center bg-background border-border text-xs font-mono font-black text-foreground p-0"
                                 />
-                                <span className="text-[10px] text-slate-600 dark:text-slate-500 font-bold">m</span>
+                                <span className="text-[10px] text-muted-foreground font-bold">m</span>
                               </div>
                             </div>
 
@@ -490,18 +490,18 @@ export default function SettingsPage() {
                                 max="360"
                                 value={config.run_frequency_minutes}
                                 onChange={(e) => setPipelineRunFrequency(pipelineKey, parseInt(e.target.value, 10) || 1)}
-                                className="w-full h-1 bg-slate-200 dark:bg-slate-950/80 rounded-lg appearance-none cursor-pointer accent-primary"
+                                className="w-full h-1 bg-muted rounded-lg appearance-none cursor-pointer accent-primary"
                               />
-                              <span className="text-[10px] text-slate-600 dark:text-slate-500 font-mono min-w-[30px] text-right">360m</span>
+                              <span className="text-[10px] text-muted-foreground font-mono min-w-[30px] text-right">360m</span>
                             </div>
-                            <span className="text-[10px] text-slate-500 dark:text-slate-400 leading-normal block">
+                            <span className="text-[10px] text-muted-foreground leading-normal block">
                               Controls how frequently schedulers invoke the raw fetch methods.
                             </span>
                           </div>
 
                           <div className="space-y-3">
                             <div className="flex items-center justify-between">
-                              <Label className="text-xs font-semibold uppercase tracking-wider text-slate-600 dark:text-slate-400 flex items-center gap-1.5">
+                              <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
                                 <Volume2 className="h-3.5 w-3.5 text-emerald-400" />
                                 Alert Suppress Duration
                               </Label>
@@ -512,9 +512,9 @@ export default function SettingsPage() {
                                   max="1440"
                                   value={config.alert_frequency_minutes}
                                   onChange={(e) => setAlertFrequency(pipelineKey, parseInt(e.target.value, 10) || 1)}
-                                  className="w-16 h-7 text-center bg-white dark:bg-slate-950/50 border-slate-200 dark:border-slate-800 text-xs font-mono font-black text-slate-800 dark:text-slate-200 p-0"
+                                  className="w-16 h-7 text-center bg-background border-border text-xs font-mono font-black text-foreground p-0"
                                 />
-                                <span className="text-[10px] text-slate-600 dark:text-slate-500 font-bold">m</span>
+                                <span className="text-[10px] text-muted-foreground font-bold">m</span>
                               </div>
                             </div>
 
@@ -525,11 +525,11 @@ export default function SettingsPage() {
                                 max="360"
                                 value={config.alert_frequency_minutes}
                                 onChange={(e) => setAlertFrequency(pipelineKey, parseInt(e.target.value, 10) || 1)}
-                                className="w-full h-1 bg-slate-200 dark:bg-slate-950/80 rounded-lg appearance-none cursor-pointer accent-primary"
+                                className="w-full h-1 bg-muted rounded-lg appearance-none cursor-pointer accent-primary"
                               />
-                              <span className="text-[10px] text-slate-600 dark:text-slate-500 font-mono min-w-[30px] text-right">360m</span>
+                              <span className="text-[10px] text-muted-foreground font-mono min-w-[30px] text-right">360m</span>
                             </div>
-                            <span className="text-[10px] text-slate-500 dark:text-slate-400 leading-normal block">
+                            <span className="text-[10px] text-muted-foreground leading-normal block">
                               Suppresses consecutive notifications to avoid spamming alerts to Teams/Slack channels.
                             </span>
                           </div>
@@ -545,10 +545,10 @@ export default function SettingsPage() {
                         )}
 
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                          <div className="flex items-center justify-between p-3.5 rounded-lg bg-slate-100 dark:bg-slate-950/20 border border-slate-200 dark:border-slate-800">
+                          <div className="flex items-center justify-between p-3.5 rounded-lg bg-muted/50 border border-border">
                             <div className="space-y-0.5">
-                              <span className="text-xs font-bold text-slate-800 dark:text-slate-300">Bypass Suppression</span>
-                              <p className="text-[10px] text-slate-500 dark:text-slate-400">
+                              <span className="text-xs font-bold text-foreground">Bypass Suppression</span>
+                              <p className="text-[10px] text-muted-foreground">
                                 Disregard suppressions and alert immediately when statistical anomalies are detected.
                               </p>
                             </div>
@@ -559,10 +559,10 @@ export default function SettingsPage() {
                             />
                           </div>
 
-                          <div className="flex items-center justify-between p-3.5 rounded-lg bg-slate-100 dark:bg-slate-950/20 border border-slate-200 dark:border-slate-800 gap-4">
+                          <div className="flex items-center justify-between p-3.5 rounded-lg bg-muted/50 border border-border gap-4">
                             <div className="space-y-0.5">
-                              <span className="text-xs font-bold text-slate-800 dark:text-slate-300">Anomaly Sensitivity</span>
-                              <p className="text-[10px] text-slate-500 dark:text-slate-400">
+                              <span className="text-xs font-bold text-foreground">Anomaly Sensitivity</span>
+                              <p className="text-[10px] text-muted-foreground">
                                 Tune outlier detection sensitivity threshold for Isolation Forest.
                               </p>
                             </div>
@@ -570,10 +570,10 @@ export default function SettingsPage() {
                               value={config.sensitivity || 'MEDIUM'}
                               onValueChange={(val) => setSensitivity(pipelineKey, val as any)}
                             >
-                              <SelectTrigger className="w-28 h-8 text-xs font-bold bg-white dark:bg-slate-950/40 border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white">
+                              <SelectTrigger className="w-28 h-8 text-xs font-bold bg-background border-border text-foreground">
                                 <SelectValue placeholder="Sensitivity" />
                               </SelectTrigger>
-                              <SelectContent className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white">
+                              <SelectContent className="bg-card border-border text-foreground">
                                 <SelectItem value="LOW" className="text-xs font-semibold">Low</SelectItem>
                                 <SelectItem value="MEDIUM" className="text-xs font-semibold">Medium</SelectItem>
                                 <SelectItem value="HIGH" className="text-xs font-semibold">High</SelectItem>
@@ -668,12 +668,12 @@ export default function SettingsPage() {
             )}
             
             {/* Sticky footer Save Action (Pipelines Tab Only) */}
-            <div className="fixed bottom-0 left-0 right-0 md:left-64 bg-white/85 dark:bg-slate-950/85 backdrop-blur-md border-t border-slate-200 dark:border-slate-800 py-4 px-6 flex items-center justify-between z-30">
-              <div className="text-[10px] text-slate-500 dark:text-slate-500 font-mono hidden sm:block">
+            <div className="fixed bottom-0 left-0 right-0 md:left-64 bg-background/85 backdrop-blur-md border-t border-border py-4 px-6 flex items-center justify-between z-30">
+              <div className="text-[10px] text-muted-foreground font-mono hidden sm:block">
                 💾 Persisting pipeline values in local store.
               </div>
               <div className="flex items-center gap-3 w-full sm:w-auto justify-end">
-                <Button variant="outline" onClick={handleResetDefaults} className="border-slate-200 dark:border-slate-800 text-xs h-9 px-4">
+                <Button variant="outline" onClick={handleResetDefaults} className="border-border text-xs h-9 px-4">
                   Reset Defaults
                 </Button>
                 <Button onClick={handleSavePipelines} disabled={isSaving} className="bg-primary hover:bg-primary/95 text-white font-bold text-xs h-9 px-6">
@@ -685,10 +685,10 @@ export default function SettingsPage() {
 
           {/* 2. Reliability & Alerts Tab Content */}
           <TabsContent value="reliability">
-            <Card className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/10 text-slate-900 dark:text-white">
+            <Card className="bg-card border border-border text-foreground">
               <CardHeader>
                 <CardTitle className="text-lg font-bold">Reliability Parameters</CardTitle>
-                <CardDescription className="text-slate-500 dark:text-slate-400">
+                <CardDescription className="text-muted-foreground">
                   Global data quality parameters and threshold scores.
                 </CardDescription>
               </CardHeader>
@@ -707,9 +707,9 @@ export default function SettingsPage() {
                     max="99"
                     value={incidentThreshold}
                     onChange={(e) => setIncidentThreshold(parseInt(e.target.value, 10))}
-                    className="w-full h-1 bg-slate-200 dark:bg-slate-850 rounded-lg appearance-none cursor-pointer accent-primary"
+                    className="w-full h-1 bg-muted rounded-lg appearance-none cursor-pointer accent-primary"
                   />
-                  <p className="text-[10px] text-slate-500 dark:text-slate-400">
+                  <p className="text-[10px] text-muted-foreground">
                     Incidents are automatically triggered when a dataset's consolidated Trust Score falls below this threshold.
                   </p>
                 </div>
@@ -723,27 +723,25 @@ export default function SettingsPage() {
                     max="1440"
                     value={alertCooldown}
                     onChange={(e) => setAlertCooldown(parseInt(e.target.value, 10) || 15)}
-                    className="w-full max-w-xs bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800"
+                    className="w-full max-w-xs bg-background border border-border text-foreground"
                   />
-                  <p className="text-[10px] text-slate-500 dark:text-slate-400">
+                  <p className="text-[10px] text-muted-foreground">
                     Suppress dispatch of new notifications for recurring alerts under the same incident cluster within this block.
                   </p>
                 </div>
               </CardContent>
-              <CardFooter className="border-t border-slate-100 dark:border-slate-800 pt-4 flex justify-end">
+              <CardFooter className="border-t border-border pt-4 flex justify-end">
                 <Button onClick={handleSaveReliability} disabled={updateSettingsMutation.isPending} className="bg-primary hover:bg-primary/95 text-white flex items-center gap-1.5">
                   {updateSettingsMutation.isPending ? 'Saving...' : 'Save Parameters'}
                 </Button>
               </CardFooter>
             </Card>
-          </TabsContent>
-
-          {/* 3. Integrations Tab Content */}
+          </TabsContent>          {/* 3. Integrations Tab Content */}
           <TabsContent value="integrations" className="space-y-6">
-            <Card className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/10 text-slate-900 dark:text-white">
+            <Card className="bg-card border border-border text-foreground">
               <CardHeader>
                 <CardTitle className="text-lg font-bold">Multi-Source Connectivity</CardTitle>
-                <CardDescription className="text-slate-500 dark:text-slate-400">
+                <CardDescription className="text-muted-foreground">
                   Select a third-party source to connect its schemas and tasks to Qolyx.
                 </CardDescription>
               </CardHeader>
@@ -766,14 +764,14 @@ export default function SettingsPage() {
                         setSelectedProvider(provider.id)
                         setIsIntegrationOpen(true)
                       }}
-                      className="flex flex-col items-center justify-center p-4 rounded-xl border border-slate-200 dark:border-slate-800 hover:border-primary/50 hover:bg-slate-50 dark:hover:bg-white/5 transition-all text-center gap-3 group"
+                      className="flex flex-col items-center justify-center p-4 rounded-xl border border-border hover:border-primary/50 hover:bg-muted transition-all text-center gap-3 group"
                     >
-                      <div className="p-3 bg-slate-100 dark:bg-slate-800 rounded-lg group-hover:scale-110 transition-transform">
+                      <div className="p-3 bg-muted rounded-lg group-hover:scale-110 transition-transform">
                         {provider.icon}
                       </div>
                       <div>
                         <p className="text-xs font-bold font-sans">{provider.name}</p>
-                        <p className="text-[10px] text-slate-400 dark:text-slate-500 mt-1 leading-normal">{provider.desc}</p>
+                        <p className="text-[10px] text-muted-foreground mt-1 leading-normal">{provider.desc}</p>
                       </div>
                     </button>
                   ))}
@@ -783,25 +781,25 @@ export default function SettingsPage() {
 
             {/* Connected Integrations */}
             {isIntegrationsLoading ? (
-              <div className="h-28 bg-slate-100 dark:bg-slate-800 animate-pulse rounded-lg" />
+              <div className="h-28 bg-muted animate-pulse rounded-lg" />
             ) : integrations.length === 0 ? (
-              <div className="text-center py-8 border border-dashed border-slate-200 dark:border-slate-800 rounded-lg text-slate-500">
+              <div className="text-center py-8 border border-dashed border-border rounded-lg text-muted-foreground">
                 No active source connections found. Add a connection above to start.
               </div>
             ) : (
               <div className="space-y-6">
-                <h3 className="font-extrabold text-sm uppercase tracking-wider text-slate-600 dark:text-slate-400">Connected Sources</h3>
+                <h3 className="font-extrabold text-sm uppercase tracking-wider text-muted-foreground">Connected Sources</h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   {integrations.map((conn) => {
                     const assets = syncedAssetsMap[conn.id] || []
                     return (
-                      <Card key={conn.id} className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/10 text-slate-900 dark:text-white overflow-hidden">
-                        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4 border-b border-slate-100 dark:border-slate-800">
+                      <Card key={conn.id} className="bg-card border border-border text-foreground overflow-hidden">
+                        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4 border-b border-border">
                           <div className="flex items-center gap-2.5">
                             {getIntegrationProviderIcon(conn.provider)}
                             <div>
                               <CardTitle className="text-sm font-bold leading-none">{conn.name}</CardTitle>
-                              <span className="text-[9px] text-slate-600 dark:text-slate-500 font-mono mt-0.5 block">{conn.provider}</span>
+                              <span className="text-[9px] text-muted-foreground font-mono mt-0.5 block">{conn.provider}</span>
                             </div>
                           </div>
                           <div className="flex items-center gap-2">
@@ -810,7 +808,7 @@ export default function SettingsPage() {
                               size="sm"
                               onClick={() => handleSyncIntegration(conn.id)}
                               disabled={syncIntegrationMutation.isPending}
-                              className="h-8 px-2.5 border-slate-200 dark:border-slate-800 text-[10px] font-bold flex items-center gap-1"
+                              className="h-8 px-2.5 border-border text-[10px] font-bold flex items-center gap-1"
                             >
                               <RefreshCw className={`h-3 w-3 ${syncIntegrationMutation.isPending ? 'animate-spin' : ''}`} />
                               <span>Sync</span>
@@ -820,7 +818,7 @@ export default function SettingsPage() {
                               size="icon"
                               onClick={() => deleteIntegrationMutation.mutate(conn.id)}
                               disabled={deleteIntegrationMutation.isPending}
-                              className="h-8 w-8 text-slate-500 hover:text-rose-500 hover:bg-rose-500/10 dark:hover:bg-rose-500/20"
+                              className="h-8 w-8 text-muted-foreground hover:text-rose-500 hover:bg-rose-500/10"
                             >
                               <Trash2 className="h-4 w-4" />
                             </Button>
@@ -828,32 +826,32 @@ export default function SettingsPage() {
                         </CardHeader>
                         <CardContent className="pt-4 space-y-4">
                           {assets.length === 0 ? (
-                            <p className="text-[10px] text-slate-500 leading-normal">
+                            <p className="text-[10px] text-muted-foreground leading-normal">
                               Connection initialized. Click <strong>Sync</strong> above to discover metadata tables or pipeline workflows from this connection.
                             </p>
                           ) : (
                             <div className="space-y-2">
-                              <p className="text-[10px] font-bold text-slate-400 flex items-center gap-1">
+                              <p className="text-[10px] font-bold text-muted-foreground flex items-center gap-1">
                                 <ListFilter className="h-3.5 w-3.5" />
                                 Discovered Assets ({assets.length})
                               </p>
-                              <div className="divide-y divide-slate-100 dark:divide-slate-800 max-h-48 overflow-y-auto border border-slate-100 dark:border-slate-800 rounded-lg p-2 bg-slate-50/50 dark:bg-slate-950/20">
+                              <div className="divide-y divide-border max-h-48 overflow-y-auto border border-border rounded-lg p-2 bg-background/50">
                                 {assets.map((asset, idx) => (
                                   <div key={idx} className="flex items-center justify-between py-2 text-xs">
                                     <div className="font-mono">
-                                      <span className="font-semibold text-slate-800 dark:text-slate-350">{asset.name}</span>
+                                      <span className="font-semibold text-foreground">{asset.name}</span>
                                       {asset.type && (
-                                        <span className="ml-2 px-1 py-0.5 rounded text-[8px] bg-slate-200 dark:bg-slate-800 text-slate-600 dark:text-slate-400 font-bold uppercase">
+                                        <span className="ml-2 px-1 py-0.5 rounded text-[8px] bg-muted text-muted-foreground font-bold uppercase">
                                           {asset.type}
                                         </span>
                                       )}
                                     </div>
                                     <div className="flex items-center gap-3">
                                       {asset.records !== undefined && asset.records !== null && (
-                                        <span className="text-[10px] text-slate-500">{asset.records.toLocaleString()} rows</span>
+                                        <span className="text-[10px] text-muted-foreground">{asset.records.toLocaleString()} rows</span>
                                       )}
                                       {asset.schedule && (
-                                        <span className="text-[10px] text-slate-500 font-mono">{asset.schedule}</span>
+                                        <span className="text-[10px] text-muted-foreground font-mono">{asset.schedule}</span>
                                       )}
                                       <Switch checked={asset.reliability_enabled} className="scale-75 data-[state=checked]:bg-primary" />
                                     </div>
@@ -882,10 +880,10 @@ export default function SettingsPage() {
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-start">
               
               {/* Generate form */}
-              <Card className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/10 text-slate-900 dark:text-white">
+              <Card className="bg-card border border-border text-foreground">
                 <CardHeader>
                   <CardTitle className="text-lg font-bold">Generate API Key</CardTitle>
-                  <CardDescription className="text-slate-500 dark:text-slate-400">
+                  <CardDescription className="text-muted-foreground">
                     Create keys for pipeline scripts and automated integrations.
                   </CardDescription>
                 </CardHeader>
@@ -899,7 +897,7 @@ export default function SettingsPage() {
                         placeholder="e.g. CI/CD Ingestion Trigger"
                         value={newKeyName}
                         onChange={(e) => setNewKeyName(e.target.value)}
-                        className="bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800"
+                        className="bg-background border-border text-foreground"
                       />
                     </div>
                     <div className="space-y-2">
@@ -908,10 +906,10 @@ export default function SettingsPage() {
                         value={newKeyExpiry === null ? 'never' : String(newKeyExpiry)}
                         onValueChange={(val) => setNewKeyExpiry(val === 'never' ? null : parseInt(val, 10))}
                       >
-                        <SelectTrigger className="bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800">
+                        <SelectTrigger className="bg-background border-border text-foreground">
                           <SelectValue placeholder="Select expiry duration" />
                         </SelectTrigger>
-                        <SelectContent className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/10 text-slate-900 dark:text-white">
+                        <SelectContent className="bg-card border-border text-foreground">
                           <SelectItem value="never">Never Expires</SelectItem>
                           <SelectItem value="30">30 Days</SelectItem>
                           <SelectItem value="90">90 Days</SelectItem>
@@ -920,7 +918,7 @@ export default function SettingsPage() {
                       </Select>
                     </div>
                   </CardContent>
-                  <CardFooter className="pt-2 border-t border-slate-100 dark:border-slate-800 flex justify-end">
+                  <CardFooter className="pt-2 border-t border-border flex justify-end">
                     <Button type="submit" disabled={createKeyMutation.isPending || !newKeyName} className="bg-primary hover:bg-primary/95 text-white flex items-center gap-1.5 w-full">
                       <Plus className="h-4 w-4" />
                       <span>Generate Key</span>
@@ -930,10 +928,10 @@ export default function SettingsPage() {
               </Card>
 
               {/* Keys list */}
-              <Card className="col-span-1 md:col-span-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/10 text-slate-900 dark:text-white">
+              <Card className="col-span-1 md:col-span-2 bg-card border border-border text-foreground">
                 <CardHeader>
                   <CardTitle className="text-lg font-bold">Active API Keys</CardTitle>
-                  <CardDescription className="text-slate-500 dark:text-slate-400">
+                  <CardDescription className="text-muted-foreground">
                     API keys allow programmatic access to the Qolyx dataset validation services.
                   </CardDescription>
                 </CardHeader>
@@ -941,33 +939,33 @@ export default function SettingsPage() {
                   {isKeysLoading ? (
                     <div className="space-y-3">
                       {[1, 2].map((i) => (
-                        <div key={i} className="h-12 bg-slate-100 dark:bg-slate-800 animate-pulse rounded-lg" />
+                        <div key={i} className="h-12 bg-muted animate-pulse rounded-lg" />
                       ))}
                     </div>
                   ) : apiKeys.length === 0 ? (
-                    <p className="text-sm text-slate-500 text-center py-6">No API keys generated yet.</p>
+                    <p className="text-sm text-muted-foreground text-center py-6">No API keys generated yet.</p>
                   ) : (
-                    <div className="border border-slate-100 dark:border-slate-800 rounded-lg overflow-hidden">
+                    <div className="border border-border rounded-lg overflow-hidden">
                       <table className="w-full text-left border-collapse text-xs">
                         <thead>
-                          <tr className="bg-slate-50 dark:bg-slate-950 border-b border-slate-100 dark:border-slate-800 text-slate-500 uppercase font-semibold">
+                          <tr className="bg-muted border-b border-border text-muted-foreground uppercase font-semibold">
                             <th className="px-4 py-3">Key Details</th>
                             <th className="px-4 py-3">Created</th>
                             <th className="px-4 py-3">Expiry</th>
                             <th className="px-4 py-3">Actions</th>
                           </tr>
                         </thead>
-                        <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
+                        <tbody className="divide-y divide-border">
                           {apiKeys.map((k) => (
-                            <tr key={k.id} className="hover:bg-slate-50/50 dark:hover:bg-white/5">
+                            <tr key={k.id} className="hover:bg-muted/50">
                               <td className="px-4 py-3.5">
                                 <div className="font-semibold">{k.name}</div>
-                                <div className="font-mono text-slate-400 dark:text-slate-500 text-[10px] mt-0.5">{k.key_preview}</div>
+                                <div className="font-mono text-muted-foreground text-[10px] mt-0.5">{k.key_preview}</div>
                               </td>
-                              <td className="px-4 py-3.5 text-slate-500 dark:text-slate-400">
+                              <td className="px-4 py-3.5 text-muted-foreground">
                                 {new Date(k.created_at).toLocaleDateString()}
                               </td>
-                              <td className="px-4 py-3.5 text-slate-500 dark:text-slate-400">
+                              <td className="px-4 py-3.5 text-muted-foreground">
                                 {k.expires_at ? new Date(k.expires_at).toLocaleDateString() : 'Never'}
                               </td>
                               <td className="px-4 py-3.5">
@@ -976,7 +974,7 @@ export default function SettingsPage() {
                                   size="sm"
                                   onClick={() => revokeKeyMutation.mutate(k.id)}
                                   disabled={revokeKeyMutation.isPending}
-                                  className="text-slate-500 hover:text-rose-500 hover:bg-rose-500/10 dark:hover:bg-rose-500/20 text-[10px] h-7 px-2"
+                                  className="text-muted-foreground hover:text-rose-500 hover:bg-rose-500/10 text-[10px] h-7 px-2"
                                 >
                                   Revoke
                                 </Button>
@@ -1002,10 +1000,10 @@ export default function SettingsPage() {
 
           {/* 5. System Admin Tab Content */}
           <TabsContent value="admin">
-            <Card className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/10 text-slate-900 dark:text-white">
+            <Card className="bg-card border border-border text-foreground">
               <CardHeader>
                 <CardTitle className="text-lg font-bold">System Administration</CardTitle>
-                <CardDescription className="text-slate-500 dark:text-slate-400">
+                <CardDescription className="text-muted-foreground">
                   Global allowed network settings and compliance database policies.
                 </CardDescription>
               </CardHeader>
@@ -1017,9 +1015,9 @@ export default function SettingsPage() {
                     placeholder="http://localhost:5173, http://127.0.0.1:5173"
                     value={corsOrigins.join(', ')}
                     onChange={(e) => setCorsOrigins(e.target.value.split(',').map((s) => s.trim()))}
-                    className="bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800"
+                    className="bg-background border border-border text-foreground"
                   />
-                  <p className="text-[10px] text-slate-500 dark:text-slate-400">
+                  <p className="text-[10px] text-muted-foreground">
                     Restricts which domain headers are permitted to contact the backend engine endpoints.
                   </p>
                 </div>
@@ -1033,9 +1031,9 @@ export default function SettingsPage() {
                     max="1825"
                     value={retentionDays}
                     onChange={(e) => setRetentionDays(parseInt(e.target.value, 10) || 90)}
-                    className="w-full max-w-xs bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800"
+                    className="w-full max-w-xs bg-background border border-border text-foreground"
                   />
-                  <p className="text-[10px] text-slate-500 dark:text-slate-400">
+                  <p className="text-[10px] text-muted-foreground">
                     Older logs representing statistical baseline values, anomaly records, and contract failures will be automatically pruned.
                   </p>
                 </div>
@@ -1047,14 +1045,14 @@ export default function SettingsPage() {
                     placeholder="https://api.company.com/webhooks/qolyx-events"
                     value={globalWebhook}
                     onChange={(e) => setGlobalWebhook(e.target.value)}
-                    className="bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800"
+                    className="bg-background border border-border text-foreground"
                   />
-                  <p className="text-[10px] text-slate-500 dark:text-slate-400">
+                  <p className="text-[10px] text-muted-foreground">
                     All reliability warnings and resolved status events will trigger a POST request with payload signatures to this endpoint.
                   </p>
                 </div>
               </CardContent>
-              <CardFooter className="border-t border-slate-100 dark:border-slate-800 pt-4 flex justify-end">
+              <CardFooter className="border-t border-border pt-4 flex justify-end">
                 <Button onClick={handleSaveAdmin} disabled={updateSettingsMutation.isPending} className="bg-primary hover:bg-primary/95 text-white flex items-center gap-1.5">
                   {updateSettingsMutation.isPending ? 'Saving...' : 'Save Settings'}
                 </Button>
@@ -1066,12 +1064,12 @@ export default function SettingsPage() {
           <TabsContent value="llm" className="space-y-6">
             {isLlmFormOpen ? (
               <form onSubmit={handleSaveLlmProvider}>
-                <Card className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/10 text-slate-900 dark:text-white">
+                <Card className="bg-card border border-border text-foreground">
                   <CardHeader>
                     <CardTitle className="text-lg font-bold">
                       {editingLlmId ? 'Edit LLM Provider' : 'Add LLM Provider'}
                     </CardTitle>
-                    <CardDescription className="text-slate-500 dark:text-slate-400">
+                    <CardDescription className="text-muted-foreground">
                       Configure connection endpoints and credentials for data summary models.
                     </CardDescription>
                   </CardHeader>
@@ -1085,16 +1083,16 @@ export default function SettingsPage() {
                           placeholder="e.g. My OpenAI"
                           value={llmName}
                           onChange={(e) => setLlmName(e.target.value)}
-                          className="bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800"
+                          className="bg-background border-border text-foreground"
                         />
                       </div>
                       <div className="space-y-2">
                         <Label htmlFor="llm-provider-type">Provider Type</Label>
                         <Select value={llmProviderType} onValueChange={handleLlmProviderTypeChange}>
-                          <SelectTrigger className="bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800">
+                          <SelectTrigger className="bg-background border-border text-foreground">
                             <SelectValue placeholder="Select type" />
                           </SelectTrigger>
-                          <SelectContent className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/10 text-slate-900 dark:text-white">
+                          <SelectContent className="bg-card border-border text-foreground">
                             <SelectItem value="OPENAI">OpenAI (Cloud)</SelectItem>
                             <SelectItem value="ANTHROPIC">Anthropic (Cloud)</SelectItem>
                             <SelectItem value="OLLAMA">Ollama (Local)</SelectItem>
@@ -1110,7 +1108,7 @@ export default function SettingsPage() {
                           placeholder="e.g. https://api.openai.com/v1"
                           value={llmBaseUrl}
                           onChange={(e) => setLlmBaseUrl(e.target.value)}
-                          className="bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800"
+                          className="bg-background border-border text-foreground"
                         />
                       </div>
                       <div className="space-y-2">
@@ -1121,7 +1119,7 @@ export default function SettingsPage() {
                           placeholder="e.g. gpt-4o, llama3.2"
                           value={llmModelName}
                           onChange={(e) => setLlmModelName(e.target.value)}
-                          className="bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800"
+                          className="bg-background border-border text-foreground"
                         />
                       </div>
                       <div className="space-y-2">
@@ -1132,7 +1130,7 @@ export default function SettingsPage() {
                           placeholder={editingLlmId ? "•••••••• (Leave blank to keep current key)" : "Enter provider API key"}
                           value={llmApiKey}
                           onChange={(e) => setLlmApiKey(e.target.value)}
-                          className="bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800"
+                          className="bg-background border-border text-foreground"
                         />
                       </div>
                       <div className="space-y-2">
@@ -1142,7 +1140,7 @@ export default function SettingsPage() {
                           type="number"
                           value={llmPriority}
                           onChange={(e) => setLlmPriority(parseInt(e.target.value, 10) || 0)}
-                          className="bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800"
+                          className="bg-background border-border text-foreground"
                         />
                       </div>
                     </div>
@@ -1151,13 +1149,13 @@ export default function SettingsPage() {
                       <Label htmlFor="llm-active">Is Provider Active</Label>
                     </div>
                   </CardContent>
-                  <CardFooter className="border-t border-slate-100 dark:border-slate-800 pt-4 flex justify-between">
+                  <CardFooter className="border-t border-border pt-4 flex justify-between">
                     <Button
                       type="button"
                       variant="outline"
                       onClick={handleTestLlmConnection}
                       disabled={isTestingLlm}
-                      className="border-slate-200 dark:border-slate-800"
+                      className="border-border text-foreground hover:bg-muted bg-card"
                     >
                       {isTestingLlm ? 'Testing...' : 'Test Connection'}
                     </Button>
@@ -1189,7 +1187,7 @@ export default function SettingsPage() {
                 <div className="flex justify-between items-center">
                   <div>
                     <h3 className="text-lg font-bold">LLM Model Providers</h3>
-                    <p className="text-xs text-slate-500 dark:text-slate-400">
+                    <p className="text-xs text-muted-foreground">
                       Configure custom models to generate data quality summaries and RCA explanations.
                     </p>
                   </div>
@@ -1199,22 +1197,22 @@ export default function SettingsPage() {
                   </Button>
                 </div>
 
-                <Card className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/10 text-slate-900 dark:text-white">
+                <Card className="bg-card border border-border text-foreground">
                   <CardContent className="p-0">
                     {isLlmLoading ? (
                       <div className="flex justify-center py-12">
                         <LoadingSpinner text="Loading LLM integrations..." />
                       </div>
                     ) : llmProviders.length === 0 ? (
-                      <div className="text-center py-12 text-slate-500 dark:text-slate-400 space-y-2">
+                      <div className="text-center py-12 text-muted-foreground space-y-2">
                         <p className="text-sm">No LLM providers configured yet.</p>
-                        <p className="text-xs text-slate-400">Bring your own key (BYOK) to unlock conversational troubleshooting.</p>
+                        <p className="text-xs text-muted-foreground/85">Bring your own key (BYOK) to unlock conversational troubleshooting.</p>
                       </div>
                     ) : (
                       <div className="overflow-x-auto">
                         <table className="w-full text-left text-sm border-collapse">
                           <thead>
-                            <tr className="border-b border-slate-100 dark:border-slate-800 text-slate-500 text-xs">
+                            <tr className="border-b border-border text-muted-foreground text-xs">
                               <th className="py-3.5 px-4 font-semibold">Name</th>
                               <th className="py-3.5 px-4 font-semibold">Type</th>
                               <th className="py-3.5 px-4 font-semibold">Base URL</th>
@@ -1226,15 +1224,15 @@ export default function SettingsPage() {
                           </thead>
                           <tbody>
                             {llmProviders.map((prov: any) => (
-                              <tr key={prov.id} className="border-b border-slate-50 dark:border-slate-800/40 hover:bg-slate-50/50 dark:hover:bg-slate-800/20">
+                              <tr key={prov.id} className="border-b border-border/40 hover:bg-muted/50">
                                 <td className="py-3.5 px-4 font-medium">{prov.name}</td>
                                 <td className="py-3.5 px-4">
-                                  <Badge variant="outline" className="text-[10px] py-0.5 px-1.5 uppercase font-semibold">
+                                  <Badge variant="outline" className="text-[10px] py-0.5 px-1.5 uppercase font-semibold border-border">
                                     {prov.provider_type}
                                   </Badge>
                                 </td>
-                                <td className="py-3.5 px-4 font-mono text-xs text-slate-500 truncate max-w-xs">{prov.base_url}</td>
-                                <td className="py-3.5 px-4 font-mono text-xs text-slate-500">{prov.model_name}</td>
+                                <td className="py-3.5 px-4 font-mono text-xs text-muted-foreground truncate max-w-xs">{prov.base_url}</td>
+                                <td className="py-3.5 px-4 font-mono text-xs text-muted-foreground">{prov.model_name}</td>
                                 <td className="py-3.5 px-4 text-center">{prov.priority}</td>
                                 <td className="py-3.5 px-4 text-center">
                                   {prov.is_active ? (
@@ -1248,7 +1246,7 @@ export default function SettingsPage() {
                                   )}
                                 </td>
                                 <td className="py-3.5 px-4 text-right space-x-2">
-                                  <Button variant="ghost" size="sm" onClick={() => handleEditLlm(prov)} className="h-8 px-2">
+                                  <Button variant="ghost" size="sm" onClick={() => handleEditLlm(prov)} className="h-8 px-2 text-foreground">
                                     Edit
                                   </Button>
                                   <Button

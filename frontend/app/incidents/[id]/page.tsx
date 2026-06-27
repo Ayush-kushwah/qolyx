@@ -124,7 +124,7 @@ export default function IncidentDetailPage({ params }: { params: { id: string } 
       case 'MEDIUM':
         return <Badge variant="outline" className="bg-warning/10 text-warning border-warning/20 uppercase text-[10px] font-bold">Medium</Badge>
       default:
-        return <Badge variant="outline" className="bg-slate-800 text-slate-400 border-white/5 uppercase text-[10px] font-bold">Low</Badge>
+        return <Badge variant="outline" className="bg-muted text-muted-foreground border-border uppercase text-[10px] font-bold">Low</Badge>
     }
   }
 
@@ -153,14 +153,14 @@ export default function IncidentDetailPage({ params }: { params: { id: string } 
         )
       case 'CLOSED':
         return (
-          <span className="flex items-center gap-1.5 text-xs text-slate-500 font-bold bg-slate-800 px-2.5 py-1 rounded-full border border-white/5">
-            <span className="h-1.5 w-1.5 rounded-full bg-slate-500" />
+          <span className="flex items-center gap-1.5 text-xs text-muted-foreground font-bold bg-muted px-2.5 py-1 rounded-full border border-border">
+            <span className="h-1.5 w-1.5 rounded-full bg-muted-foreground" />
             Closed
           </span>
         )
       default:
         return (
-          <span className="text-xs text-slate-400 font-bold bg-slate-800 px-2.5 py-1 rounded-full border border-white/5">
+          <span className="text-xs text-muted-foreground font-bold bg-muted px-2.5 py-1 rounded-full border border-border">
             {state}
           </span>
         )
@@ -227,13 +227,13 @@ export default function IncidentDetailPage({ params }: { params: { id: string } 
 
   return (
     <ErrorBoundary>
-      <div className="space-y-8 select-none">
+      <div className="space-y-4 select-none">
         
         {/* Back navigation & Refresh row */}
         <div className="flex items-center justify-between">
           <Link 
             href="/incidents" 
-            className="flex items-center gap-2 text-xs font-bold text-slate-400 hover:text-white transition-colors uppercase tracking-wider"
+            className="flex items-center gap-2 text-xs font-bold text-muted-foreground hover:text-foreground transition-colors uppercase tracking-wider"
           >
             <ArrowLeft className="h-4 w-4" />
             Back to Incident Feed
@@ -242,7 +242,7 @@ export default function IncidentDetailPage({ params }: { params: { id: string } 
             variant="ghost"
             size="sm"
             onClick={refetchAll}
-            className="text-slate-400 border border-white/5 hover:bg-white/5 hover:text-white text-xs font-bold gap-1"
+            className="text-muted-foreground border border-border hover:bg-muted hover:text-foreground text-xs font-bold gap-1"
           >
             <RotateCcw className="h-3.5 w-3.5" />
             Force Sync
@@ -250,18 +250,18 @@ export default function IncidentDetailPage({ params }: { params: { id: string } 
         </div>
 
         {/* Incident Main Title Block */}
-        <div className="flex flex-col md:flex-row md:items-start justify-between gap-6 border-b border-white/5 pb-6">
-          <div className="space-y-3 flex-1">
-            <div className="flex flex-wrap items-center gap-3">
+        <div className="flex flex-col md:flex-row md:items-start justify-between gap-4 border-b border-border pb-4">
+          <div className="space-y-2 flex-1">
+            <div className="flex flex-wrap items-center gap-2">
               {getSeverityBadge(incident.severity)}
               {getStateBadge(incident.state)}
-              <span className="text-xs font-mono text-slate-500">Pipeline Run: {incident.pipeline_run_id.slice(0, 8)}...</span>
+              <span className="text-xs font-mono text-muted-foreground">Pipeline Run: {incident.pipeline_run_id.slice(0, 8)}...</span>
             </div>
-            <h1 className="text-2xl md:text-3xl font-extrabold tracking-tight text-slate-100 flex items-start gap-2.5">
+            <h1 className="text-2xl md:text-3xl font-extrabold tracking-tight text-foreground flex items-start gap-2.5">
               <ShieldAlert className="h-7 w-7 text-critical mt-1 flex-shrink-0" />
               {incident.title}
             </h1>
-            <p className="text-xs font-mono text-slate-400 bg-slate-900/40 border border-white/5 px-3 py-1 rounded inline-block">
+            <p className="text-xs font-mono text-muted-foreground bg-muted/40 border border-border px-3 py-1 rounded inline-block">
               Target Source: {incident.table_name}
             </p>
           </div>
@@ -274,52 +274,52 @@ export default function IncidentDetailPage({ params }: { params: { id: string } 
           <div className="lg:col-span-2 space-y-6">
             
             {/* Trust Score & Circular Gauge */}
-            <div className="glass-panel p-6 rounded-xl flex flex-col md:flex-row items-center gap-8">
+            <div className="glass-panel p-6 rounded-xl flex flex-col md:flex-row items-center gap-8 bg-card border border-border">
               <div className="flex-shrink-0">
                 <TrustScoreGauge score={score} size="md" />
               </div>
               <div className="space-y-4 flex-grow text-center md:text-left">
                 <div className="space-y-1">
-                  <h3 className="text-base font-bold text-slate-200">Pipeline Run Quality</h3>
-                  <p className="text-xs text-slate-400">
+                  <h3 className="text-base font-bold text-foreground">Pipeline Run Quality</h3>
+                  <p className="text-xs text-muted-foreground">
                     Calculated run scoring with penalty deductions logged at time of anomaly capture.
                   </p>
                 </div>
                 
                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 text-left pt-2">
-                  <div className="p-2 rounded bg-slate-950/40 border border-white/5">
-                    <div className="text-[10px] font-bold text-slate-500 uppercase tracking-wide">Schema Failures</div>
-                    <div className="text-xs font-bold text-slate-200">-{rca ? (rca.primary_penalty === 'schema' ? '40' : '0') : '10'} pts</div>
+                  <div className="p-2 rounded bg-background/40 border border-border">
+                    <div className="text-[10px] font-bold text-muted-foreground uppercase tracking-wide">Schema Failures</div>
+                    <div className="text-xs font-bold text-foreground">-{rca ? (rca.primary_penalty === 'schema' ? '40' : '0') : '10'} pts</div>
                   </div>
-                  <div className="p-2 rounded bg-slate-950/40 border border-white/5">
-                    <div className="text-[10px] font-bold text-slate-500 uppercase tracking-wide">Freshness Lag</div>
-                    <div className="text-xs font-bold text-slate-200">-{rca ? (rca.primary_penalty === 'freshness' ? '30' : '0') : '0'} pts</div>
+                  <div className="p-2 rounded bg-background/40 border border-border">
+                    <div className="text-[10px] font-bold text-muted-foreground uppercase tracking-wide">Freshness Lag</div>
+                    <div className="text-xs font-bold text-foreground">-{rca ? (rca.primary_penalty === 'freshness' ? '30' : '0') : '0'} pts</div>
                   </div>
-                  <div className="p-2 rounded bg-slate-950/40 border border-white/5">
-                    <div className="text-[10px] font-bold text-slate-500 uppercase tracking-wide">Volume Drift</div>
-                    <div className="text-xs font-bold text-slate-200">-{rca ? (rca.primary_penalty === 'volume' ? '30' : '0') : '10'} pts</div>
+                  <div className="p-2 rounded bg-background/40 border border-border">
+                    <div className="text-[10px] font-bold text-muted-foreground uppercase tracking-wide">Volume Drift</div>
+                    <div className="text-xs font-bold text-foreground">-{rca ? (rca.primary_penalty === 'volume' ? '30' : '0') : '10'} pts</div>
                   </div>
-                  <div className="p-2 rounded bg-slate-950/40 border border-white/5">
-                    <div className="text-[10px] font-bold text-slate-500 uppercase tracking-wide">ML Anomalies</div>
-                    <div className="text-xs font-bold text-slate-200">-{rca ? (rca.primary_penalty === 'anomaly' ? '20' : '10') : '20'} pts</div>
+                  <div className="p-2 rounded bg-background/40 border border-border">
+                    <div className="text-[10px] font-bold text-muted-foreground uppercase tracking-wide">ML Anomalies</div>
+                    <div className="text-xs font-bold text-foreground">-{rca ? (rca.primary_penalty === 'anomaly' ? '20' : '10') : '20'} pts</div>
                   </div>
-                  <div className="p-2 rounded bg-slate-950/40 border border-white/5 col-span-2 sm:col-span-1">
-                    <div className="text-[10px] font-bold text-slate-500 uppercase tracking-wide">DBT Tests</div>
-                    <div className="text-xs font-bold text-slate-200">-{rca ? (rca.primary_penalty === 'dbt' ? '20' : '0') : '0'} pts</div>
+                  <div className="p-2 rounded bg-background/40 border border-border col-span-2 sm:col-span-1">
+                    <div className="text-[10px] font-bold text-muted-foreground uppercase tracking-wide">DBT Tests</div>
+                    <div className="text-xs font-bold text-foreground">-{rca ? (rca.primary_penalty === 'dbt' ? '20' : '0') : '0'} pts</div>
                   </div>
                 </div>
               </div>
             </div>
 
             {/* Root Cause Analysis (RCA) Section */}
-            <div className="glass-panel p-6 rounded-xl space-y-4 relative overflow-hidden group">
-              <div className="flex items-center justify-between border-b border-white/5 pb-4">
+            <div className="glass-panel p-6 rounded-xl space-y-4 bg-card border border-border relative overflow-hidden group">
+              <div className="flex items-center justify-between border-b border-border pb-4">
                 <div className="space-y-0.5">
-                  <h3 className="text-sm font-bold text-slate-200 uppercase tracking-wider flex items-center gap-1.5">
+                  <h3 className="text-sm font-bold text-foreground uppercase tracking-wider flex items-center gap-1.5">
                     <Sparkles className="h-4 w-4 text-primary animate-pulse" />
                     AI Root Cause Analysis (RCA)
                   </h3>
-                  <p className="text-[11px] text-slate-500">ML models tracing telemetry and schema metrics</p>
+                  <p className="text-[11px] text-muted-foreground">ML models tracing telemetry and schema metrics</p>
                 </div>
                 {rca && (
                   <Badge variant="outline" className="bg-primary/10 text-primary border-primary/20 text-[10px] font-semibold h-5">
@@ -329,21 +329,21 @@ export default function IncidentDetailPage({ params }: { params: { id: string } 
               </div>
 
               {rca ? (
-                <div className="space-y-4 text-xs text-slate-300">
+                <div className="space-y-4 text-xs text-foreground/90">
                   <div className="space-y-1">
-                    <span className="font-bold text-slate-200 uppercase tracking-wider text-[10px]">Summary</span>
-                    <p className="bg-slate-950/30 p-3 rounded-lg border border-white/5 leading-relaxed">{rca.summary}</p>
+                    <span className="font-bold text-foreground uppercase tracking-wider text-[10px]">Summary</span>
+                    <p className="bg-background/30 p-3 rounded-lg border border-border leading-relaxed">{rca.summary}</p>
                   </div>
                   
                   <div className="space-y-1">
-                    <span className="font-bold text-slate-200 uppercase tracking-wider text-[10px]">Root Cause</span>
-                    <p className="bg-slate-950/30 p-3 rounded-lg border border-white/5 leading-relaxed font-mono">{rca.root_cause}</p>
+                    <span className="font-bold text-foreground uppercase tracking-wider text-[10px]">Root Cause</span>
+                    <p className="bg-background/30 p-3 rounded-lg border border-border leading-relaxed font-mono">{rca.root_cause}</p>
                   </div>
 
                   {rca.contributing_factors && rca.contributing_factors.length > 0 && (
                     <div className="space-y-1">
-                      <span className="font-bold text-slate-200 uppercase tracking-wider text-[10px]">Contributing Factors</span>
-                      <ul className="list-disc pl-4 space-y-1 bg-slate-950/30 p-3 rounded-lg border border-white/5">
+                      <span className="font-bold text-foreground uppercase tracking-wider text-[10px]">Contributing Factors</span>
+                      <ul className="list-disc pl-4 space-y-1 bg-background/30 p-3 rounded-lg border border-border">
                         {rca.contributing_factors.map((factor, index) => (
                           <li key={index} className="leading-relaxed">{factor}</li>
                         ))}
@@ -353,17 +353,17 @@ export default function IncidentDetailPage({ params }: { params: { id: string } 
 
                   {rca.recommendation && (
                     <div className="space-y-1">
-                      <span className="font-bold text-slate-200 uppercase tracking-wider text-[10px]">Recommendation</span>
-                      <p className="bg-slate-950/30 p-3 rounded-lg border border-white/5 leading-relaxed text-healthy">{rca.recommendation}</p>
+                      <span className="font-bold text-foreground uppercase tracking-wider text-[10px]">Recommendation</span>
+                      <p className="bg-background/30 p-3 rounded-lg border border-border leading-relaxed text-healthy bg-healthy/10">{rca.recommendation}</p>
                     </div>
                   )}
                 </div>
               ) : (
                 <div className="flex flex-col items-center justify-center py-10 text-center space-y-3">
-                  <AlertCircle className="h-8 w-8 text-slate-500 opacity-60" />
+                  <AlertCircle className="h-8 w-8 text-muted-foreground opacity-60" />
                   <div className="space-y-1">
-                    <p className="text-xs text-slate-400 font-bold">No RCA Telemetry Generated</p>
-                    <p className="text-[11px] text-slate-500">Run manual analysis diagnostics below.</p>
+                    <p className="text-xs text-muted-foreground font-bold">No RCA Telemetry Generated</p>
+                    <p className="text-[11px] text-muted-foreground">Run manual analysis diagnostics below.</p>
                   </div>
                   <Button
                     size="sm"
@@ -378,39 +378,38 @@ export default function IncidentDetailPage({ params }: { params: { id: string } 
             </div>
 
             {/* Chronological Timeline */}
-            <div className="glass-panel p-6 rounded-xl space-y-4">
-              <div className="border-b border-white/5 pb-4">
-                <h3 className="text-sm font-bold text-slate-200 uppercase tracking-wider">
+            <div className="glass-panel p-6 rounded-xl space-y-4 bg-card border border-border">
+              <div className="border-b border-border pb-4">
+                <h3 className="text-sm font-bold text-foreground uppercase tracking-wider">
                   Timeline Events
                 </h3>
-                <p className="text-[11px] text-slate-500">Audit logs tracking incident transitions and alerts</p>
+                <p className="text-[11px] text-muted-foreground">Audit logs tracking incident transitions and alerts</p>
               </div>
 
-              <div className="relative pl-6 border-l border-white/5 ml-3 space-y-6 pt-2">
+              <div className="relative pl-6 border-l border-border ml-3 space-y-6 pt-2">
                 {timeline.map((event) => {
-                  const isStateChange = event.event_type.includes('STATE_CHANGE') || event.event_type.includes('status')
                   return (
                     <div key={event.id} className="relative group select-none">
                       {/* Blip dot */}
-                      <span className={`absolute -left-[30px] top-1 h-3.5 w-3.5 rounded-full border-2 border-slate-950 flex items-center justify-center ${
+                      <span className={`absolute -left-[30px] top-1 h-3.5 w-3.5 rounded-full border-2 border-background flex items-center justify-center ${
                         event.event_type.includes('CREATE') ? 'bg-critical' :
                         event.event_type.includes('ACKNOWLEDGE') ? 'bg-warning' :
-                        event.event_type.includes('RESOLVE') ? 'bg-healthy' : 'bg-slate-500'
+                        event.event_type.includes('RESOLVE') ? 'bg-healthy' : 'bg-muted-foreground'
                       }`} />
                       
                       <div className="space-y-1">
                         <div className="flex items-center gap-3">
-                          <span className="text-xs font-bold text-slate-200">{event.event_type.replace(/_/g, ' ')}</span>
-                          <span className="text-[10px] font-mono text-slate-500">{format(new Date(event.created_at), 'yyyy-MM-dd HH:mm:ss')}</span>
+                          <span className="text-xs font-bold text-foreground">{event.event_type.replace(/_/g, ' ')}</span>
+                          <span className="text-[10px] font-mono text-muted-foreground">{format(new Date(event.created_at), 'yyyy-MM-dd HH:mm:ss')}</span>
                         </div>
                         {event.created_by && (
-                          <div className="text-[10px] text-slate-400 flex items-center gap-1 font-medium">
-                            <User className="h-3 w-3 text-slate-500" />
-                            Triggered by: <span className="font-bold text-slate-300">{event.created_by}</span>
+                          <div className="text-[10px] text-muted-foreground flex items-center gap-1 font-medium">
+                            <User className="h-3 w-3 text-muted-foreground/80" />
+                            Triggered by: <span className="font-bold text-foreground">{event.created_by}</span>
                           </div>
                         )}
                         {event.event_data && Object.keys(event.event_data).length > 0 && (
-                          <div className="text-[11px] bg-slate-950/40 border border-white/5 rounded p-2.5 mt-1 text-slate-400 font-mono overflow-x-auto leading-normal">
+                          <div className="text-[11px] bg-background/40 border border-border rounded p-2.5 mt-1 text-muted-foreground font-mono overflow-x-auto leading-normal">
                             {JSON.stringify(event.event_data, null, 2)}
                           </div>
                         )}
@@ -427,8 +426,8 @@ export default function IncidentDetailPage({ params }: { params: { id: string } 
           <div className="space-y-6">
             
             {/* Quick Actions Panel */}
-            <div className="glass-panel p-6 rounded-xl space-y-4">
-              <h3 className="text-xs font-bold text-slate-400 uppercase tracking-widest border-b border-white/5 pb-2">
+            <div className="glass-panel p-6 rounded-xl space-y-4 bg-card border border-border">
+              <h3 className="text-xs font-bold text-muted-foreground uppercase tracking-widest border-b border-border pb-2">
                 Operations Commands
               </h3>
 
@@ -454,26 +453,26 @@ export default function IncidentDetailPage({ params }: { params: { id: string } 
                         Resolve Incident
                       </Button>
                     </DialogTrigger>
-                    <DialogContent className="bg-slate-900 border border-white/10 text-white max-w-md rounded-xl shadow-2xl">
+                    <DialogContent className="bg-card border border-border text-foreground max-w-md rounded-xl shadow-2xl">
                       <form onSubmit={handleResolve} className="space-y-4">
                         <DialogHeader>
-                          <DialogTitle className="text-base font-extrabold text-slate-100 flex items-center gap-2">
+                          <DialogTitle className="text-base font-extrabold text-foreground flex items-center gap-2">
                             <CheckCircle2 className="h-5 w-5 text-healthy" />
                             Resolve Data Breach
                           </DialogTitle>
-                          <DialogDescription className="text-slate-400 text-xs leading-relaxed">
+                          <DialogDescription className="text-muted-foreground text-xs leading-relaxed">
                             Provide short, specific engineering resolution notes. Describe the fixes applied or investigations completed.
                           </DialogDescription>
                         </DialogHeader>
                         
                         <div className="space-y-1">
-                          <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Resolution Notes</label>
+                          <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Resolution Notes</label>
                           <Textarea
                             placeholder="Describe how the schema breach or anomaly was corrected..."
                             value={resolutionNotes}
                             onChange={(e) => setResolutionNotes(e.target.value)}
                             required
-                            className="bg-slate-950 border-white/10 text-slate-200 text-xs h-24 focus:border-primary focus:ring-1 focus:ring-primary rounded-lg resize-none"
+                            className="bg-background border-border text-foreground text-xs h-24 focus:border-primary focus:ring-1 focus:ring-primary rounded-lg resize-none"
                           />
                         </div>
 
@@ -483,7 +482,7 @@ export default function IncidentDetailPage({ params }: { params: { id: string } 
                             variant="ghost"
                             size="sm"
                             onClick={() => setIsResolveOpen(false)}
-                            className="text-slate-400 border border-white/5 hover:bg-white/5 hover:text-white text-xs font-bold"
+                            className="text-muted-foreground border border-border hover:bg-muted hover:text-foreground text-xs font-bold"
                           >
                             Cancel
                           </Button>
@@ -505,7 +504,7 @@ export default function IncidentDetailPage({ params }: { params: { id: string } 
                   <Button
                     onClick={handleClose}
                     disabled={isMutating}
-                    className="w-full bg-slate-800 text-slate-300 border border-white/5 hover:bg-slate-700 hover:text-white font-bold text-xs uppercase"
+                    className="w-full bg-muted text-muted-foreground border border-border hover:bg-muted/80 hover:text-foreground font-bold text-xs uppercase"
                   >
                     {closeMutation.isPending ? 'Closing...' : 'Close Incident'}
                   </Button>
@@ -515,7 +514,7 @@ export default function IncidentDetailPage({ params }: { params: { id: string } 
                   <Button
                     onClick={handleReopen}
                     disabled={isMutating}
-                    className="w-full bg-slate-900 border border-white/5 hover:bg-white/5 text-slate-300 hover:text-white font-bold text-xs uppercase"
+                    className="w-full bg-background border border-border hover:bg-muted text-muted-foreground hover:text-foreground font-bold text-xs uppercase"
                   >
                     {reopenMutation.isPending ? 'Reopening...' : 'Reopen Incident'}
                   </Button>
@@ -523,9 +522,9 @@ export default function IncidentDetailPage({ params }: { params: { id: string } 
               </div>
 
               {/* Assignee selector */}
-              <div className="space-y-1.5 pt-2 border-t border-white/5">
-                <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider flex items-center gap-1">
-                  <UserCheck className="h-3.5 w-3.5 text-slate-400" />
+              <div className="space-y-1.5 pt-2 border-t border-border">
+                <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider flex items-center gap-1">
+                  <UserCheck className="h-3.5 w-3.5 text-muted-foreground/80" />
                   Assign Operator
                 </label>
                 <Select 
@@ -533,10 +532,10 @@ export default function IncidentDetailPage({ params }: { params: { id: string } 
                   onValueChange={handleAssignOperator}
                   disabled={updateMutation.isPending}
                 >
-                  <SelectTrigger className="bg-slate-950/60 border-white/5 text-slate-200 h-9 font-medium text-xs rounded-lg">
+                  <SelectTrigger className="bg-background border-border text-foreground h-9 font-medium text-xs rounded-lg">
                     <SelectValue />
                   </SelectTrigger>
-                  <SelectContent className="bg-slate-900 border border-white/10 text-slate-200">
+                  <SelectContent className="bg-card border-border text-foreground">
                     {MOCK_OPERATORS.map((o) => (
                       <SelectItem key={o.value} value={o.value} className="text-xs">
                         {o.label}
@@ -553,7 +552,7 @@ export default function IncidentDetailPage({ params }: { params: { id: string } 
                     onClick={handleRegenerateRCA}
                     disabled={rcaMutation.isPending}
                     variant="outline"
-                    className="w-full border-white/5 text-slate-400 hover:bg-white/5 hover:text-white text-[10px] font-bold uppercase tracking-wider h-8 gap-1"
+                    className="w-full border-border text-muted-foreground hover:bg-muted hover:text-foreground text-[10px] font-bold uppercase tracking-wider h-8 gap-1 bg-card"
                   >
                     <Wrench className="h-3.5 w-3.5" />
                     {rcaMutation.isPending ? 'Re-analyzing...' : 'Regenerate RCA'}
@@ -563,9 +562,9 @@ export default function IncidentDetailPage({ params }: { params: { id: string } 
             </div>
 
             {/* Incident Comments thread */}
-            <div className="glass-panel p-6 rounded-xl flex flex-col justify-between min-h-[350px]">
-              <div className="border-b border-white/5 pb-2">
-                <h3 className="text-xs font-bold text-slate-400 uppercase tracking-widest">
+            <div className="glass-panel p-6 rounded-xl flex flex-col justify-between min-h-[350px] bg-card border border-border">
+              <div className="border-b border-border pb-2">
+                <h3 className="text-xs font-bold text-muted-foreground uppercase tracking-widest">
                   Discussion Thread
                 </h3>
               </div>
@@ -575,17 +574,17 @@ export default function IncidentDetailPage({ params }: { params: { id: string } 
                 {comments.length > 0 ? (
                   comments.map((comment) => (
                     <div key={comment.id} className="space-y-1 text-xs">
-                      <div className="flex items-center justify-between text-[10px] text-slate-500 font-semibold">
-                        <span className="text-slate-300 font-bold">{comment.created_by}</span>
+                      <div className="flex items-center justify-between text-[10px] text-muted-foreground font-semibold">
+                        <span className="text-foreground font-bold">{comment.created_by}</span>
                         <span>{format(new Date(comment.created_at), 'MM-dd HH:mm')}</span>
                       </div>
-                      <p className="bg-slate-950/40 border border-white/5 rounded-lg p-2.5 text-slate-300 leading-relaxed leading-normal">
+                      <p className="bg-background/40 border border-border rounded-lg p-2.5 text-foreground/90 leading-normal">
                         {comment.comment}
                       </p>
                     </div>
                   ))
                 ) : (
-                  <div className="flex flex-col items-center justify-center h-full py-16 text-center text-slate-500 text-xs">
+                  <div className="flex flex-col items-center justify-center h-full py-16 text-center text-muted-foreground text-xs">
                     <User className="h-8 w-8 opacity-40 mb-2" />
                     <span>No comments posted. Add a team note below.</span>
                   </div>
@@ -593,14 +592,14 @@ export default function IncidentDetailPage({ params }: { params: { id: string } 
               </div>
 
               {/* Comment Input */}
-              <form onSubmit={handlePostComment} className="pt-4 border-t border-white/5 flex gap-2">
+              <form onSubmit={handlePostComment} className="pt-4 border-t border-border flex gap-2">
                 <Textarea
                   placeholder="Ask a question or add details..."
                   value={commentText}
                   onChange={(e) => setCommentText(e.target.value)}
                   required
                   disabled={commentMutation.isPending}
-                  className="bg-slate-950 border-white/5 text-slate-200 text-xs h-9 min-h-[36px] max-h-[80px] focus:border-primary focus:ring-1 focus:ring-primary rounded-lg resize-none flex-grow"
+                  className="bg-background border-border text-foreground text-xs h-9 min-h-[36px] max-h-[80px] focus:border-primary focus:ring-1 focus:ring-primary rounded-lg resize-none flex-grow"
                 />
                 <Button
                   type="submit"

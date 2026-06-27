@@ -63,9 +63,9 @@ export default function AlertConfigCard({
           : webhook_url
         : 'Not Configured'
       return (
-        <div className="text-[11px] text-slate-600 dark:text-slate-400 font-mono flex flex-col gap-0.5">
-          <span className="text-[9px] font-bold text-slate-500 dark:text-slate-500 uppercase">Webhook URL</span>
-          <span className="truncate text-slate-700 dark:text-slate-300 font-semibold" title={webhook_url || ''}>{displayUrl}</span>
+        <div className="text-[11px] text-muted-foreground font-mono flex flex-col gap-0.5">
+          <span className="text-[9px] font-bold text-muted-foreground uppercase">Webhook URL</span>
+          <span className="truncate text-foreground font-semibold" title={webhook_url || ''}>{displayUrl}</span>
         </div>
       )
     }
@@ -77,14 +77,14 @@ export default function AlertConfigCard({
           : telegram_bot_token
         : 'Not Configured'
       return (
-        <div className="text-[11px] text-slate-600 dark:text-slate-400 font-mono flex flex-col gap-1">
+        <div className="text-[11px] text-muted-foreground font-mono flex flex-col gap-1">
           <div>
-            <span className="text-[9px] font-bold text-slate-500 dark:text-slate-500 uppercase block">Bot Token</span>
-            <span className="text-slate-700 dark:text-slate-300 font-semibold">{maskedToken}</span>
+            <span className="text-[9px] font-bold text-muted-foreground uppercase block">Bot Token</span>
+            <span className="text-foreground font-semibold">{maskedToken}</span>
           </div>
           <div>
-            <span className="text-[9px] font-bold text-slate-500 dark:text-slate-500 uppercase block">Chat ID</span>
-            <span className="text-slate-700 dark:text-slate-300 font-semibold">{telegram_chat_id || 'Not Configured'}</span>
+            <span className="text-[9px] font-bold text-muted-foreground uppercase block">Chat ID</span>
+            <span className="text-foreground font-semibold">{telegram_chat_id || 'Not Configured'}</span>
           </div>
         </div>
       )
@@ -100,15 +100,15 @@ export default function AlertConfigCard({
       const displayRecipients = recipients.length > 30 ? `${recipients.slice(0, 27)}...` : recipients
 
       return (
-        <div className="text-[11px] text-slate-600 dark:text-slate-400 flex flex-col gap-1 font-semibold">
+        <div className="text-[11px] text-muted-foreground flex flex-col gap-1 font-semibold">
           <div>
-            <span className="text-[9px] font-mono font-bold text-slate-500 dark:text-slate-500 uppercase block">Recipients</span>
-            <span className="truncate text-slate-700 dark:text-slate-300" title={recipients}>{displayRecipients}</span>
+            <span className="text-[9px] font-mono font-bold text-muted-foreground uppercase block">Recipients</span>
+            <span className="truncate text-foreground" title={recipients}>{displayRecipients}</span>
           </div>
           <div className="flex gap-4 font-mono text-[10px]">
             <div>
-              <span className="text-[9px] font-bold text-slate-500 dark:text-slate-500 uppercase">SMTP Server</span>
-              <div className="truncate text-slate-600 dark:text-slate-400">{smtpServer}:{smtpPort}</div>
+              <span className="text-[9px] font-bold text-muted-foreground uppercase">SMTP Server</span>
+              <div className="truncate text-muted-foreground">{smtpServer}:{smtpPort}</div>
             </div>
           </div>
         </div>
@@ -117,9 +117,9 @@ export default function AlertConfigCard({
 
     if (channel_type.toLowerCase() === 'ntfy') {
       return (
-        <div className="text-[11px] text-slate-600 dark:text-slate-400 leading-normal flex flex-col gap-0.5 font-semibold">
-          <span className="text-[9px] font-bold text-slate-500 dark:text-slate-500 uppercase">Subscription mode</span>
-          <span className="text-slate-700 dark:text-slate-300">Uses personal subscriber topic alerts.</span>
+        <div className="text-[11px] text-muted-foreground leading-normal flex flex-col gap-0.5 font-semibold">
+          <span className="text-[9px] font-bold text-muted-foreground uppercase">Subscription mode</span>
+          <span className="text-foreground">Uses personal subscriber topic alerts.</span>
         </div>
       )
     }
@@ -129,20 +129,20 @@ export default function AlertConfigCard({
 
   return (
     <div
-      className={`glass-panel p-5 rounded-xl border relative transition-all hover:scale-[1.01] hover:border-slate-300 dark:hover:border-white/10 flex flex-col justify-between min-h-[175px] ${
+      className={`glass-panel p-5 rounded-xl border relative transition-all hover:scale-[1.01] hover:border-muted-foreground/30 flex flex-col justify-between min-h-[175px] ${
         config.is_active 
-          ? 'border-slate-200 dark:border-white/5 bg-slate-50/50 dark:bg-slate-900/10' 
-          : 'border-dashed border-slate-200 dark:border-white/5 opacity-60 bg-transparent'
+          ? 'border-border bg-card' 
+          : 'border-dashed border-border opacity-60 bg-transparent'
       }`}
     >
       {/* Header Info */}
       <div className="space-y-3">
         <div className="flex items-start justify-between gap-4">
           <div className="flex items-center gap-2">
-            <div className="p-1.5 bg-slate-100 dark:bg-slate-950/40 rounded border border-slate-200 dark:border-white/5 flex items-center justify-center">
+            <div className="p-1.5 bg-muted rounded border border-border flex items-center justify-center">
               {getChannelIcon(config.channel_type)}
             </div>
-            <h3 className="font-bold text-slate-800 dark:text-slate-200 text-sm tracking-tight leading-tight line-clamp-1">
+            <h3 className="font-bold text-foreground text-sm tracking-tight leading-tight line-clamp-1">
               {config.name}
             </h3>
           </div>
@@ -156,7 +156,7 @@ export default function AlertConfigCard({
 
         {/* Badges */}
         <div className="flex flex-wrap gap-2">
-          <Badge variant="outline" className="bg-slate-100 dark:bg-slate-950/40 text-[9px] font-bold text-slate-600 dark:text-slate-400 border-slate-200 dark:border-white/5 py-0.5 uppercase tracking-wide">
+          <Badge variant="outline" className="bg-muted text-[9px] font-bold text-muted-foreground border-border py-0.5 uppercase tracking-wide">
             {config.channel_type}
           </Badge>
           <Badge variant="outline" className="bg-primary/10 text-primary border-primary/20 text-[9px] font-bold py-0.5 uppercase tracking-wide">
@@ -166,12 +166,12 @@ export default function AlertConfigCard({
       </div>
 
       {/* Channel specific configs */}
-      <div className="bg-slate-100/50 dark:bg-slate-950/20 p-2.5 rounded-lg border border-slate-200 dark:border-white/5 mt-4 min-h-[60px] flex flex-col justify-center">
+      <div className="bg-muted/30 p-2.5 rounded-lg border border-border mt-4 min-h-[60px] flex flex-col justify-center">
         {renderChannelDetails()}
       </div>
 
       {/* Footer Controls */}
-      <div className="flex items-center justify-between border-t border-slate-200 dark:border-white/5 pt-3 mt-4">
+      <div className="flex items-center justify-between border-t border-border pt-3 mt-4">
         <Button
           size="sm"
           variant="outline"
@@ -192,7 +192,7 @@ export default function AlertConfigCard({
             size="sm"
             variant="outline"
             onClick={() => onEdit(config)}
-            className="h-8 px-3 text-slate-600 dark:text-slate-400 hover:text-slate-800 dark:hover:text-white border-slate-200 dark:border-white/5 hover:bg-slate-100 dark:hover:bg-white/5 text-xs font-bold gap-1"
+            className="h-8 px-3 border-border text-muted-foreground hover:bg-accent hover:text-accent-foreground text-xs font-bold gap-1"
           >
             <Edit3 className="h-3.5 w-3.5" />
             Configure
@@ -201,7 +201,7 @@ export default function AlertConfigCard({
             size="sm"
             variant="outline"
             onClick={() => onDelete(config.id)}
-            className="h-8 w-8 p-0 text-slate-500 hover:text-rose-400 border-slate-200 dark:border-white/5 hover:bg-rose-500/10"
+            className="h-8 w-8 p-0 border-border text-muted-foreground hover:bg-rose-500/10 hover:text-rose-500"
           >
             <Trash2 className="h-3.5 w-3.5" />
           </Button>

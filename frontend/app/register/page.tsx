@@ -4,17 +4,25 @@ import React, { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { Shield, Mail, Lock, User, UserCheck, Loader2, ArrowRight } from 'lucide-react'
-import { registerUser } from '@/lib/api'
+import { registerUser, verifyEmail } from '@/lib/api'
 
 export default function RegisterPage() {
   const router = useRouter()
+  
+  // Registration form state
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
-  
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  
+  // Verification state
+  const [showVerification, setShowVerification] = useState(false)
+  const [userId, setUserId] = useState('')
+  const [otpCode, setOtpCode] = useState('')
+  const [isVerifying, setIsVerifying] = useState(false)
+  const [verificationError, setVerificationError] = useState<string | null>(null)
   const [success, setSuccess] = useState(false)
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -23,15 +31,39 @@ export default function RegisterPage() {
     setError(null)
 
     try {
-      await registerUser({ name, email, username, password })
-      setSuccess(true)
-      setTimeout(() => {
-        router.push('/login')
-      }, 2000)
+      const res = await registerUser({ name, email, username, password })
+      if (res?.auto_verified) {
+        setSuccess(true)
+        setTimeout(() => {
+          router.push('/login')
+        }, 2000)
+      } else {
+        setUserId(res?.user_id || '')
+        setShowVerification(true)
+      }
     } catch (err: any) {
       setError(err?.message || 'Registration failed. Username or email may be taken.')
     } finally {
       setIsLoading(false)
+    }
+  }
+
+  const handleVerifyOtp = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setIsVerifying(true)
+    setVerificationError(null)
+
+    try {
+      await verifyEmail({ user_id: userId, code: otpCode })
+      setSuccess(true)
+      setShowVerification(false)
+      setTimeout(() => {
+        router.push('/login')
+      }, 2000)
+    } catch (err: any) {
+      setVerificationError(err?.message || 'Invalid verification code. Please check your inbox.')
+    } finally {
+      setIsVerifying(false)
     }
   }
 
@@ -56,10 +88,13 @@ export default function RegisterPage() {
             />
           </div>
           <h2 className="mt-2 text-center text-3xl font-extrabold tracking-tight text-foreground">
-            Create Operator Account
+            {showVerification ? 'Verify Your Email' : 'Create Operator Account'}
           </h2>
           <p className="mt-2 text-center text-sm text-muted-foreground">
-            Register to set up dynamic monitoring policies
+            {showVerification 
+              ? `We sent a 6-digit verification code to ${email}`
+              : 'Register to set up dynamic monitoring policies'
+            }
           </p>
         </div>
 
@@ -70,8 +105,49 @@ export default function RegisterPage() {
                 <UserCheck className="h-6 w-6" />
               </div>
               <h3 className="text-lg font-bold text-foreground">Registration Complete</h3>
-              <p className="text-sm text-muted-foreground">Your operator account has been created. Redirecting to login...</p>
+              <p className="text-sm text-muted-foreground">Your operator account has been created and verified. Redirecting to login...</p>
             </div>
+          ) : showVerification ? (
+            <form className="space-y-6" onSubmit={handleVerifyOtp}>
+              {verificationError && (
+                <div className="rounded-lg bg-rose-500/15 border border-rose-500/20 p-4 text-sm text-rose-400">
+                  {verificationError}
+                </div>
+              )}
+
+              <div>
+                <label htmlFor="otp" className="block text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2 text-center">
+                  6-Digit Verification Code
+                </label>
+                <input
+                  id="otp"
+                  name="otp"
+                  type="text"
+                  required
+                  maxLength={6}
+                  value={otpCode}
+                  onChange={(e) => setOtpCode(e.target.value.replace(/\D/g, ''))}
+                  className="block w-full rounded-lg border border-border bg-background py-3 text-center text-2xl font-mono tracking-[0.75em] text-foreground focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
+                  placeholder="000000"
+                />
+              </div>
+
+              <div>
+                <button
+                  type="submit"
+                  disabled={isVerifying || otpCode.length < 6}
+                  className="group relative flex w-full justify-center rounded-lg bg-primary py-2.5 px-4 text-sm font-semibold text-white hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:ring-offset-background transition-colors disabled:opacity-50"
+                >
+                  {isVerifying ? (
+                    <Loader2 className="h-5 w-5 animate-spin" />
+                  ) : (
+                    <span className="flex items-center gap-1.5">
+                      Verify Code <ArrowRight className="h-4 w-4" />
+                    </span>
+                  )}
+                </button>
+              </div>
+            </form>
           ) : (
             <form className="space-y-4" onSubmit={handleSubmit}>
               {error && (
@@ -186,10 +262,21 @@ export default function RegisterPage() {
           )}
 
           <div className="mt-6 border-t border-border pt-6 text-center text-xs text-muted-foreground">
-            Already have an account?{' '}
-            <Link href="/login" className="font-semibold text-primary hover:text-primary/80 transition-colors">
-              Sign In
-            </Link>
+            {showVerification ? (
+              <button 
+                onClick={() => setShowVerification(false)} 
+                className="font-semibold text-primary hover:text-primary/80 transition-colors"
+              >
+                Back to Registration
+              </button>
+            ) : (
+              <>
+                Already have an account?{' '}
+                <Link href="/login" className="font-semibold text-primary hover:text-primary/80 transition-colors">
+                  Sign In
+                </Link>
+              </>
+            )}
           </div>
         </div>
       </div>

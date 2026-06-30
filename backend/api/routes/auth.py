@@ -7,7 +7,13 @@ from sqlalchemy.orm import Session
 
 from backend.core.database import get_db
 from backend.core.config import settings
-from backend.modules.users.models import User, UserSession, LoginHistory
+from backend.core.events import redis_client
+from backend.modules.users.models import User, UserSession, LoginHistory, EmailVerification
+from backend.modules.users.email_utils import send_verification_email
+from email_validator import validate_email, EmailNotValidError
+import random
+import re
+from pydantic import BaseModel
 from backend.modules.users.schemas import (
     UserRegisterRequest,
     UserLoginRequest,
@@ -19,28 +25,58 @@ logger = logging.getLogger("qolyx.api.routes.auth")
 
 router = APIRouter(prefix="/auth", tags=["Authentication"])
 
-@router.post("/register", response_model=UserProfileResponse)
+@router.post("/register")
 def register(payload: UserRegisterRequest, db: Session = Depends(get_db)):
-    """Register a new platform user."""
+    """Register a new platform user with validation and OTP generation."""
     logger.info(f"Attempting registration for email: {payload.email}")
 
-    # Check if email exists
+    # 1. Validate email format using email-validator
+    try:
+        validation = validate_email(payload.email, check_deliverability=False)
+        payload.email = validation.normalized
+    except EmailNotValidError as e:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Invalid email format: {str(e)}"
+        )
+
+    # 2. Check if email exists
     existing_email = db.query(User).filter(User.email == payload.email).first()
     if existing_email:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="A user with this email address already exists."
-        )
+        if existing_email.is_active:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="A user with this email address already exists."
+            )
+        else:
+            logger.info(f"Deleting inactive unverified user {existing_email.email} for re-registration.")
+            db.delete(existing_email)
+            db.commit()
 
-    # Check if username exists
+    # 3. Check if username exists
     existing_username = db.query(User).filter(User.username == payload.username).first()
     if existing_username:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="A user with this username already exists."
-        )
+        if existing_username.is_active:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="A user with this username already exists."
+            )
+        else:
+            logger.info(f"Deleting inactive unverified user with username {existing_username.username} for re-registration.")
+            db.delete(existing_username)
+            db.commit()
 
-    # Create new user
+    # 4. Password strength validation (min 8 chars, uppercase, lowercase, number)
+    if len(payload.password) < 8:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Password must be at least 8 characters.")
+    if not re.search(r"[A-Z]", payload.password):
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Password must contain at least one uppercase letter.")
+    if not re.search(r"[a-z]", payload.password):
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Password must contain at least one lowercase letter.")
+    if not re.search(r"\d", payload.password):
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Password must contain at least one number.")
+
+    # 5. Create inactive user
     hashed = hash_password(payload.password)
     new_user = User(
         id=uuid.uuid4(),
@@ -48,6 +84,7 @@ def register(payload: UserRegisterRequest, db: Session = Depends(get_db)):
         email=payload.email,
         username=payload.username,
         hashed_password=hashed,
+        is_active=False,  # inactive until verified
         timezone="UTC",
         theme="system",
         date_format="ISO",
@@ -67,10 +104,130 @@ def register(payload: UserRegisterRequest, db: Session = Depends(get_db)):
     )
 
     db.add(new_user)
+    db.flush()
+
+    # 6. Generate 6-digit verification code
+    verification_code = f"{random.randint(100000, 999999)}"
+    expires_at = datetime.now(timezone.utc) + timedelta(hours=24)
+
+    verification = EmailVerification(
+        id=uuid.uuid4(),
+        user_id=new_user.id,
+        email=payload.email,
+        verification_code=verification_code,
+        verified=False,
+        expires_at=expires_at,
+        created_at=datetime.now(timezone.utc),
+        updated_at=datetime.now(timezone.utc)
+    )
+    db.add(verification)
     db.commit()
-    db.refresh(new_user)
-    logger.info(f"Successfully registered user: {new_user.email}")
-    return new_user
+
+    # 7. Check if SMTP is configured (SaaS Mode) vs Self-Hosted Mode
+    if not settings.SMTP_HOST or not settings.SMTP_USER:
+        # Self-hosted mode with no SMTP -> auto-verify
+        new_user.is_active = True
+        verification.verified = True
+        db.commit()
+        logger.info(f"Self-hosted instance auto-verified user {new_user.email}")
+        return {
+            "message": "Account created successfully. (Email verification skipped — self-hosted mode.)",
+            "user_id": str(new_user.id),
+            "email": new_user.email,
+            "auto_verified": True
+        }
+    else:
+        # Dispatch verification code via SMTP
+        if send_verification_email(payload.email, verification_code):
+            logger.info(f"Verification email successfully sent to {new_user.email}")
+            return {
+                "message": "Verification email sent. Please check your inbox.",
+                "user_id": str(new_user.id),
+                "email": new_user.email,
+                "auto_verified": False
+            }
+        else:
+            db.rollback()
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="Failed to send verification email. Please check SMTP configuration."
+            )
+
+
+class VerifyEmailRequest(BaseModel):
+    user_id: str
+    code: str
+
+
+@router.post("/verify-email")
+def verify_email(payload: VerifyEmailRequest, db: Session = Depends(get_db)):
+    """Verifies a user's email address using the 6-digit OTP code with rate limiting."""
+    # Rate limit attempts per user to prevent brute-forcing OTP
+    rate_limit_key = f"rate_limit:verify_email:{payload.user_id}"
+    attempts = redis_client.get(rate_limit_key)
+    
+    if attempts and int(attempts) >= 5:
+        logger.warning(f"Rate limit exceeded for OTP verification on user_id: {payload.user_id}")
+        raise HTTPException(
+            status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+            detail="Too many verification attempts. Please try again in 15 minutes."
+        )
+        
+    # Increment the attempts count
+    try:
+        pipe = redis_client.pipeline()
+        pipe.incr(rate_limit_key)
+        if not attempts:
+            pipe.expire(rate_limit_key, 900)  # 15 minutes TTL
+        pipe.execute()
+    except Exception as redis_err:
+        logger.warning(f"Failed to record rate limit attempt in Redis: {redis_err}")
+
+    # Find verification record
+    verification = db.query(EmailVerification).filter(
+        EmailVerification.user_id == uuid.UUID(payload.user_id),
+        EmailVerification.verification_code == payload.code,
+        EmailVerification.verified == False
+    ).first()
+
+    if not verification:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid verification code or user ID."
+        )
+
+    # Convert expires_at to timezone-aware UTC if it is naive
+    expires_at_aware = verification.expires_at
+    if expires_at_aware.tzinfo is None:
+        expires_at_aware = expires_at_aware.replace(tzinfo=timezone.utc)
+
+    if expires_at_aware < datetime.now(timezone.utc):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Verification code has expired."
+        )
+
+    # Activate user
+    user = db.query(User).filter(User.id == verification.user_id).first()
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="User not found."
+        )
+
+    user.is_active = True
+    verification.verified = True
+    db.commit()
+
+    # Clear rate limit key on successful verification
+    try:
+        redis_client.delete(rate_limit_key)
+    except Exception as redis_err:
+        logger.warning(f"Failed to clear Redis verification rate limit: {redis_err}")
+
+    logger.info(f"Successfully verified email and activated user: {user.email}")
+    return {"message": "Email verified successfully. You can now log in."}
+
 
 @router.post("/login")
 def login(payload: UserLoginRequest, response: Response, request: Request, db: Session = Depends(get_db)):
@@ -124,6 +281,13 @@ def login(payload: UserLoginRequest, response: Response, request: Request, db: S
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Incorrect email or password."
+        )
+
+    if not user.is_active:
+        logger.warning(f"Unverified login attempt for email: {payload.email}")
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Please verify your email before logging in. Check your inbox for the verification code."
         )
 
     # 1. Create UserSession

@@ -94,3 +94,28 @@ dbt-clean:
 
 dbt-build:
 	docker compose --env-file .env -f infra/compose.yaml run --rm qolyx-dbt dbt build
+
+demo:
+	@echo "Checking if Docker is running..."
+	@docker info >/dev/null 2>&1 || (echo "ERROR: Docker is not running. Please start Docker first." && exit 1)
+	@echo "Starting Qolyx services in the background (building if needed)..."
+	docker compose --env-file .env -f infra/compose.yaml up -d --build
+	@python -c "import time, urllib.request; start = time.time(); print('Waiting for Qolyx Backend to become healthy...', flush=True); \
+	while time.time() - start < 120: \
+		try: \
+			if urllib.request.urlopen('http://localhost:8000/api/health').getcode() == 200: \
+				print('Backend is healthy!'); break \
+		except Exception: \
+			pass \
+		time.sleep(2)"
+	@echo "Running demo setup (seeding data, running dbt, calculating scores, executing scenarios)..."
+	docker compose --env-file .env -f infra/compose.yaml exec qolyx-backend python -m demo.demo_runner
+	@echo "Pausing Airflow DAGs automatically to prevent periodic alert noise..."
+	docker compose --env-file .env -f infra/compose.yaml exec qolyx-airflow airflow dags pause qolyx_finnhub_ingestion || true
+	docker compose --env-file .env -f infra/compose.yaml exec qolyx-airflow airflow dags pause qolyx_fda_ingestion || true
+	docker compose --env-file .env -f infra/compose.yaml exec qolyx-airflow airflow dags pause qolyx_github_ingestion || true
+	@echo "Opening browser to Qolyx Dashboard..."
+	@python -c "import webbrowser; webbrowser.open('http://localhost:5173')"
+	@echo "Displaying Qolyx Demo Summary:"
+	docker compose --env-file .env -f infra/compose.yaml exec qolyx-backend python -m demo.demo_summary
+

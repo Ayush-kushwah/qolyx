@@ -1,0 +1,8 @@
+feat: add Redis-based rate limiting to OTP verification endpoint
+
+- Limit OTP verification attempts to 5 per user in 15 minutes
+- Prevent brute-force guessing of 6-digit verification codes
+- Use Redis atomic operations (pipeline incr + expire)
+- Clear rate limit key on successful verification
+- Return HTTP 429 Too Many Requests when rate limit exceeded
+- Graceful fallback if Redis is unavailable

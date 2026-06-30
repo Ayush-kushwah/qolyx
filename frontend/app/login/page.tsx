@@ -134,6 +134,21 @@ export default function LoginPage() {
               Register here
             </Link>
           </div>
+
+          <div className="mt-6 p-4 bg-amber-500/10 border border-amber-500/20 rounded-xl">
+            <p className="text-xs text-center text-amber-400 font-semibold">
+              Self-hosted instance?
+            </p>
+            <p className="text-xs text-center text-amber-400 mt-1">
+              Default admin: <code className="font-mono bg-amber-500/15 px-2 py-0.5 rounded">admin@qolyx.io</code>
+            </p>
+            <p className="text-xs text-center text-amber-400 mt-1">
+              Password: <code className="font-mono bg-amber-500/15 px-2 py-0.5 rounded">adminpassword123</code>
+            </p>
+            <p className="text-[10px] text-center text-amber-400/70 mt-2">
+              ⚠️ Please change the default password after first login
+            </p>
+          </div>
         </div>
       </div>
     </div>

@@ -32,6 +32,7 @@ class User(Base):
     theme: Any = Column(String(50), default="system")
     date_format: Any = Column(String(50), default="ISO")
     notification_preferences: Any = Column(JSON, nullable=True)
+    is_active: Any = Column(Boolean, default=True, nullable=False)
     created_at: Any = Column(DateTime, nullable=False, default=lambda: datetime.now(timezone.utc))
     updated_at: Any = Column(
         DateTime, 
@@ -45,6 +46,7 @@ class User(Base):
     login_history = relationship("LoginHistory", back_populates="user", cascade="all, delete-orphan")
     api_keys = relationship("ApiKey", back_populates="user", cascade="all, delete-orphan")
     llm_providers = relationship("LLMProvider", back_populates="user", cascade="all, delete-orphan")
+    email_verifications = relationship("EmailVerification", back_populates="user", cascade="all, delete-orphan")
 
 
 class UserSession(Base):
@@ -139,4 +141,28 @@ class LLMProvider(Base):
 
     # Relationships
     user = relationship("User", back_populates="llm_providers")
+
+
+class EmailVerification(Base):
+    """Database model representing email verification OTP codes."""
+    __tablename__ = "email_verifications"
+    __allow_unmapped__ = True
+
+    id: Any = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    user_id: Any = Column(UUID(as_uuid=True), ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
+    email: Any = Column(String(255), nullable=False)
+    verification_code: Any = Column(String(6), nullable=False)  # 6-digit OTP
+    verified: Any = Column(Boolean, default=False, nullable=False)
+    expires_at: Any = Column(DateTime, nullable=False)
+    created_at: Any = Column(DateTime, nullable=False, default=lambda: datetime.now(timezone.utc))
+    updated_at: Any = Column(
+        DateTime, 
+        nullable=False, 
+        default=lambda: datetime.now(timezone.utc),
+        onupdate=lambda: datetime.now(timezone.utc)
+    )
+
+    # Relationships
+    user = relationship("User", back_populates="email_verifications")
+
 
